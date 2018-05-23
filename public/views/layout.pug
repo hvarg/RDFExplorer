@@ -1,0 +1,23 @@
+doctype html
+html(lang="en", ng-app="rdfvis")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1, shrink-to-fit=no")
+    base(href="/")
+    // Bootstrap 4 CSS
+    link(rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css")
+    // mine
+    link(rel="stylesheet", href="styles/style.css")
+    title="RDF Visualization"
+  body
+    block content
+    // Bootstrap 4.0 js
+    //script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
+    // AngularJS
+    script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js")
+    script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-animate.js")
+    // Downloaded components
+    script(src="components/ui-bootstrap-tpls-2.5.0.min.js")
+    // My scripts
+    script(src="scripts/app.js")
+    script(src="scripts/controllers/main.js")

@@ -1,0 +1,14 @@
+{
+  "name": "RDFExplorer",
+  "version": "1.0.0",
+  "description": "An RDF explorator and SPARQL query builed.",
+  "main": "server.js",
+  "author": "Hernan Vargas <hvargas@inf.utfsm.cl>",
+  "dependencies": {
+    "body-parser": "^1.4.3",
+    "express": "^4.13.4",
+    "morgan": "^1.1.1",
+    "pug": "^2.0.0-beta6",
+    "request": "^2.85.0"
+  }
+}

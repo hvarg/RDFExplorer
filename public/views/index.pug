@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  main.container(role="main", ng-controller="MainCtrl as main")
+    div.row
+      div.col-md-2
+      div.col-md-8
+        h2 Welcome to {{ main.name }}
