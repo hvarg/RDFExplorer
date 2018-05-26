@@ -1,7 +1,16 @@
 extends layout
 
 block content
-  main.container(role="main", ng-controller="MainCtrl as main")
+  div.tools(ng-controller="MainCtrl as main")
+    button.btn.btn-default(type="button", aria-label="Left Align", ng-click="main.test()")
+      span.glyphicon.glyphicon-cog(aria-hidden="true")
+    button.btn.btn-default(type="button", aria-label="Left Align", ng-click="main.test()")
+      span.glyphicon.glyphicon-search(aria-hidden="true")
+  div.tools-right(ng-controller="MainCtrl as main")
+    button.btn.btn-default(type="button", aria-label="Left Align", ng-click="main.test()")
+      span.glyphicon.glyphicon-th-list(aria-hidden="true")
+  visual-query-builder()
+  //main.container(role="main", ng-controller="MainCtrl as main")
     div.row
       div.col-md-2
       div.col-md-8

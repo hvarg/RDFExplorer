@@ -6,8 +6,9 @@ html(lang="en", ng-app="rdfvis")
     base(href="/")
     // Bootstrap 4 CSS
     link(rel="stylesheet", href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css")
-    // mine
+    // My CSSs
     link(rel="stylesheet", href="styles/style.css")
+    link(rel="stylesheet", href="styles/graph.css")
     title="RDF Visualization"
   body
     block content
@@ -16,8 +17,13 @@ html(lang="en", ng-app="rdfvis")
     // AngularJS
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-animate.js")
+    // D3
+    script(src="https://d3js.org/d3.v3.min.js")
+    //script(src="https://d3js.org/d3.v5.min.js")
     // Downloaded components
     script(src="components/ui-bootstrap-tpls-2.5.0.min.js")
     // My scripts
     script(src="scripts/app.js")
     script(src="scripts/controllers/main.js")
+    script(src="scripts/directives/visual-query-builder.js")
+    script(src="scripts/services/property-graph.js")

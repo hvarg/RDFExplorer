@@ -1,0 +1,98 @@
+svg{
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.conceptG text{
+  pointer-events: none;
+}
+
+marker{
+  fill: #333;
+}
+
+g.conceptG circle{
+  fill: #F6FBFF;
+  stroke: #333;
+  stroke-width: 2px;
+}
+
+g.conceptG:hover circle{
+  fill: rgb(200, 238, 241);
+}
+
+g.selected circle{
+  fill: rgb(250, 232, 255);
+}
+g.selected:hover circle{
+  fill: rgb(250, 232, 255);
+}
+
+path.link {
+  fill: none;
+  stroke: #333;
+  stroke-width: 6px;
+  cursor: default;
+}
+
+path.link:hover{
+  stroke: rgb(94, 196, 204);
+}
+
+g.connect-node circle{
+  fill: #BEFFFF;
+}
+
+path.link.hidden{
+  stroke-width: 0;
+}
+
+path.link.selected {
+  stroke: rgb(229, 172, 247);
+}
+
+.mainRect {
+  font-family: serif;
+  fill: #f8f8f8;
+  stroke-width: 2px;
+  stroke: red;
+}
+
+.mainRect:hover {
+  fill: #f1f1f1;
+}
+
+.mainTitle {
+  font-weight: bold;
+  text-anchor: middle;
+  alignment-baseline: central;
+  font-size: 16;
+}
+
+.innerRect {
+  font-family: serif;
+  fill: #f3f3f3;
+  stroke-width: 1px;
+  stroke: blue;
+}
+
+.innerRect:hover {
+  fill: #f0f0f0;
+}
+
+.innerText {
+  text-anchor: middle;
+  alignment-baseline: central;
+  font-size: 14;
+}
+/*.csubtitle {
+  text-anchor: end;
+  alignment-baseline: after-edge;
+  font-size: 14;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.75);
+}*/

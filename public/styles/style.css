@@ -1,0 +1,33 @@
+body, html {
+  overflow-y: hidden;
+  overflow-x: hidden;
+  height: 100vh;
+  width: 100%;
+  /*min-width: 750px;*/
+}
+
+visual-query-builder {
+  position:absolute;
+  left:0;
+  right:0;
+  height: 100%;
+}
+
+#d3vqb {
+  /*background: red;*/
+  border: 1px solid red;
+}
+
+.tools {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 20;
+}
+
+.tools-right {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 20;
+}

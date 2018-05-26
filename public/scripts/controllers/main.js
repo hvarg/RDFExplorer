@@ -6,5 +6,10 @@ function MainCtrl () {
   var vm = this;
 
   vm.name = 'RDF Visualization'
-  console.log('hello world');
+
+  vm.test = test;
+
+  function test () {
+    console.log("TEST!");
+  }
 }
