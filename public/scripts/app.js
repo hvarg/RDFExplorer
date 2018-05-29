@@ -1,4 +1,5 @@
 angular.module('rdfvis', [
+  'ngAnimate',
   'ui.bootstrap',
   'rdfvis.services',
   'rdfvis.controllers',

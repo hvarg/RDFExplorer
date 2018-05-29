@@ -10,7 +10,8 @@ function propertyGraphService () {
   var lastNodeId = 0;
   var propertyGraph = {
     nodes: [],
-    edges: []
+    edges: [],
+    selected: ''
   }
 
   function Node () {
@@ -46,11 +47,15 @@ function propertyGraphService () {
   };
 
   Node.prototype.getLabel = function () {
-    return 'ThisLabel'+this.id;
+    return this.name || 'ThisLabel'+this.id;
   };
 
   Node.prototype.newProp = function () {
     return new Property(this);
+  };
+
+  Node.prototype.onClick = function () {
+    propertyGraph.selected = this.getLabel();
   };
 
   /**************************/
@@ -77,11 +82,15 @@ function propertyGraphService () {
   });
 
   Property.prototype.getLabel = function () {
-    return 'PropLabel' + this.index;
+    return 'PropLabel' + this.parentNode.id + this.index;
   };
 
   Property.prototype.getUniq = function () {
     return '2';
+  };
+
+  Property.prototype.onClick = function () {
+    propertyGraph.selected = this.getLabel();
   };
   /**************************/
   /* Public stuff */
@@ -94,6 +103,30 @@ function propertyGraphService () {
       return new Edge(source.newProp(), target);
     }
   };
+
+  propertyGraph.addNodeFromEvent = function (ev) {
+    var d = propertyGraph.addNode();
+    d.x = ev.layerX;
+    d.y = ev.layerY;
+    d.name = ev.dataTransfer.getData("uri"); //FIXME
+  };
+
+  propertyGraph.toQuery = function () {
+    var v = {}, i, m='', q = '';
+    for (i = 0; i < propertyGraph.edges.length; i++) {
+      edge = propertyGraph.edges[i];
+      s = ' ?'+ edge.source.parentNode.id;
+      p = ' ?'+ edge.source.parentNode.id + edge.source.index;
+      o = ' ?'+ edge.target.id;
+      m += s + p + o + '\n'
+      v[s] = 1; v[p] = 1; v[o] = 1;
+    }
+    for (i in v) {
+      q += i;
+    }
+    return 'SELECT'+q+' WHERE {\n' +m +'} ';
+  };
+  
 
   return propertyGraph;
 }

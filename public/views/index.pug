@@ -1,17 +1,34 @@
 extends layout
 
 block content
-  div.tools(ng-controller="MainCtrl as main")
-    button.btn.btn-default(type="button", aria-label="Left Align", ng-click="main.test()")
+  div.tools
+    button.click-auto.btn.btn-default.align2(type="button", aria-label="Left Align", ng-click="main.test()")
       span.glyphicon.glyphicon-cog(aria-hidden="true")
-    button.btn.btn-default(type="button", aria-label="Left Align", ng-click="main.test()")
-      span.glyphicon.glyphicon-search(aria-hidden="true")
-  div.tools-right(ng-controller="MainCtrl as main")
-    button.btn.btn-default(type="button", aria-label="Left Align", ng-click="main.test()")
+    div#search-container
+      form(ng-submit="main.search()")
+        input#search-input.form-control(
+            type="text",
+            ng-click="main.searchActivate()",
+            ng-model="main.searchInput",
+            ng-class="{'active': main.searchActive}")
+        span#search-icon.glyphicon.glyphicon-search(aria-hidden="true")
+    div#left-panel(ng-hide="!main.searchActive")
+      div.fakeRect(
+          draggable="true",
+          ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value)",
+          ng-repeat="(key, value) in main.searchResults track by $index ") {{ value }}
+
+  div.tools-right
+    button.pull-right.btn.btn-default(
+        ng-class="{'active': main.describeActive}",
+        style="margin-bottom: 6px;",
+        type="button", aria-label="Right Align", ng-click="main.describeToggle()")
       span.glyphicon.glyphicon-th-list(aria-hidden="true")
-  visual-query-builder()
-  //main.container(role="main", ng-controller="MainCtrl as main")
-    div.row
-      div.col-md-2
-      div.col-md-8
-        h2 Welcome to {{ main.name }}
+    div#right-panel(ng-hide="!main.describeActive")
+      h1 {{ main.getSelected() }}
+
+  visual-query-builder(
+      ng-click="main.searchDeactivate()",
+      update="main.updateSVG",
+      ondragover="event.preventDefault();",
+      ondrop="angular.element(this).scope().drop(event)")
