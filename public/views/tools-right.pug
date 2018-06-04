@@ -1,0 +1,21 @@
+div.tools-right
+  div#right-buttons(
+    data-position="left-aligned",
+    data-step="3",
+    data-intro='More tools are displayed here!')
+    button.pull-right.btn.btn-default(
+        ng-click="main.tutorial()"
+        type="button", aria-label="Right Align")
+      span.glyphicon.glyphicon-info-sign(aria-hidden="true")
+    button.pull-right.btn.btn-default(
+        ng-class="{'active': main.describeActive}",
+        type="button", aria-label="Right Align", ng-click="main.describeToggle()")
+      span.glyphicon.glyphicon-th-list(aria-hidden="true")
+  div#right-panel(ng-hide="!main.describeActive")
+    h1 {{ main.selected.getLabel() }}
+    div.fakeRect(
+        ondragstart="angular.element(this).scope().drag(event, '', 'some prop' )",
+        draggable="true") some property
+    div.fakeRect(
+        ondragstart="angular.element(this).scope().drag(event, 'some obj', 'some prop' )",
+        draggable="true") some object

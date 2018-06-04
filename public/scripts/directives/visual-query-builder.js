@@ -448,10 +448,15 @@ function visualQueryBuilder (pGraph) {
         .on("mouseup",   function(d){ thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d); })
         .on("click",     function(d){ /*d.onClick();*/ })
         .on("dblclick",  function(d){ d.onClick(); })
-        .on('contextmenu', function(){
+        .on('contextmenu', function(d){
             var xycoords = d3.mouse(thisGraph.svgG.node());
             d3.event.preventDefault();
-            menu(xycoords[0], xycoords[1]);
+            menu(xycoords[0], xycoords[1], {
+                'delete': function () {
+                  d.delete();
+                  thisGraph.updateGraph();
+                }
+            });
         })
         .call(thisGraph.drag);
 
@@ -480,7 +485,7 @@ function visualQueryBuilder (pGraph) {
           .attr("width", element[0].offsetWidth)
           .attr("height", element[0].offsetHeight);
 
-    var menu = contextMenu().items('Edit Variable', 'option 2', 'option 3');
+    var menu = contextMenu().items('Edit Variable', '...', 'delete');
     var graph = new GraphCreator(svg, pGraph.nodes, pGraph.edges);
     graph.updateGraph();
     
@@ -519,11 +524,8 @@ function visualQueryBuilder (pGraph) {
     }
 /*************/
 function contextMenu() {
-    var height,
-        width,
-        margin = 0.1, // fraction of width
-        items = [],
-        rescale = false,
+    var height, width, margin = 0.1, // fraction of width
+        items = [], rescale = false,
         style = {
             'rect': {
                 'mouseout': {
@@ -541,7 +543,7 @@ function contextMenu() {
             }
         };
 
-    function menu(x, y) {
+    function menu(x, y, f) {
         d3.select('.context-menu').remove();
         scaleItems();
 
@@ -552,6 +554,7 @@ function contextMenu() {
             .data(items).enter()
             .append('g').attr('class', 'menu-entry')
             .style({'cursor': 'pointer'})
+            .on('click', function (d) { if (f[d]) f[d](); })
             .on('mouseover', function(){
                 d3.select(this).select('rect').style(style.rect.mouseover) })
             .on('mouseout', function(){
@@ -576,10 +579,7 @@ function contextMenu() {
 
         // Other interactions
         d3.select('body')
-            .on('click', function() {
-                d3.select('.context-menu').remove();
-            });
-
+            .on('click', function() { d3.select('.context-menu').remove(); });
     }
 
     menu.items = function(e) {

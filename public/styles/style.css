@@ -126,3 +126,11 @@ visual-query-builder {
   background-color: #e6e6e6;
   border-color: #adadad;
 }
+
+#right-buttons {
+  height: 40px;
+}
+
+#right-buttons > button {
+  margin-left: 4px;
+}

@@ -1,31 +1,8 @@
 extends layout
 
 block content
-  div.tools
-    button.click-auto.btn.btn-default.align2(type="button", aria-label="Left Align", ng-click="main.test()")
-      span.glyphicon.glyphicon-cog(aria-hidden="true")
-    div#search-container
-      form(ng-submit="main.search()")
-        input#search-input.form-control(
-            type="text",
-            ng-click="main.searchActivate()",
-            ng-model="main.searchInput",
-            ng-class="{'active': main.searchActive}")
-        span#search-icon.glyphicon.glyphicon-search(aria-hidden="true")
-    div#left-panel(ng-hide="!main.searchActive")
-      div.fakeRect(
-          draggable="true",
-          ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value)",
-          ng-repeat="(key, value) in main.searchResults track by $index ") {{ value }}
-
-  div.tools-right
-    button.pull-right.btn.btn-default(
-        ng-class="{'active': main.describeActive}",
-        style="margin-bottom: 6px;",
-        type="button", aria-label="Right Align", ng-click="main.describeToggle()")
-      span.glyphicon.glyphicon-th-list(aria-hidden="true")
-    div#right-panel(ng-hide="!main.describeActive")
-      h1 {{ main.getSelected() }}
+  include tools
+  include tools-right
 
   visual-query-builder(
       ng-click="main.searchDeactivate()",
