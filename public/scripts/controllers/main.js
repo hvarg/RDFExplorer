@@ -12,6 +12,7 @@ function MainCtrl ($scope, pGraph) {
   vm.searchActive = false;
   vm.describeActive = false;
   vm.updateSVG = null;
+  vm.getZoom = null;
   vm.tutorial = tutorial;
 
   vm.search = search;
@@ -51,10 +52,11 @@ function MainCtrl ($scope, pGraph) {
   }
 
   function drop (ev) {
+    var z = vm.getZoom();
     //check if exists first
     var d = pGraph.addNode();
-    d.x = ev.layerX;
-    d.y = ev.layerY;
+    d.x = (ev.layerX - z[0])/z[2];
+    d.y = (ev.layerY - z[1])/z[2];
     if (ev.dataTransfer.getData("uri")) {
       d.name = ev.dataTransfer.getData("uri");
     } else {

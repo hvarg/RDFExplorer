@@ -6,7 +6,10 @@ function visualQueryBuilder (pGraph) {
   var directive = {
     link: link,
     restrict: 'EA',
-    scope: { update: '='},
+    scope: {
+      update: '=',
+      getZoom: '=',
+    },
   };
   return directive;
 
@@ -116,6 +119,7 @@ function visualQueryBuilder (pGraph) {
 
       // listen for resize
       window.onresize = function(){thisGraph.updateWindow(svg);};
+      thisGraph.zoom = dragSvg;
     };
     /**********************************/
 
@@ -491,6 +495,11 @@ function visualQueryBuilder (pGraph) {
     
     scope.update = function () {
       graph.updateGraph();
+    };
+
+    scope.getZoom = function () {
+      var t = graph.zoom.translate();
+      return [t[0], t[1], graph.zoom.scale()];
     };
 
 /*************/
