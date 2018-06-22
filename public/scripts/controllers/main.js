@@ -1,8 +1,8 @@
 angular.module('rdfvis.controllers').controller('MainCtrl', MainCtrl);
 
-MainCtrl.$inject = ['$scope', 'propertyGraphService'];
+MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService'];
 
-function MainCtrl ($scope, pGraph) {
+function MainCtrl ($scope, pGraph, query) {
   $scope.drag = drag;
   $scope.drop = drop;
   var vm = this;
@@ -41,7 +41,10 @@ function MainCtrl ($scope, pGraph) {
   function describeDeactivate() { vm.describeActive = false; }
 
   function search () {
-    console.log(vm.searchInput);
+    if (vm.searchInput) {
+      q = query.search(vm.searchInput);
+      console.log(q);
+    }
     vm.searchResults.push('ThisLabel ' + vm.searchInput);
     vm.searchActive = true;
   }
@@ -83,5 +86,6 @@ function MainCtrl ($scope, pGraph) {
   vm.test = test;
   function test () {
     console.log(pGraph.toQuery());
+    console.log(query.search('donald'));
   }
 }
