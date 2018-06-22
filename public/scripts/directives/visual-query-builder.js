@@ -453,7 +453,11 @@ function visualQueryBuilder (pGraph) {
         .on("click",     function(d){ /*d.onClick();*/ })
         .on("dblclick",  function(d){ d.onClick(); })
         .on('contextmenu', function(d){
+            var z = scope.getZoom();
             var xycoords = d3.mouse(thisGraph.svgG.node());
+            //console.log(z, xycoords); TODO: zoom z[2]
+            xycoords[0] = (xycoords[0] + z[0]);
+            xycoords[1] = (xycoords[1] + z[1]);
             d3.event.preventDefault();
             menu(xycoords[0], xycoords[1], {
                 'delete': function () {

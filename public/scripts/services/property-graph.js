@@ -1,7 +1,7 @@
 angular.module('rdfvis.services').factory('propertyGraphService', propertyGraphService);
-propertyGraphService.$inject = [];
+propertyGraphService.$inject = ['requestService'];
 
-function propertyGraphService () {
+function propertyGraphService (req) {
   var nodeWidth = 220,
       nodeBaseHeight = 30,
       diffParentChild = 20,
@@ -47,7 +47,7 @@ function propertyGraphService () {
   };
 
   Node.prototype.getLabel = function () {
-    return (this.name || 'ThisLabel') + this.id;
+    return this.uri ? req.getLabel(this.uri) : '?' + this.id;
   };
 
   Node.prototype.newProp = function () {
@@ -105,7 +105,8 @@ function propertyGraphService () {
   });
 
   Property.prototype.getLabel = function () {
-    return (this.name || 'PropLabel') + this.parentNode.id + this.index;
+    //return (this.name || 'PropLabel') + this.parentNode.id + this.index;
+    return this.uri ? req.getLabel(this.uri) : '?' + this.parentNode.id + this.index;
   };
 
   Property.prototype.getUniq = function () {
@@ -128,15 +129,20 @@ function propertyGraphService () {
     }
   };
 
+  function u (l) {return ' <'+l.uri+'>';}
+
   propertyGraph.toQuery = function () {
     var v = {}, i, m='', q = '';
     for (i = 0; i < propertyGraph.edges.length; i++) {
       edge = propertyGraph.edges[i];
-      s = ' ?'+ edge.source.parentNode.id;
-      p = ' ?'+ edge.source.parentNode.id + edge.source.index;
-      o = ' ?'+ edge.target.id;
-      m += s + p + o + '\n'
-      v[s] = 1; v[p] = 1; v[o] = 1;
+      s = edge.source.parentNode.uri ? u(edge.source.parentNode) : ' ?'+ edge.source.parentNode.id;
+      p = edge.source.uri ? u(edge.source) : ' ?'+ edge.source.parentNode.id + edge.source.index;
+      o = edge.target.uri ? u(edge.target) : ' ?'+ edge.target.id;
+      if (s[1]=='?' || p[1] == '?' || o[1] == '?')
+        m += s + p + o + '\n'
+      if (!edge.source.parentNode.uri) v[s] = 1;
+      if (!edge.source.uri) v[p] = 1;
+      if (!edge.target.uri) v[o] = 1;
     }
     for (i in v) {
       q += i;

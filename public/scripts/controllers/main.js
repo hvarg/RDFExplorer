@@ -1,8 +1,8 @@
 angular.module('rdfvis.controllers').controller('MainCtrl', MainCtrl);
 
-MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService'];
+MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService'];
 
-function MainCtrl ($scope, pGraph, query) {
+function MainCtrl ($scope, pGraph, query, request) {
   $scope.drag = drag;
   $scope.drop = drop;
   var vm = this;
@@ -19,16 +19,41 @@ function MainCtrl ($scope, pGraph, query) {
   vm.searchToggle = searchToggle;
   vm.searchActivate = searchActivate;
   vm.searchDeactivate = searchDeactivate;
+  vm.searchWait = false;
+  vm.noResults  = false;
+  vm.lastSearch = '';
 
   vm.describeToggle = describeToggle;
   vm.describeActivate = describeActivate;
   vm.describeDeactivate = describeDeactivate;
   
   vm.selected = null;
+  vm.descObjProp = [];
+  vm.descDatatypeProp = [];
   pGraph.onClick = function (obj) {
     vm.selected = obj;
+    vm.descObjProp = [];
+    vm.descDatatypeProp = [];
+    request.execQuery(query.getObjProp(obj.uri), function (data) {
+      vm.descObjProp = data.results.bindings;
+    });
+    request.execQuery(query.getDatatypeProp(obj.uri), function (data) {
+      vm.descDatatypeProp = data.results.bindings;
+    });
     describeActivate();
     $scope.$apply();
+  };
+
+  vm.descPropValue = {};
+  vm.getObjPropValue = function (uri, prop) {
+    request.execQuery(query.getObjPropValue(uri, prop), function (data) {
+      vm.descPropValue[prop] = data.results.bindings;
+    });
+  };
+  vm.getDatatypePropValue = function (uri, prop) {
+    request.execQuery(query.getDatatypePropValue(uri, prop), function (data) {
+      vm.descPropValue[prop] = data.results.bindings;
+    });
   };
 
 
@@ -41,11 +66,21 @@ function MainCtrl ($scope, pGraph, query) {
   function describeDeactivate() { vm.describeActive = false; }
 
   function search () {
-    if (vm.searchInput) {
-      q = query.search(vm.searchInput);
-      console.log(q);
+    if (vm.searchInput && vm.searchInput != vm.lastSearch) {
+      var input = vm.searchInput;
+      vm.searchWait = true;
+      vm.noResults  = false; 
+      q = query.search(input);
+      //console.log(q);
+      request.execQuery(q, function (data) {
+        vm.searchResults = data.results.bindings;
+        vm.lastSearch = input;
+        vm.searchWait = false;
+        if (vm.searchResults.length == 0) vm.noResults = true;
+        /*console.log(data);
+        console.log(vm.searchResults);*/
+      });
     }
-    vm.searchResults.push('ThisLabel ' + vm.searchInput);
     vm.searchActive = true;
   }
 
@@ -61,13 +96,11 @@ function MainCtrl ($scope, pGraph, query) {
     d.x = (ev.layerX - z[0])/z[2];
     d.y = (ev.layerY - z[1])/z[2];
     if (ev.dataTransfer.getData("uri")) {
-      d.name = ev.dataTransfer.getData("uri");
-    } else {
-      d.name = '?';
+      d.uri = ev.dataTransfer.getData("uri");
     }
     if (ev.dataTransfer.getData("prop")) {
       var p = vm.selected.newProp();
-      p.name = ev.dataTransfer.getData("prop");
+      p.uri = ev.dataTransfer.getData("prop");
       pGraph.addEdge(p, d);
     } else { // from search
       var index = vm.searchResults.indexOf( ev.dataTransfer.getData("uri") );
@@ -86,6 +119,5 @@ function MainCtrl ($scope, pGraph, query) {
   vm.test = test;
   function test () {
     console.log(pGraph.toQuery());
-    console.log(query.search('donald'));
   }
 }

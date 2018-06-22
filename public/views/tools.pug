@@ -17,7 +17,10 @@ div.tools(
           ng-class="{'active': main.searchActive}")
       span#search-icon.glyphicon.glyphicon-search(aria-hidden="true")
   div#left-panel(ng-hide="!main.searchActive")
+    img(src="/images/spin.svg", style="display: block; margin: 0 auto;", ng-show="main.searchWait")
+    div.alert.alert-warning(role="alert", ng-show="main.noResults")
+      strong No results found!
     div.fakeRect(
         draggable="true",
-        ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value, '')",
-        ng-repeat="(key, value) in main.searchResults track by $index ") {{ value }}
+        ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri.value, '')",
+        ng-repeat="(key, value) in main.searchResults track by $index ") {{ value.label.value }}
