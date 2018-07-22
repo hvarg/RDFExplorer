@@ -8,27 +8,8 @@ div.tools-right
         type="button", aria-label="Right Align")
       span.glyphicon.glyphicon-info-sign(aria-hidden="true")
     button.pull-right.btn.btn-default(
-        ng-class="{'active': main.describeActive}",
-        type="button", aria-label="Right Align", ng-click="main.describeToggle()")
+        ng-class="{'active': (main.toolr == 'describe') }",
+        type="button", aria-label="Right Align", ng-click="main.toolrToggle('describe')")
       span.glyphicon.glyphicon-th-list(aria-hidden="true")
-  div#right-panel(ng-hide="!main.describeActive")
-    h1(style="text-align: center;") {{ main.selected.getLabel() }}
-    hr
-    table.table.table-hover
-      tbody
-        tr(ng-repeat="(key, value) in main.descDatatypeProp track by $index",
-           ng-init="main.getDatatypePropValue(main.selected.uri, value.uri.value)")
-          th {{ value.label.value }}
-          td
-            div(ng-repeat="(k, v) in main.descPropValue[value.uri.value] track by $index") {{ v.uri.value }}
-
-    div.propRect(
-        ng-repeat="(key, value) in main.descObjProp track by $index",
-        ng-init="main.getObjPropValue(main.selected.uri, value.uri.value)")
-      div(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().value.uri.value)",
-          draggable="true") {{ value.label.value }}
-      hr
-      div.fakeRect(
-          ng-repeat="(k, v) in main.descPropValue[value.uri.value] track by $index"
-          ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().v.uri.value,  angular.element(this).scope().value.uri.value)",
-          draggable="true") {{ v.label.value }}
+  div#right-panel(ng-hide="main.toolr == 'none'")
+    include describe

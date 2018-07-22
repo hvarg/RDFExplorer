@@ -1,69 +1,45 @@
 angular.module('rdfvis.controllers').controller('MainCtrl', MainCtrl);
 
-MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService'];
+MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', '$timeout'];
 
-function MainCtrl ($scope, pGraph, query, request) {
-  $scope.drag = drag;
-  $scope.drop = drop;
+function MainCtrl ($scope, pGraph, query, request, $timeout) {
   var vm = this;
-  vm.name = 'RDF Visualization'
+  /* vars */
   vm.searchInput = '';
   vm.searchResults = [];
   vm.searchActive = false;
-  vm.describeActive = false;
+  vm.searchWait = false;
+  vm.noResults  = false;
+  vm.lastSearch = '';
+  vm.toolr = 'none';
+
+  /* functions */
   vm.updateSVG = null;
   vm.getZoom = null;
   vm.tutorial = tutorial;
-
+  vm.toolrToggle = toolrToggle;
   vm.search = search;
   vm.searchToggle = searchToggle;
   vm.searchActivate = searchActivate;
   vm.searchDeactivate = searchDeactivate;
-  vm.searchWait = false;
-  vm.noResults  = false;
-  vm.lastSearch = '';
-
-  vm.describeToggle = describeToggle;
-  vm.describeActivate = describeActivate;
-  vm.describeDeactivate = describeDeactivate;
-  
+  vm.test = test;
   vm.selected = null;
-  vm.descObjProp = [];
-  vm.descDatatypeProp = [];
-  pGraph.onClick = function (obj) {
-    vm.selected = obj;
-    vm.descObjProp = [];
-    vm.descDatatypeProp = [];
-    request.execQuery(query.getObjProp(obj.uri), function (data) {
-      vm.descObjProp = data.results.bindings;
-    });
-    request.execQuery(query.getDatatypeProp(obj.uri), function (data) {
-      vm.descDatatypeProp = data.results.bindings;
-    });
-    describeActivate();
-    $scope.$apply();
-  };
 
-  vm.descPropValue = {};
-  vm.getObjPropValue = function (uri, prop) {
-    request.execQuery(query.getObjPropValue(uri, prop), function (data) {
-      vm.descPropValue[prop] = data.results.bindings;
-    });
-  };
-  vm.getDatatypePropValue = function (uri, prop) {
-    request.execQuery(query.getDatatypePropValue(uri, prop), function (data) {
-      vm.descPropValue[prop] = data.results.bindings;
-    });
-  };
+  /* scope */
+  $scope.drag = drag;
+  $scope.drop = drop;
+  $scope.$on('toolr', function(event, data) { vm.toolr = data; });
+  $scope.$on('setSelected', function(event, data) { vm.selected = data; });
 
+  /* Tools display functions */
+  function toolrToggle (panel) {
+    if (vm.toolr == panel) vm.toolr = 'none';
+    else vm.toolr = panel;
+  }
 
   function searchToggle() { vm.searchActive = !vm.searchActive; }
   function searchActivate() { vm.searchActive = true; }
   function searchDeactivate() { vm.searchActive = false; }
-
-  function describeToggle() { vm.describeActive = !vm.describeActive;}
-  function describeActivate() { vm.describeActive = true; }
-  function describeDeactivate() { vm.describeActive = false; }
 
   function search () {
     if (vm.searchInput && vm.searchInput != vm.lastSearch) {
@@ -71,7 +47,6 @@ function MainCtrl ($scope, pGraph, query, request) {
       vm.searchWait = true;
       vm.noResults  = false; 
       q = query.search(input);
-      //console.log(q);
       request.execQuery(q, function (data) {
         vm.searchResults = data.results.bindings;
         vm.lastSearch = input;
@@ -116,8 +91,12 @@ function MainCtrl ($scope, pGraph, query, request) {
     introJs().start();
   }
 
-  vm.test = test;
   function test () {
     console.log(pGraph.toQuery());
   }
+  //test
+  $timeout(function () {
+    d = pGraph.addNode();
+    d.x = 300; d.y = 300; d.uri = "http://dbpedia.org/resource/Barack_Obama"; vm.updateSVG();
+  }, 200)
 }

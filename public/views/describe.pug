@@ -1,0 +1,25 @@
+div(ng-controller="DescribeCtrl as ctrl")
+  h1(style="text-align: center;") {{ ctrl.selected.getLabel() }}
+  hr
+  div(ng-repeat="(key, value) in ctrl.long track by $index") 
+    strong {{ value.label.value }} :&nbsp;
+    | {{ ctrl.descPropValue[value.uri.value][0].uri.value }}
+    //FIXME
+  table.table.table-hover
+    tbody
+      tr(ng-repeat="(key, value) in ctrl.descDatatypeProp track by $index",
+         ng-init="ctrl.getDatatypePropValue(ctrl.selected.uri, value.uri.value)")
+        th {{ value.label.value }}
+        td
+          div(ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] track by $index") {{ v.uri.value }}
+
+  div.propRect(
+      ng-repeat="(key, value) in ctrl.descObjProp track by $index",
+      ng-init="ctrl.getObjPropValue(ctrl.selected.uri, value.uri.value)")
+    div(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().value.uri.value)",
+        draggable="true") {{ value.label.value }}
+    hr
+    div.fakeRect(
+        ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] | limitTo:10 track by $index"
+        ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().v.uri.value,  angular.element(this).scope().value.uri.value)",
+        draggable="true") {{ v.label.value }}
