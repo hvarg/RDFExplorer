@@ -55,7 +55,7 @@ function DescribeCtrl ($scope, pGraph, query, request) {
     request.execQuery(query.getDatatypePropValue(uri, prop), function (data) {
       vm.descPropValue[prop] = data.results.bindings.filter(obj => { //filter non eng
         if (obj.uri.type != 'literal' || !obj.uri['xml:lang'] || obj.uri['xml:lang'] == 'en') {
-          if (obj.uri.value.length > 150) { // move long descriptions
+          if (obj.uri.value.length > 180) { // move long descriptions
             vm.descDatatypeProp = vm.descDatatypeProp.filter(dt => {
               if (dt.uri.value == prop) {
                 vm.long.push( dt );

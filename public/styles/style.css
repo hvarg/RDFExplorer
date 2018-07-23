@@ -138,7 +138,6 @@ visual-query-builder {
   border: 2px solid grey;
   border-radius: 6px;
   width: 100%;
-  min-height: 30px;
   padding-top: 3px;
   font-weight: bold;
   text-align: center;
@@ -146,6 +145,77 @@ visual-query-builder {
   box-sizing: border-box;
   font-family: "Helvetica Neue";
   margin-bottom: 6px;
+  overflow-y: hidden;
+  -webkit-transition: max-height 0.4s ease-in-out;
+  transition: max-height 0.4s ease-in-out;
+  max-height: 30px;
+}
+
+.propRect.active {
+  max-height: 350px;
+}
+
+.propRect > .head {
+  padding-left:8px;
+  padding-right:30px;
+  display:inline-block;
+  width: 100%;
+  text-overflow: ellipsis;
+  /*overflow: hidden;*/
+  height: 1.2em;
+  white-space: nowrap;
+  position: relative;
+}
+
+.propRect > .head > .info {
+  position: absolute;
+  right: 0px;
+  display:inline-block;
+  width: 50%;
+}
+
+.propRect > .head > .info > span {
+  margin-right: 6px;
+}
+
+/* enable absolute positioning */
+.inner-addon {
+  width: calc(100% - 30px);
+  position: relative;
+}
+
+/* style icon */
+.inner-addon .glyphicon {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* align icon */
+.right-addon .glyphicon {
+  right: 0px;
+}
+
+/* add padding  */
+.right-addon input {
+  background-color: #f8f8f8;
+  height: 1.4em;
+  padding: 0px;
+  border: 0px;
+  box-shadow: unset;
+  border-radius: unset;
+  text-align: right;
+  padding-right: 16px;
+  width: 0px;
+  margin-left: calc(100% - 16px);
+  transition: all linear 0.3s;
+}
+
+.right-addon input:focus {
+  border-color: unset;
+  box-shadow: unset;
+  width: 100%;
+  margin-left: 0;
+  border-bottom: 1px solid black;
 }
 
 .propRect > hr {
@@ -153,7 +223,12 @@ visual-query-builder {
   margin-bottom: 3px;
 }
 
-.propRect > .fakeRect {
+.propRect > .fakeRect-container {
+  max-height: 316px;
+  overflow-y: scroll;
+}
+
+.propRect > .fakeRect-container > .fakeRect {
   width: auto;
   display: inline-block;
   margin-right: 6px;
