@@ -92,6 +92,10 @@ function visualQueryBuilder (pGraph) {
       svg.on("mouseup",   function (d) {thisGraph.svgMouseUp.call(thisGraph, d);});
       svg.on("mouseover", function (d) {thisGraph.focused = true;});
       svg.on("mouseout",  function (d) {thisGraph.focused = false;});
+      svg.on("contextmenu", function () {
+        //Do no show context menu, the default menu can break the tools ouside the svg.
+        d3.event.preventDefault();
+      });
 
       // listen for dragging
       var dragSvg = d3.behavior.zoom()
@@ -411,6 +415,13 @@ function visualQueryBuilder (pGraph) {
       });
       thisGraph.circles.each(function (d,i) { //FIXME this is not the best way to do this.
         var thisProp, thisSelection, i;
+        /* Remove properties */
+        if (d.redraw) {
+          d3.select(this).selectAll("."+consts.innerTextClass).remove();
+          d3.select(this).selectAll("."+consts.innerRectClass).remove();
+          d.redraw = false;
+          d.lastPropDraw = 0;
+        }
         /* Update already drawn properties */
         for (i = 0; i < d.lastPropDraw; i++) {
           thisProp = d.properties[i];
@@ -427,7 +438,10 @@ function visualQueryBuilder (pGraph) {
               .attr("height", thisProp.getHeight())
               .attr("x", -thisProp.getWidth()/2)
               .attr("y", thisProp.getOffsetY())
-              .style("stroke", thisGraph.colors(thisProp.getUniq()));
+              .style("stroke", thisGraph.colors(thisProp.getUniq()))
+              .on("contextmenu", d => {
+                menu({ 'delete': function () { thisProp.delete(); thisGraph.updateGraph(); }});
+              });
           thisSelection.append("text")
               .classed(consts.innerTextClass, true)
               .attr("x", 0).attr("y", thisProp.getOffsetY()+ thisProp.getHeight()/2)
@@ -453,17 +467,8 @@ function visualQueryBuilder (pGraph) {
         .on("click",     function(d){ /*d.onClick();*/ })
         .on("dblclick",  function(d){ d.onClick(); })
         .on('contextmenu', function(d){
-            var z = scope.getZoom();
-            var xycoords = d3.mouse(thisGraph.svgG.node());
-            //console.log(z, xycoords); TODO: zoom z[2]
-            xycoords[0] = (xycoords[0] + z[0]);
-            xycoords[1] = (xycoords[1] + z[1]);
-            d3.event.preventDefault();
-            menu(xycoords[0], xycoords[1], {
-                'delete': function () {
-                  d.delete();
-                  thisGraph.updateGraph();
-                }
+            menu({
+              'delete': function () { d.delete(); thisGraph.updateGraph(); }
             });
         })
         .call(thisGraph.drag);
@@ -493,8 +498,8 @@ function visualQueryBuilder (pGraph) {
           .attr("width", element[0].offsetWidth)
           .attr("height", element[0].offsetHeight);
 
-    var menu = contextMenu().items('Edit Variable', '...', 'delete');
     var graph = new GraphCreator(svg, pGraph.nodes, pGraph.edges);
+    var menu = contextMenu().items('Edit Variable', '...', 'delete');
     graph.updateGraph();
     
     scope.update = function () {
@@ -536,27 +541,20 @@ function visualQueryBuilder (pGraph) {
       return "M" + sx + "," + sy + "L" + tx + "," + t.y;
     }
 /*************/
+
 function contextMenu() {
     var height, width, margin = 0.1, // fraction of width
-        items = [], rescale = false,
-        style = {
-            'rect': {
-                'mouseout': {
-                    'fill': 'rgb(244,244,244)',
-                    'stroke': 'white',
-                    'stroke-width': '1px'
-                },
-                'mouseover': {
-                    'fill': 'rgb(200,200,200)'
-                }
-            },
-            'text': {
-                'fill': 'steelblue',
-                'font-size': '13'
-            }
-        };
+        items = [], rescale = false;
 
-    function menu(x, y, f) {
+    function menu(f) {
+        var z = scope.getZoom();
+        var xycoords = d3.mouse(graph.svgG.node());
+        //console.log(z, xycoords); TODO: zoom z[2]
+        var x = (xycoords[0] + z[0]);
+        var y = (xycoords[1] + z[1]);
+        d3.event.preventDefault();
+        d3.event.stopPropagation();
+
         d3.select('.context-menu').remove();
         scaleItems();
 
@@ -566,36 +564,29 @@ function contextMenu() {
             .selectAll('tmp')
             .data(items).enter()
             .append('g').attr('class', 'menu-entry')
-            .style({'cursor': 'pointer'})
-            .on('click', function (d) { if (f[d]) f[d](); })
-            .on('mouseover', function(){
-                d3.select(this).select('rect').style(style.rect.mouseover) })
-            .on('mouseout', function(){
-                d3.select(this).select('rect').style(style.rect.mouseout) });
+            .on('click', function (d) { if (f[d]) f[d](); });
 
         d3.selectAll('.menu-entry')
-            .append('rect')
+            .append('rect').attr('class', 'menu-entry-rect')
             .attr('x', x)
             .attr('y', function(d, i){ return y + (i * height); })
             .attr('width', width)
-            .attr('height', height)
-            .style(style.rect.mouseout);
+            .attr('height', height);
 
         d3.selectAll('.menu-entry')
-            .append('text')
+            .append('text').attr('class', 'menu-entry-text')
             .text(function(d){ return d; })
             .attr('x', x)
             .attr('y', function(d, i){ return y + (i * height); })
             .attr('dy', height - margin / 2)
-            .attr('dx', margin)
-            .style(style.text);
+            .attr('dx', margin);
 
         // Other interactions
         d3.select('body')
             .on('click', function() { d3.select('.context-menu').remove(); });
     }
 
-    menu.items = function(e) {
+    menu.items = function(e) { //insert items to the menu.
         if (!arguments.length) return items;
         for (i in arguments) items.push(arguments[i]);
         rescale = true;
@@ -607,9 +598,8 @@ function contextMenu() {
         if (rescale) {
             d3.select('svg').selectAll('tmp')
                 .data(items).enter()
-                .append('text')
+                .append('text').attr('class', 'menu-entry-text')
                 .text(function(d){ return d; })
-                .style(style.text)
                 .attr('x', -1000)
                 .attr('y', -1000)
                 .attr('class', 'tmp');

@@ -18,8 +18,8 @@ function propertyGraphService (req) {
     this.id = lastNodeId++;
     this.properties = [];
     propertyGraph.nodes.push(this);
-    // last draw prop
     this.lastPropDraw = 0;
+    this.redraw = false;
   }
   
   function Property (parentNode) {
@@ -55,12 +55,20 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.delete = function () {
-    var i, j, edge, prop;
+    var i, j, edge, prop, tmp;
+    // remove all edges with this node as target.
     for (i = propertyGraph.edges.length - 1; i >= 0; i--) {
       edge = propertyGraph.edges[i];
-      if (edge.target === this) 
+      if (edge.target === this) {
+        // remove the property if is the only target
+        tmp = propertyGraph.edges.filter(e => { return (e.source === edge.source); });
+        if (tmp.length == 1) {
+          tmp[0].source.delete();
+        }
         propertyGraph.edges.splice(i, 1);
+      }
     }
+    // remove all edges with source = some property of this node.
     for (j = 0; j < this.properties.length; j++) {
       prop = this.properties[j];
       for (i = propertyGraph.edges.length - 1; i >= 0; i--) {
@@ -69,6 +77,7 @@ function propertyGraphService (req) {
           propertyGraph.edges.splice(i, 1);
       }
     }
+    // remove this node.
     for (i = 0; i < propertyGraph.nodes.length; i++) {
       node = propertyGraph.nodes[i];
       if (node === this) 
@@ -117,6 +126,24 @@ function propertyGraphService (req) {
     if (propertyGraph.onClick)
       propertyGraph.onClick(this);
   };
+
+  Property.prototype.delete = function () {
+    var thisProp = this;
+    var i, edge;
+    // remove all edges 
+    for (i = propertyGraph.edges.length - 1; i >= 0; i--) {
+      edge = propertyGraph.edges[i];
+      if (edge.source === thisProp)
+        propertyGraph.edges.splice(i, 1);
+    }
+    // remove this property from parent and fix index
+    i = thisProp.parentNode.properties.indexOf(thisProp);
+    thisProp.parentNode.properties.splice(i, 1);
+    for (; i < thisProp.parentNode.properties.length; i++)
+      thisProp.parentNode.properties[i].index -= 1;
+    thisProp.parentNode.redraw = true;
+  }
+
   /**************************/
   /* Public stuff */
   propertyGraph.addNode = function () { return new Node(); };

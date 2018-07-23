@@ -96,3 +96,26 @@ path.link.selected {
   font-style: italic;
   color: rgba(0, 0, 0, 0.75);
 }*/
+
+.context-menu {
+}
+
+.context-menu > .menu-entry {
+  cursor: pointer;
+}
+
+.menu-entry-text {
+  fill: steelblue;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.menu-entry-rect {
+  fill: rgb(244,244,244);
+  stroke: white;
+  stroke-width: 1px;
+}
+
+.menu-entry-rect:hover {
+  fill: rgb(200,200,200);
+}
