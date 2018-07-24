@@ -95,8 +95,8 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     console.log(pGraph.toQuery());
   }
   //test
-  $timeout(function () {
-    d = pGraph.addNode();
-    d.x = 300; d.y = 300; d.uri = "http://dbpedia.org/resource/Barack_Obama"; vm.updateSVG();
-  }, 200)
+  //$timeout(function () {
+  //  d = pGraph.addNode();
+  //  d.x = 300; d.y = 300; d.uri = "http://dbpedia.org/resource/Barack_Obama"; vm.updateSVG();
+  //}, 200)
 }
