@@ -23,7 +23,7 @@ visual-query-builder {
   display: none;
 }
 
-.tools {
+#search-container {
   position: absolute;
   left: 10px;
   top: 10px;
@@ -33,7 +33,7 @@ visual-query-builder {
   pointer-events: none;
 }
 
-.tools-right {
+#tools {
   position: absolute;
   right: 10px;
   top: 10px;
@@ -44,6 +44,7 @@ visual-query-builder {
 }
 
 #search-input-container {
+  width: 250px;
   display: inline-block;
   position: relative;
   pointer-events: auto;
@@ -78,7 +79,7 @@ visual-query-builder {
   pointer-events: auto;
 }
 
-#left-panel {
+#search-results-panel {
   border: 1px solid #ccc;
   border-radius: 4px;
   margin-top: 6px;
@@ -89,7 +90,7 @@ visual-query-builder {
   background-color: rgba(255, 255, 255, 0.75);
 }
 
-#left-panel.ng-hide {
+#search-results-panel.ng-hide {
   height: 0;
 }
 

@@ -1,26 +1,19 @@
-div.tools(
-    data-position="right-aligned",
-    data-step="2",
-    data-intro='The results of your search appear here..')
-  button.click-auto.btn.btn-default.align2(type="button", aria-label="Left Align", ng-click="main.test()")
-    span.glyphicon.glyphicon-cog(aria-hidden="true")
-  div#search-input-container
-    form(
-        data-position="bottom-right-aligned",
-        data-step="1",
-        data-intro='Hello!, you can search something here..',
-        ng-submit="main.search()")
-      input#search-input.form-control(
-          type="text",
-          ng-click="main.searchActivate()",
-          ng-model="main.searchInput",
-          ng-class="{'active': main.searchActive}")
-      span#search-icon.glyphicon.glyphicon-search(aria-hidden="true")
-  div#left-panel(ng-hide="!main.searchActive")
-    img(src="/images/spin.svg", style="display: block; margin: 0 auto;", ng-show="main.searchWait")
-    div.alert.alert-warning(role="alert", ng-show="main.noResults")
-      strong No results found!
-    div.fakeRect(
-        draggable="true",
-        ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri.value, '')",
-        ng-repeat="(key, value) in main.searchResults track by $index ") {{ value.label.value }}
+div#tools
+  div#right-buttons(
+    data-position="left-aligned",
+    data-step="3",
+    data-intro='More tools are displayed here!')
+    button.pull-right.btn.btn-default(
+        ng-click="main.test()",
+        type="button", aria-label="Left Align")
+      span.glyphicon.glyphicon-cog(aria-hidden="true")
+    button.pull-right.btn.btn-default(
+        ng-click="main.tutorial()"
+        type="button", aria-label="Right Align")
+      span.glyphicon.glyphicon-info-sign(aria-hidden="true")
+    button.pull-right.btn.btn-default(
+        ng-class="{'active': (main.tool == 'describe') }",
+        type="button", aria-label="Right Align", ng-click="main.toolToggle('describe')")
+      span.glyphicon.glyphicon-th-list(aria-hidden="true")
+  div#right-panel(ng-hide="main.tool == 'none'")
+    include describe

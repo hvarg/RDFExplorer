@@ -11,13 +11,13 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   vm.searchWait = false;
   vm.noResults  = false;
   vm.lastSearch = '';
-  vm.toolr = 'none';
+  vm.tool = 'none';
 
   /* functions */
   vm.updateSVG = null;
   vm.getZoom = null;
   vm.tutorial = tutorial;
-  vm.toolrToggle = toolrToggle;
+  vm.toolToggle = toolToggle;
   vm.search = search;
   vm.searchToggle = searchToggle;
   vm.searchActivate = searchActivate;
@@ -28,13 +28,12 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   /* scope */
   $scope.drag = drag;
   $scope.drop = drop;
-  $scope.$on('toolr', function(event, data) { vm.toolr = data; });
+  $scope.$on('tool', function(event, data) { vm.tool = data; });
   $scope.$on('setSelected', function(event, data) { vm.selected = data; });
 
-  /* Tools display functions */
-  function toolrToggle (panel) {
-    if (vm.toolr == panel) vm.toolr = 'none';
-    else vm.toolr = panel;
+  /* Tools display function */
+  function toolToggle (panel) {
+    vm.tool = (vm.tool == panel) ? 'none' : panel;
   }
 
   function searchToggle() { vm.searchActive = !vm.searchActive; }

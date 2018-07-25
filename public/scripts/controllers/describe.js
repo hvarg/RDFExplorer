@@ -31,9 +31,8 @@ function DescribeCtrl ($scope, pGraph, query, request) {
     request.execQuery(query.getDatatypeProp(obj.uri), function (data) {
       vm.descDatatypeProp = data.results.bindings;
     });
-    $scope.$emit('toolr', 'describe');
+    $scope.$emit('tool', 'describe');
     $scope.$emit('setSelected', obj);
-    $scope.$apply(); //TODO maybe this should go in main.
   };
 
   function getObjPropValue (uri, prop) {
