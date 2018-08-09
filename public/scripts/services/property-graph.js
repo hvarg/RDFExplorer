@@ -11,7 +11,8 @@ function propertyGraphService (req) {
   var propertyGraph = {
     nodes: [],
     edges: [],
-    onClick: null,
+    describe: null,
+    edit: null,
   }
 
   function Node () {
@@ -85,11 +86,6 @@ function propertyGraphService (req) {
     }
   };
 
-  Node.prototype.onClick = function () {
-    if (propertyGraph.onClick)
-      propertyGraph.onClick(this);
-  };
-
   /**************************/
   /*** Property.prototype ***/
   Property.prototype.getWidth = function () { return this.parentNode.getWidth() - diffParentChild; };
@@ -122,11 +118,6 @@ function propertyGraphService (req) {
     return '2';
   };
 
-  Property.prototype.onClick = function () {
-    if (propertyGraph.onClick)
-      propertyGraph.onClick(this);
-  };
-
   Property.prototype.delete = function () {
     var thisProp = this;
     var i, edge;
@@ -145,7 +136,29 @@ function propertyGraphService (req) {
   }
 
   /**************************/
-  /* Public stuff */
+  /**** from controllers ****/
+  Node.prototype.describe = function () {
+    if (propertyGraph.describe)
+      propertyGraph.describe(this);
+  };
+
+  Property.prototype.describe = function () {
+    if (propertyGraph.describe)
+      propertyGraph.describe(this);
+  };
+
+  Node.prototype.edit = function () {
+    if (propertyGraph.edit)
+      propertyGraph.edit(this);
+  };
+
+  Property.prototype.edit = function () {
+    if (propertyGraph.edit)
+      propertyGraph.edit(this);
+  };
+
+  /**************************/
+  /****** Public stuff ******/
   propertyGraph.addNode = function () { return new Node(); };
   propertyGraph.addEdge = function (source, target) {
     /* FIXME: duplicate edges */
@@ -155,8 +168,6 @@ function propertyGraphService (req) {
       return new Edge(source.newProp(), target);
     }
   };
-
-  function u (l) {return ' <'+l.uri+'>';}
 
   propertyGraph.toQuery = function () {
     var v = {}, i, m='', q = '';
@@ -176,7 +187,10 @@ function propertyGraphService (req) {
     }
     return 'SELECT'+q+' WHERE {\n' +m +'} ';
   };
-  
 
+  function u (l) {
+    return ' <'+l.uri+'>';
+  }
+  
   return propertyGraph;
 }

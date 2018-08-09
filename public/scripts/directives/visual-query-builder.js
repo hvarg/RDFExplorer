@@ -440,7 +440,7 @@ function visualQueryBuilder (pGraph) {
               .attr("y", thisProp.getOffsetY())
               .style("stroke", thisGraph.colors(thisProp.getUniq()))
               .on("contextmenu", d => {
-                menu({ 'delete': function () { thisProp.delete(); thisGraph.updateGraph(); }});
+                menu({ 'Remove': function () { thisProp.delete(); thisGraph.updateGraph(); }});
               });
           thisSelection.append("text")
               .classed(consts.innerTextClass, true)
@@ -464,11 +464,13 @@ function visualQueryBuilder (pGraph) {
         .on("mouseout",  function(d){ d3.select(this).classed(consts.connectClass, false); })
         .on("mousedown", function(d){ thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d); })
         .on("mouseup",   function(d){ thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d); })
-        .on("click",     function(d){ /*d.onClick();*/ })
-        .on("dblclick",  function(d){ d.onClick(); })
+        .on("click",     function(d){ /* Do something TODO*/ })
+        .on("dblclick",  function(d){ d.describe(); })
         .on('contextmenu', function(d){
             menu({
-              'delete': function () { d.delete(); thisGraph.updateGraph(); }
+              'Describe': function () { d.describe(); },
+              'Edit':     function () { d.edit(); },
+              'Remove':   function () { d.delete(); thisGraph.updateGraph(); }
             });
         })
         .call(thisGraph.drag);
@@ -499,7 +501,7 @@ function visualQueryBuilder (pGraph) {
           .attr("height", element[0].offsetHeight);
 
     var graph = new GraphCreator(svg, pGraph.nodes, pGraph.edges);
-    var menu = contextMenu().items('Edit Variable', '...', 'delete');
+    var menu = contextMenu().items('Describe', 'Edit', '...', 'Remove');
     graph.updateGraph();
     
     scope.update = function () {

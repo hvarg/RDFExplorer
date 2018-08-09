@@ -12,7 +12,7 @@ function DescribeCtrl ($scope, pGraph, query, request) {
   vm.raw = [];
   vm.long = [];
 
-  pGraph.onClick = describe;
+  pGraph.describe = describe;
   vm.getObjPropValue = getObjPropValue;
   vm.getDatatypePropValue = getDatatypePropValue;
 

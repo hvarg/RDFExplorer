@@ -17,6 +17,12 @@ div#tools
         ng-class="{'active': (main.tool == 'describe') }",
         type="button", aria-label="Right Align")
       span.glyphicon.glyphicon-th-list(aria-hidden="true")
+    button.pull-right.btn.btn-default(
+        ng-click="main.toolToggle('edit')",
+        ng-class="{'active': (main.tool == 'edit') }",
+        type="button", aria-label="Right Align")
+      span.glyphicon.glyphicon-pencil(aria-hidden="true")
   div#right-panel(ng-hide="main.tool == 'none'")
     include describe
     include settings
+    include edit
