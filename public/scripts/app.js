@@ -1,4 +1,5 @@
 angular.module('rdfvis', [
+  'angular-loading-bar',
   'ngAnimate',
   'ui.bootstrap',
   'rdfvis.services',
@@ -9,3 +10,10 @@ angular.module('rdfvis', [
 angular.module('rdfvis.services', []);
 angular.module('rdfvis.controllers', []);
 angular.module('rdfvis.directives', []);
+
+// angular-loading-bar spinner off
+angular.module('rdfvis').config([
+  'cfpLoadingBarProvider', cfpLoadingBarProvider => {
+    cfpLoadingBarProvider.includeSpinner = false;
+  }
+]);
