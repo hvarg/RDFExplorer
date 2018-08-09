@@ -11,10 +11,10 @@ function requestService (settings, $http) {
     return str.join("&");
   }
 
-  function execQuery (query, callback) {
-    $http({
+  function execQuery (query, callback, cErr) {
+    return $http({
         method: 'post',
-        url: 'https://dbpedia.org/sparql',
+        url: settings.endpoint.url,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         transformRequest: toForm, 
         data: { query: query, format: "application/sparql-results+json" }
@@ -25,9 +25,12 @@ function requestService (settings, $http) {
           tmp = response.data.results.bindings[i];
           if (tmp.label) label[tmp.uri.value] = tmp.label.value;
         }
-        callback(response.data);
+        return callback(response.data);
       },
-      function onError   (response) {console.log('Error: ', response);}
+      function onError   (response) {
+        console.log('Error ' + response.status + ':' + response.data);
+        return cErr(response);
+      }
     );
   }
 

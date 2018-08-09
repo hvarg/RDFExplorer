@@ -22,23 +22,24 @@ function queryService (settings) {
     return h;
   }
 
+  /* TODO: fix language filter and exact match for bif*/
   function search (keyword, type, limit, offset) {
-    type = type || settings.selectedClass;
+    type = type || settings.searchClass.uri.value;
     limit = limit || settings.resultLimit;
     prefixes = ['rdf', 'rdfs'];
-    q  = 'SELECT ?uri ?label WHERE {\n';
+    q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
     q += '  ?uri rdf:type   ' + u(type) + ' ;\n';
     q += '       rdfs:label ?label .\n';
-    switch (settings.endpointType) {
+    switch (settings.endpoint.type) {
       case 'virtuoso':
-        q += '  ?label bif:contains "' + keyword + '" .\n';
+        q += '  ?label bif:contains "\'' + keyword + '\'" .\n';
         break;
       case 'fuseki':
         q += '  ?uri text:query (rdfs:label "' + keyword + '" '+ limit +') .\n';
         prefixes.push('text');
         break;
       default:
-        q += '  FILTER regex(?label, "' + keyword + '", "i")\n'
+        q += '  FILTER regex(?label, ".*' + keyword + '.*", "i")\n'
     }
     q += '  FILTER (lang(?label) = "en")\n';
     q += '} LIMIT ' + limit;

@@ -30,6 +30,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   $scope.drop = drop;
   $scope.$on('tool', function(event, data) { vm.tool = data; });
   $scope.$on('setSelected', function(event, data) { vm.selected = data; });
+  $scope.$on('newSettings', function(event, data) { vm.lastSearch = ''; });
 
   /* Tools display function */
   function toolToggle (panel) {
@@ -40,20 +41,26 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   function searchActivate() { vm.searchActive = true; }
   function searchDeactivate() { vm.searchActive = false; }
 
+  function onSearch (data) {
+    vm.searchResults = data.results.bindings;
+    vm.searchWait = false;
+    if (vm.searchResults.length == 0) vm.noResults = true;
+  }
+
+  function onSearchErr (resp) {
+    vm.searchWait = false;
+    vm.noResults = false;
+    vm.searchErr = true;
+    vm.lastSearch = '';
+  }
+
   function search () {
     if (vm.searchInput && vm.searchInput != vm.lastSearch) {
       var input = vm.searchInput;
+      vm.lastSearch = input;
       vm.searchWait = true;
       vm.noResults  = false; 
-      q = query.search(input);
-      request.execQuery(q, function (data) {
-        vm.searchResults = data.results.bindings;
-        vm.lastSearch = input;
-        vm.searchWait = false;
-        if (vm.searchResults.length == 0) vm.noResults = true;
-        /*console.log(data);
-        console.log(vm.searchResults);*/
-      });
+      request.execQuery(query.search(input), onSearch, onSearchErr);
     }
     vm.searchActive = true;
   }

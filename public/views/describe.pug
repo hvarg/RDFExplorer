@@ -1,4 +1,4 @@
-div(ng-controller="DescribeCtrl as ctrl")
+div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   h1(style="text-align: center;") {{ ctrl.selected.getLabel() }}
   hr
   div(ng-repeat="(key, value) in ctrl.long track by $index", ng-init="value.more = false;")
