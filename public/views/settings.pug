@@ -11,24 +11,24 @@ div(ng-show="main.tool == 'settings'", ng-controller="SettingsCtrl as ctrl")
   form
 
     div.form-group
-      label(for="endpoint-url") Endpoint URL:
-      input.form-control#endpoint-url(type="url", placeholder="URI", ng-model="ctrl.endpoint.url")
+      label(for="settings-endpoint-url") Endpoint URL:
+      input#settings-endpoint-url.form-control(type="url", placeholder="URI", ng-model="ctrl.endpoint.url")
     .row
       .col-xs-7
         .input-group
-          span.input-group-addon Endpoint Type:
-          select.form-control(ng-model="ctrl.endpoint.type", style="-webkit-appearance:none;")
+          label.input-group-addon(for="settings-endpoint-type") Endpoint Type:
+          select#settings-endpoint-type.form-control(ng-model="ctrl.endpoint.type", style="-webkit-appearance:none;")
             option(value="") Other
             option(value="virtuoso") Virtuoso
             option(value="fuseki") Fuseki
       .col-xs-5(style="padding-left:0px;")
         .input-group
-          span.input-group-addon Limit:
-          input.form-control(type="number",value="10", ng-model="ctrl.limit")
+          label.input-group-addon(for="settings-limit") Limit:
+          input#settings-limit.form-control(type="number",value="10", ng-model="ctrl.limit")
 
     div.form-group
-      label.control-label(for="selected-class") Search class:
-      input.form-control#selected-class(type="text",
+      label.control-label(for="settings-selected-class") Search class:
+      input#settings-selected-class.form-control(type="text",
           autocomplete="off",
           placeholder="Class",
           ng-model="ctrl.class",

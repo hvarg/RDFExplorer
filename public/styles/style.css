@@ -13,11 +13,6 @@ visual-query-builder {
   height: 100%;
 }
 
-#d3vqb {
-  /*background: red;*/
-  /*border: 1px solid red;*/
-}
-
 /* Do no show introjs number */
 .introjs-helperNumberLayer {
   display: none;
@@ -30,16 +25,6 @@ visual-query-builder {
   bottom:10px;
   z-index: 20;
   width: 250px;
-  pointer-events: none;
-}
-
-#tools {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  bottom:10px;
-  z-index: 20;
-  width: 400px;
   pointer-events: none;
 }
 
@@ -75,10 +60,6 @@ visual-query-builder {
   padding-right: 12px;
 }
 
-.click-auto {
-  pointer-events: auto;
-}
-
 #search-results-panel {
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -92,6 +73,16 @@ visual-query-builder {
 
 #search-results-panel.ng-hide {
   height: 0;
+}
+
+#tools {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  bottom:10px;
+  z-index: 20;
+  width: 400px;
+  pointer-events: none;
 }
 
 #right-panel {
@@ -108,10 +99,6 @@ visual-query-builder {
 
 #right-panel.ng-hide {
   height: 0;
-}
-
-.align2 {
-  margin-top: -2px;
 }
 
 .fakeRect {
@@ -234,12 +221,6 @@ visual-query-builder {
   display: inline-block;
   margin-right: 6px;
   padding: 3px;
-}
-
-.btn.active {
-  color: #333;
-  background-color: #e6e6e6;
-  border-color: #adadad;
 }
 
 #right-buttons {
