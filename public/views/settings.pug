@@ -29,6 +29,7 @@ div(ng-show="main.tool == 'settings'", ng-controller="SettingsCtrl as ctrl")
     div.form-group
       label.control-label(for="selected-class") Search class:
       input.form-control#selected-class(type="text",
+          autocomplete="off",
           placeholder="Class",
           ng-model="ctrl.class",
           typeahead-template-url="customTemplate.html",

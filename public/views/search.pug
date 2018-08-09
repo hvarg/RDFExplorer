@@ -9,6 +9,7 @@ div#search-container(
         data-intro='Hello!, you can search something here..',
         ng-submit="main.search()")
       input#search-input.form-control(
+          autocomplete="off",
           type="text",
           ng-click="main.searchActivate()",
           ng-model="main.searchInput",
