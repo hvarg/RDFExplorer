@@ -230,6 +230,7 @@ visual-query-builder {
   margin-left: 4px;
 }
 
+/* To fix typeahead (bootstrap 3) */
 .dropdown-menu>li>a {
   display: block;
   padding: 3px 20px;
@@ -239,9 +240,43 @@ visual-query-builder {
   color: #333;
   white-space: nowrap;
 }
- .dropdown-menu>.active>a, .dropdown-menu>.active>a:focus, .dropdown-menu>.active>a:hover {
+
+.dropdown-menu>.active>a, .dropdown-menu>.active>a:focus, .dropdown-menu>.active>a:hover {
   color: #fff;
   text-decoration: none;
   background-color: #337ab7;
   outline: 0;
+}
+
+.input-group-typeahead > div + div {
+  flex: 1 1 auto;
+}
+
+#settings-selected-class {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-right: 40px;
+}
+
+[uib-typeahead-popup].dropdown-menu {
+  width: 100%;
+  overflow-x: scroll;
+}
+/***/
+
+.loading {
+  background-image: url("/images/spin.svg");
+  background-size: 25px 25px;
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: calc(100% - 10px);
+}
+
+
+.error {
+  background-image: url("/images/error.svg");
+  background-size: 15px 15px;
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: calc(100% - 10px);
 }

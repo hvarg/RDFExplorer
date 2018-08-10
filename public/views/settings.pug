@@ -8,40 +8,59 @@ script(type="text/ng-template", id="customTemplate.html")
 div(ng-show="main.tool == 'settings'", ng-controller="SettingsCtrl as ctrl")
   h1(style="text-align: center;") Settings
   hr
-  form
 
-    div.form-group
-      label(for="settings-endpoint-url") Endpoint URL:
-      input#settings-endpoint-url.form-control(type="url", placeholder="URI", ng-model="ctrl.endpoint.url")
-    .row
-      .col-xs-7
+  h5 Endpoint configuration:
+  form
+    .form-row
+      .form-group.col-md-6
         .input-group
-          label.input-group-addon(for="settings-endpoint-type") Endpoint Type:
-          select#settings-endpoint-type.form-control(ng-model="ctrl.endpoint.type", style="-webkit-appearance:none;")
+          .input-group-prepend
+            label.input-group-text(for="settings-endpoint-label") Name:
+          input#settings-endpoint-label.form-control(type="text", ng-model="ctrl.endpoint.label")
+      .form-group.col-md-6
+        .input-group
+          .input-group-prepend
+            label.input-group-text(for="settings-endpoint-type") Type:
+          select#settings-endpoint-type.custom-select(ng-model="ctrl.endpoint.type")
             option(value="") Other
             option(value="virtuoso") Virtuoso
             option(value="fuseki") Fuseki
-      .col-xs-5(style="padding-left:0px;")
-        .input-group
-          label.input-group-addon(for="settings-limit") Limit:
-          input#settings-limit.form-control(type="number",value="10", ng-model="ctrl.limit")
 
-    div.form-group
-      label.control-label(for="settings-selected-class") Search class:
-      input#settings-selected-class.form-control(type="text",
-          autocomplete="off",
-          placeholder="Class",
-          ng-model="ctrl.class",
-          typeahead-template-url="customTemplate.html",
-          typeahead-show-hint="true",
-          uib-typeahead-wait-ms="300",
-          typeahead-min-length="3",
-          uib-typeahead="class as class.label.value for class in ctrl.getClasses($viewValue)",
-          typeahead-loading="ctrl.loading",
-          typeahead-no-results="ctrl.noResults")
-      i(ng-show="ctrl.loading").fa.fa-refresh
-      div(ng-show="ctrl.noResults")
-        i.fa.fa-remove No Results Found
+    .form-row
+      .form-group.col-md-12
+        .input-group
+          .input-group-prepend
+            label.input-group-text(for="settings-endpoint-url") URL:
+          input#settings-endpoint-url.form-control(type="url", placeholder="URI", ng-model="ctrl.endpoint.url")
+
+  h5.text Search configuration:
+  form
+    .form-row
+      .form-group.col-md-12
+        // The typeahead adds a relative div as parent of the label, .input-group-typeahead to fix that.
+        .input-group.input-group-typeahead
+          .input-group-prepend
+            label.input-group-text(for="settings-selected-class") Class:
+          input#settings-selected-class.form-control(
+              type="text",
+              autocomplete="off",
+              ng-class="{'loading': ctrl.loading, 'error': ctrl.noResults}",
+              placeholder="Write a class name to search",
+              ng-model="ctrl.class",
+              typeahead-template-url="customTemplate.html",
+              typeahead-show-hint="true",
+              uib-typeahead-wait-ms="300",
+              typeahead-min-length="3",
+              uib-typeahead="class as class.label.value for class in ctrl.getClasses($viewValue)",
+              typeahead-loading="ctrl.loading",
+              typeahead-no-results="ctrl.noResults")
+
+    .form-row
+      .form-group.col-md-5
+        .input-group
+          .input-group-prepend
+            label.input-group-text(for="settings-limit") Limit:
+          input#settings-limit.form-control(type="number", ng-model="ctrl.limit")
 
     button.btn.btn-info(type="button", ng-click="ctrl.default()") Default
     button.pull-right.btn.btn-primary(type="button", ng-click="ctrl.save()") Save
