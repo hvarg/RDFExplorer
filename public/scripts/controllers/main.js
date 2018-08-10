@@ -43,6 +43,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
 
   function onSearch (data) {
     vm.searchResults = data.results.bindings;
+    vm.searchError = false;
     vm.searchWait = false;
     if (vm.searchResults.length == 0) vm.noResults = true;
   }
@@ -50,7 +51,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   function onSearchErr (resp) {
     vm.searchWait = false;
     vm.noResults = false;
-    vm.searchErr = true;
+    vm.searchError = true;
     vm.lastSearch = '';
   }
 

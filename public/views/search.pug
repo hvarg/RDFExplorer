@@ -13,10 +13,10 @@ div#search-container(
           type="text",
           ng-click="main.searchActivate()",
           ng-model="main.searchInput",
-          ng-class="{'active': main.searchActive}")
-      span#search-icon.glyphicon.glyphicon-search(aria-hidden="true")
+          ng-class="{'active': main.searchActive, 'loading': main.searchWait, 'error': main.searchError }")
+      span#search-icon.fa.fa-search(aria-hidden="true")
   div#search-results-panel(ng-hide="!main.searchActive")
-    img(src="/images/spin.svg", style="display: block; margin: 0 auto;", ng-show="main.searchWait")
+    //img(src="/images/spin.svg", style="display: block; margin: 0 auto;", ng-show="main.searchWait")
     div.alert.alert-warning(role="alert", ng-show="main.noResults")
       strong No results found!
     div.fakeRect(
