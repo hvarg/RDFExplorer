@@ -145,13 +145,10 @@ visual-query-builder {
 
 .propRect > .head {
   padding-left:8px;
-  padding-right:30px;
+  padding-right:50px;
   display:inline-block;
   width: 100%;
-  text-overflow: ellipsis;
-  /*overflow: hidden;*/
   height: 1.2em;
-  white-space: nowrap;
   position: relative;
 }
 
@@ -173,13 +170,13 @@ visual-query-builder {
 }
 
 /* style icon */
-.inner-addon .glyphicon {
+.inner-addon .fa {
   position: absolute;
   pointer-events: none;
 }
 
 /* align icon */
-.right-addon .glyphicon {
+.right-addon .fa {
   right: 0px;
 }
 
@@ -191,7 +188,6 @@ visual-query-builder {
   border: 0px;
   box-shadow: unset;
   border-radius: unset;
-  text-align: right;
   padding-right: 16px;
   width: 0px;
   margin-left: calc(100% - 16px);
@@ -199,6 +195,8 @@ visual-query-builder {
 }
 
 .right-addon input:focus {
+  padding-left: 5px;
+  background-color: rgba(248, 248, 248, 0.95);
   border-color: unset;
   box-shadow: unset;
   width: 100%;
@@ -230,4 +228,20 @@ visual-query-builder {
 #right-buttons > button {
   pointer-events: auto;
   margin-left: 4px;
+}
+
+.dropdown-menu>li>a {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: 400;
+  line-height: 1.42857143;
+  color: #333;
+  white-space: nowrap;
+}
+ .dropdown-menu>.active>a, .dropdown-menu>.active>a:focus, .dropdown-menu>.active>a:hover {
+  color: #fff;
+  text-decoration: none;
+  background-color: #337ab7;
+  outline: 0;
 }

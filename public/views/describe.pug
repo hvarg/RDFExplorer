@@ -5,8 +5,8 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     strong {{ value.label.value }} :&nbsp;
     div(ng-if="!value.more" ,style="display: inline;") {{ ctrl.descPropValue[value.uri.value][0].uri.value.slice(0,180) + '...'}}
     div(ng-if="value.more" ,style="display: inline;") {{ ctrl.descPropValue[value.uri.value][0].uri.value }}
-    a(ng-if="!value.more", ng-click="value.more = !value.more") [more]
-    a(ng-if="value.more", ng-click="value.more = !value.more") [less]
+    a(href="", ng-if="!value.more", ng-click="value.more = !value.more") [more]
+    a(href="", ng-if="value.more", ng-click="value.more = !value.more") [less]
   table.table.table-hover
     tbody
       tr(ng-repeat="(key, value) in ctrl.descDatatypeProp track by $index",
@@ -20,14 +20,14 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
       ng-init="ctrl.getObjPropValue(ctrl.selected.uri, value.uri.value); value.active = false; value.filter = '';",
       ng-class="{'active': value.active}")
     div.head
-      div(style="display:inline-block; width:100%;",
+      div.text-truncate(style="display:inline-block; width:100%;",
           ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().value.uri.value)",
           draggable="true") {{ value.label.value }}
       div.info
-        span.pull-right.glyphicon.glyphicon-menu-down(ng-show="!value.active", aria-hidden="true", ng-click="value.active = !value.active")
-        span.pull-right.glyphicon.glyphicon-menu-up(ng-show="value.active", aria-hidden="true", ng-click="value.active = !value.active")
+        span.pull-right.fa(aria-hidden="true", ng-click="value.active = !value.active",
+                           ng-class="value.active ? 'fa-chevron-up' : 'fa-chevron-down'")
         div.inner-addon.right-addon
-          i.glyphicon.glyphicon-search(aria-hidden="true")
+          i.fa.fa-search(aria-hidden="true")
           input.form-control(type="text", ng-model="value.filter")
     hr
     div.fakeRect-container

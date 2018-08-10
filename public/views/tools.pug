@@ -3,25 +3,25 @@ div#tools
     data-position="left-aligned",
     data-step="3",
     data-intro='More tools are displayed here!')
-    button.pull-right.btn.btn-default(
+    button.pull-right.btn.btn-outline-secondary(
         ng-click="main.tutorial()"
         type="button", aria-label="Right Align")
-      span.glyphicon.glyphicon-info-sign(aria-hidden="true")
-    button.pull-right.btn.btn-default(
+      span.fa.fa-info(aria-hidden="true")
+    button.pull-right.btn.btn-outline-secondary(
         ng-click="main.toolToggle('settings')",
         ng-class="{'active': (main.tool == 'settings') }",
         type="button", aria-label="Left Align")
-      span.glyphicon.glyphicon-cog(aria-hidden="true")
-    button.pull-right.btn.btn-default(
+      span.fa.fa-cogs(aria-hidden="true")
+    button.pull-right.btn.btn-outline-secondary(
         ng-click="main.toolToggle('describe')",
         ng-class="{'active': (main.tool == 'describe') }",
         type="button", aria-label="Right Align")
-      span.glyphicon.glyphicon-th-list(aria-hidden="true")
-    button.pull-right.btn.btn-default(
+      span.fa.fa-list(aria-hidden="true")
+    button.pull-right.btn.btn-outline-secondary(
         ng-click="main.toolToggle('edit')",
         ng-class="{'active': (main.tool == 'edit') }",
         type="button", aria-label="Right Align")
-      span.glyphicon.glyphicon-pencil(aria-hidden="true")
+      span.fa.fa-pencil(aria-hidden="true")
   div#right-panel(ng-hide="main.tool == 'none'")
     include describe
     include settings

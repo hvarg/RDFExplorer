@@ -39,9 +39,9 @@ div(ng-show="main.tool == 'settings'", ng-controller="SettingsCtrl as ctrl")
           uib-typeahead="class as class.label.value for class in ctrl.getClasses($viewValue)",
           typeahead-loading="ctrl.loading",
           typeahead-no-results="ctrl.noResults")
-      i(ng-show="ctrl.loading").glyphicon.glyphicon-refresh
+      i(ng-show="ctrl.loading").fa.fa-refresh
       div(ng-show="ctrl.noResults")
-        i.glyphicon.glyphicon-remove No Results Found
+        i.fa.fa-remove No Results Found
 
     button.btn.btn-info(type="button", ng-click="ctrl.default()") Default
     button.pull-right.btn.btn-primary(type="button", ng-click="ctrl.save()") Save
