@@ -1,3 +1,40 @@
 div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
   h1(style="text-align: center;") Editing {{ ctrl.selected.getLabel() }}
   hr
+
+  form
+    .form-row
+      .input-group.col-md-12
+        .input-group-prepend
+          label.input-group-text(for="edit-var-name") Variable name
+        span#edit-var-name-prefix ?
+        input#edit-var-name.form-control(
+            type="text",
+            autocomplete="off",
+            ng-model="ctrl.label",
+            placeholder="{{ ctrl.selected.id }}")
+
+    .form-row.mt-2
+      .form-group.col-md-12
+        // The typeahead adds a relative div as parent of the label, .input-group-typeahead to fix that.
+        .input-group.input-group-typeahead
+          .input-group-prepend
+            label.input-group-text(for="edit-var-class") Class:
+          input#edit-var-class.form-control(
+              type="text",
+              autocomplete="off",
+              ng-class="{'loading': ctrl.loading, 'error': ctrl.noResults}",
+              placeholder="Write a class name to search",
+              ng-model="ctrl.class",
+              typeahead-template-url="customTemplate.html",
+              typeahead-show-hint="true",
+              uib-typeahead-wait-ms="5000",
+              typeahead-min-length="3",
+              uib-typeahead="class as class.label.value for class in ctrl.getClasses($viewValue)",
+              typeahead-loading="ctrl.loading",
+              typeahead-no-results="ctrl.noResults")
+
+  div
+    hr
+    pre class: {{ctrl.class | json}}
+    pre selected: {{ctrl.selected | json}}
