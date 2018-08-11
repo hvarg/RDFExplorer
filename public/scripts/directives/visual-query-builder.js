@@ -59,6 +59,19 @@ function visualQueryBuilder (pGraph) {
           .append('svg:path')
           .attr('d', 'M0,-5L10,0L0,5');
 
+      // circle at the start
+      defs.append('svg:marker')
+          .attr('id', 'start-circle')
+          .attr('viewBox', '0 -5 12 12')
+          .attr('refX', 2)
+          .attr('refY', 2)
+          .attr('markerWidth', 3)
+          .attr('markerHeight', 3)
+          .append('svg:circle')
+          .attr('r',"2")
+          .attr('cx',"2")
+          .attr('cy',"2")
+
       thisGraph.svg = svg;
       thisGraph.svgG = svg.append("g")
           .classed(thisGraph.consts.graphClass, true);
@@ -391,7 +404,9 @@ function visualQueryBuilder (pGraph) {
       thisGraph.circles = thisGraph.circles.data(thisGraph.nodes, function(d){ return d.id;});
 
       // update existing paths
-      thisGraph.paths.style('marker-end', 'url(#end-arrow)')
+      thisGraph.paths
+        .style('marker-end', 'url(#end-arrow)')
+        .style('marker-start', 'url(#start-circle)')
         .classed(consts.selectedClass, function(d){ return d === state.selectedEdge; })
         .attr("d", function(d){ return smartArrow(d.source, d.target); });
 
@@ -399,6 +414,7 @@ function visualQueryBuilder (pGraph) {
       thisGraph.paths.enter()
         .append("path")
         .style('marker-end','url(#end-arrow)')
+        .style('marker-start', 'url(#start-circle)')
         .classed("link", true)
         .attr("d", function(d){ return smartArrow(d.source, d.target); })
         .on("mousedown", function(d){
