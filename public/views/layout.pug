@@ -13,6 +13,8 @@ html(lang="en", ng-app="rdfvis")
     link(rel="stylesheet", href="//cdnjs.cloudflare.com/ajax/libs/angular-loading-bar/0.9.0/loading-bar.min.css")
     // IntroJS
     link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/2.9.3/introjs.min.css")
+    // CodeMirror
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.39.2/codemirror.min.css")
     // My CSSs
     link(rel="stylesheet", href="styles/style.css")
     link(rel="stylesheet", href="styles/graph.css")
@@ -31,18 +33,21 @@ html(lang="en", ng-app="rdfvis")
     script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-animate.js")
     // D3
     script(src="https://d3js.org/d3.v3.min.js")
-    //Intro
+    // IntroJS
     script(src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/2.9.3/intro.min.js")
     //Ui bootstrap
     script(src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.0/ui-bootstrap-tpls.min.js")
     // angular-loading-bar
-    link(rel="stylesheet", href="//cdnjs.cloudflare.com/ajax/libs/angular-loading-bar/0.9.0/loading-bar.min.css")
     script(src="//cdnjs.cloudflare.com/ajax/libs/angular-loading-bar/0.9.0/loading-bar.min.js")
+    // CodeMirror
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.39.2/codemirror.min.js")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.39.2/mode/sparql/sparql.min.js")
     // My scripts
     script(src="scripts/app.js")
     script(src="scripts/controllers/main.js")
     script(src="scripts/controllers/describe.js")
     script(src="scripts/controllers/edit.js")
+    script(src="scripts/controllers/sparql.js")
     script(src="scripts/controllers/settings.js")
     script(src="scripts/directives/visual-query-builder.js")
     script(src="scripts/services/settings.js")

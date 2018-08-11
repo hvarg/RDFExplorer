@@ -22,7 +22,13 @@ div#tools
         ng-class="{'active': (main.tool == 'edit') }",
         type="button", aria-label="Right Align")
       span.fa.fa-pencil(aria-hidden="true")
+    button.pull-right.btn.btn-outline-secondary(
+        ng-click="main.toolToggle('sparql')",
+        ng-class="{'active': (main.tool == 'sparql') }",
+        type="button", aria-label="Right Align")
+      span.fa.fa-code(aria-hidden="true")
   div#right-panel(ng-hide="main.tool == 'none'")
     include describe
     include settings
     include edit
+    include sparql
