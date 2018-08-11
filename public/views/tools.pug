@@ -10,16 +10,18 @@ div#tools
     button.pull-right.btn.btn-outline-secondary(
         ng-click="main.toolToggle('settings')",
         ng-class="{'active': (main.tool == 'settings') }",
-        type="button", aria-label="Left Align")
+        type="button", aria-label="Right Align")
       span.fa.fa-cogs(aria-hidden="true")
     button.pull-right.btn.btn-outline-secondary(
         ng-click="main.toolToggle('describe')",
         ng-class="{'active': (main.tool == 'describe') }",
+        ng-disabled="!main.selected || main.selected.isVariable()",
         type="button", aria-label="Right Align")
       span.fa.fa-list(aria-hidden="true")
     button.pull-right.btn.btn-outline-secondary(
         ng-click="main.toolToggle('edit')",
         ng-class="{'active': (main.tool == 'edit') }",
+        ng-disabled="!main.selected || !main.selected.isVariable()",
         type="button", aria-label="Right Align")
       span.fa.fa-pencil(aria-hidden="true")
     button.pull-right.btn.btn-outline-secondary(

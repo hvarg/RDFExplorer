@@ -55,6 +55,10 @@ function propertyGraphService (req) {
     return new Property(this);
   };
 
+  Node.prototype.isVariable = function () {
+    return !(this.uri);
+  };
+
   Node.prototype.delete = function () {
     var i, j, edge, prop, tmp;
     // remove all edges with this node as target.

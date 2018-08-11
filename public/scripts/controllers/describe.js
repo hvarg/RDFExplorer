@@ -4,6 +4,7 @@ DescribeCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'reque
 
 function DescribeCtrl ($scope, pGraph, query, request) {
   var vm = this;
+  var lastSelectedUri = null;
   vm.selected = null;
   vm.descObjProp = [];
   vm.descDatatypeProp = [];
@@ -17,22 +18,25 @@ function DescribeCtrl ($scope, pGraph, query, request) {
   vm.getDatatypePropValue = getDatatypePropValue;
 
   function describe (obj) {
-    vm.selected = obj;
-    vm.descObjProp = [];
-    vm.descDatatypeProp = [];
-    vm.descPropValue = {};
-    
-    vm.raw = [];
-    vm.long = [];
-    
-    request.execQuery(query.getObjProp(obj.uri), function (data) {
-      vm.descObjProp = data.results.bindings;
-    });
-    request.execQuery(query.getDatatypeProp(obj.uri), function (data) {
-      vm.descDatatypeProp = data.results.bindings;
-    });
-    $scope.$emit('tool', 'describe');
+    if (obj.uri != lastSelectedUri) {
+      lastSelectedUri = obj.uri;
+      vm.selected = obj;
+      vm.descObjProp = [];
+      vm.descDatatypeProp = [];
+      vm.descPropValue = {};
+      
+      vm.raw = [];
+      vm.long = [];
+      
+      request.execQuery(query.getObjProp(obj.uri), function (data) {
+        vm.descObjProp = data.results.bindings;
+      });
+      request.execQuery(query.getDatatypeProp(obj.uri), function (data) {
+        vm.descDatatypeProp = data.results.bindings;
+      });
+    }
     $scope.$emit('setSelected', obj);
+    $scope.$emit('tool', 'describe');
   };
 
   function getObjPropValue (uri, prop) {
