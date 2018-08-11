@@ -333,8 +333,7 @@ function visualQueryBuilder (pGraph) {
         /* Here we create a new variable */
         var xycoords = d3.mouse(thisGraph.svgG.node()),
             d = pGraph.addNode();
-        d.x = xycoords[0];
-        d.y = xycoords[1];
+        d.setPosition(xycoords[0],xycoords[1]);
 
         thisGraph.updateGraph();
       } else if (state.shiftNodeDrag){

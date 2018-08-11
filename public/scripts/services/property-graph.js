@@ -9,12 +9,20 @@ function propertyGraphService (req) {
       childPadding = 10;
   var lastNodeId = 0;
   var propertyGraph = {
+    // DATA:
     nodes: [],
     edges: [],
+    // Functions:
+    addNode: addNode,
+    addEdge: addEdge,
+    getNodeByValue: getNodeByValue,
+    toQuery: toQuery,
+    // Defined elsewhere:
     describe: null,
     edit: null,
   }
 
+  /** Datatypes **/
   function Node () {
     this.id = lastNodeId++;
     this.properties = [];
@@ -40,6 +48,16 @@ function propertyGraphService (req) {
   Node.prototype.getBaseHeight = function () { return nodeBaseHeight; };
   Node.prototype.getHeight = function () {
     return nodeBaseHeight + this.lastPropDraw*(childHeight+childPadding);
+  };
+
+  Node.prototype.setPosition = function (x , y) {
+    this.x = x;
+    this.y = y;
+    return this;
+  };
+
+  Node.prototype.addValue = function (value) {
+    this.uri = value; //TODO
   };
 
   Node.prototype.getUniq = function () {
@@ -163,17 +181,25 @@ function propertyGraphService (req) {
 
   /**************************/
   /****** Public stuff ******/
-  propertyGraph.addNode = function () { return new Node(); };
-  propertyGraph.addEdge = function (source, target) {
+  function addNode () {
+    return new Node();
+  }
+
+  function addEdge (source, target) {
     /* FIXME: duplicate edges */
     if (source instanceof Property) 
       return new Edge(source, target);
     if (source instanceof Node) {
       return new Edge(source.newProp(), target);
     }
-  };
+  }
 
-  propertyGraph.toQuery = function () {
+  function getNodeByValue (value) {
+    if (!value) return null;
+    return null; //TODO
+  }
+
+  function toQuery () {
     var v = {}, i, m='', q = '';
     for (i = 0; i < propertyGraph.edges.length; i++) {
       edge = propertyGraph.edges[i];
@@ -190,7 +216,7 @@ function propertyGraphService (req) {
       q += i;
     }
     return 'SELECT'+q+' WHERE {\n' +m +'} ';
-  };
+  }
 
   function u (l) {
     return ' <'+l.uri+'>';

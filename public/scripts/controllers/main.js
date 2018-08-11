@@ -72,24 +72,30 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   }
 
   function drop (ev) {
-    var z = vm.getZoom();
-    //check if exists first
-    var d = pGraph.addNode();
-    d.x = (ev.layerX - z[0])/z[2];
-    d.y = (ev.layerY - z[1])/z[2];
-    if (ev.dataTransfer.getData("uri")) {
-      d.uri = ev.dataTransfer.getData("uri");
+    var z    = vm.getZoom();
+    var uri  = ev.dataTransfer.getData("uri");
+    var prop = ev.dataTransfer.getData("prop");
+    // Create or get the node.
+    var d = pGraph.getNodeByValue(uri);
+    if (!d) {
+      d = pGraph.addNode();
+      if (uri) d.addValue(uri);
     }
-    if (ev.dataTransfer.getData("prop")) {
+    d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
+
+    // Add the property.
+    if (prop) {
       var p = vm.selected.newProp();
       p.uri = ev.dataTransfer.getData("prop");
       pGraph.addEdge(p, d);
     } else { // from search
-      var index = vm.searchResults.indexOf( ev.dataTransfer.getData("uri") );
-      vm.searchResults.splice(index, 1);
+      vm.searchResults = vm.searchResults.filter( obj => {
+        return (obj.uri.value != uri);
+      });
       if (vm.searchResults.length == 0) 
         vm.searchActive = false;
     }
+
     vm.updateSVG();
     $scope.$apply();
   }
