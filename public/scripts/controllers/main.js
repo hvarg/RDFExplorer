@@ -76,19 +76,23 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     var uri  = ev.dataTransfer.getData("uri");
     var prop = ev.dataTransfer.getData("prop");
     // Create or get the node.
-    var d = pGraph.getNodeByValue(uri);
+    var d = pGraph.getNodeByUri(uri);
     if (!d) {
       d = pGraph.addNode();
-      if (uri) d.addValue(uri);
+      if (uri) d.addUri(uri);
     }
     d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
 
-    // Add the property.
+    // Add the property
     if (prop) {
-      var p = vm.selected.newProp();
-      p.uri = ev.dataTransfer.getData("prop");
+      var p = vm.selected.getPropByUri(prop);
+      if (!p) {
+        p = vm.selected.newProp();
+        p.addUri(prop);
+      }
+      // Create (selected)--p-->(d) edge
       pGraph.addEdge(p, d);
-    } else { // from search
+    } else { // from search, remove the search result
       vm.searchResults = vm.searchResults.filter( obj => {
         return (obj.uri.value != uri);
       });

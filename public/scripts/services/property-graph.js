@@ -8,6 +8,7 @@ function propertyGraphService (req) {
       childHeight = 20,
       childPadding = 10;
   var lastNodeId = 0;
+  var uriToNode = {};
   var propertyGraph = {
     // DATA:
     nodes: [],
@@ -15,7 +16,7 @@ function propertyGraphService (req) {
     // Functions:
     addNode: addNode,
     addEdge: addEdge,
-    getNodeByValue: getNodeByValue,
+    getNodeByUri: getNodeByUri,
     toQuery: toQuery,
     // Defined elsewhere:
     describe: null,
@@ -26,14 +27,18 @@ function propertyGraphService (req) {
   function Node () {
     this.id = lastNodeId++;
     this.properties = [];
-    propertyGraph.nodes.push(this);
+    this.uris = [];
+    this.uriIndex = -1;
     this.lastPropDraw = 0;
     this.redraw = false;
+    propertyGraph.nodes.push(this);
   }
   
   function Property (parentNode) {
     this.parentNode = parentNode;
     this.index = parentNode.properties.length;
+    this.uris = [];
+    this.uriIndex = -1;
     parentNode.properties.push(this);
   }
 
@@ -56,9 +61,22 @@ function propertyGraphService (req) {
     return this;
   };
 
-  Node.prototype.addValue = function (value) {
-    this.uri = value; //TODO
+  Node.prototype.addUri = function (uri) {
+    //TODO: check if already exists and stuff
+    this.uris.push( uri );
+    if (this.uris.length == 1) {
+      this.uriIndex = 0; 
+    }
+    uriToNode[uri] = this;
   };
+
+  Node.prototype.getUri = function () {
+    if (this.uriIndex >= 0) {
+      return this.uris[this.uriIndex];
+    } else {
+      return null;
+    }
+  }
 
   Node.prototype.getUniq = function () {
     // This function returns an unique 'string' that defines the color of this node.
@@ -66,15 +84,28 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.getLabel = function () {
-    return this.uri ? req.getLabel(this.uri) : '?' + this.id;
+    if (this.uriIndex >= 0) {
+      return req.getLabel(this.getUri());
+    } else {
+      //TODO: check alias and stuff
+      return '?' + this.id;
+    }
   };
 
   Node.prototype.newProp = function () {
     return new Property(this);
   };
 
+  Node.prototype.getPropByUri = function (uri) {
+    for (var i = 0; i < this.properties.length; i++) {
+      if (this.properties[i].getUri() == uri)
+        return this.properties[i];
+    }
+    return null;
+  };
+
   Node.prototype.isVariable = function () {
-    return !(this.uri);
+    return (this.uriIndex < 0);
   };
 
   Node.prototype.delete = function () {
@@ -131,9 +162,29 @@ function propertyGraphService (req) {
     get: function() { return this.parentNode.id; }
   });
 
+  Property.prototype.addUri = function (uri) {
+    //TODO: check if already exists and stuff
+    this.uris.push( uri );
+    if (this.uris.length == 1) {
+      this.uriIndex = 0; 
+    }
+  };
+
+  Property.prototype.getUri = function () {
+    if (this.uriIndex >= 0) {
+      return this.uris[this.uriIndex];
+    } else {
+      return null;
+    }
+  }
+
   Property.prototype.getLabel = function () {
-    //return (this.name || 'PropLabel') + this.parentNode.id + this.index;
-    return this.uri ? req.getLabel(this.uri) : '?' + this.parentNode.id + this.index;
+    if (this.uriIndex >= 0) {
+      return req.getLabel(this.getUri());
+    } else {
+      //TODO: check alias and stuff
+      return '?' + this.parentNode.id + this.index;
+    }
   };
 
   Property.prototype.getUniq = function () {
@@ -194,9 +245,8 @@ function propertyGraphService (req) {
     }
   }
 
-  function getNodeByValue (value) {
-    if (!value) return null;
-    return null; //TODO
+  function getNodeByUri (uri) {
+    return uriToNode[uri] || null;
   }
 
   function toQuery () {

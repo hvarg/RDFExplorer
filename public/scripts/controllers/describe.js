@@ -18,8 +18,8 @@ function DescribeCtrl ($scope, pGraph, query, request) {
   vm.getDatatypePropValue = getDatatypePropValue;
 
   function describe (obj) {
-    if (obj.uri != lastSelectedUri) {
-      lastSelectedUri = obj.uri;
+    if (obj.getUri() != lastSelectedUri) {
+      lastSelectedUri = obj.getUri();
       vm.selected = obj;
       vm.descObjProp = [];
       vm.descDatatypeProp = [];
@@ -28,10 +28,10 @@ function DescribeCtrl ($scope, pGraph, query, request) {
       vm.raw = [];
       vm.long = [];
       
-      request.execQuery(query.getObjProp(obj.uri), function (data) {
+      request.execQuery(query.getObjProp(obj.getUri()), function (data) {
         vm.descObjProp = data.results.bindings;
       });
-      request.execQuery(query.getDatatypeProp(obj.uri), function (data) {
+      request.execQuery(query.getDatatypeProp(obj.getUri()), function (data) {
         vm.descDatatypeProp = data.results.bindings;
       });
     }

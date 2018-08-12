@@ -10,14 +10,14 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   table.table.table-hover
     tbody
       tr(ng-repeat="(key, value) in ctrl.descDatatypeProp track by $index",
-         ng-init="ctrl.getDatatypePropValue(ctrl.selected.uri, value.uri.value)")
+         ng-init="ctrl.getDatatypePropValue(ctrl.selected.getUri(), value.uri.value)")
         th {{ value.label.value }}
         td
           div(ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] track by $index") {{ v.uri.value }}
 
   div.propRect(
       ng-repeat="(key, value) in ctrl.descObjProp track by $index",
-      ng-init="ctrl.getObjPropValue(ctrl.selected.uri, value.uri.value); value.active = false; value.filter = '';",
+      ng-init="ctrl.getObjPropValue(ctrl.selected.getUri(), value.uri.value); value.active = false; value.filter = '';",
       ng-class="{'active': value.active}")
     div.head
       div.text-truncate(style="display:inline-block; width:100%;",
