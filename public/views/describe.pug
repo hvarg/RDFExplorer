@@ -1,4 +1,7 @@
 div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
+  div(ng-if="ctrl.selected.values.data.length > 1")
+    i.pull-right.fa.fa-chevron-right(ng-click="ctrl.getNext()")
+    i.pull-left.fa.fa-chevron-left(ng-click="ctrl.getPrev()")
   h1(style="text-align: center;") {{ ctrl.selected.getLabel() }}
   hr
 
