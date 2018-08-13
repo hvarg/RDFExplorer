@@ -10,6 +10,11 @@ function DescribeCtrl ($scope, pGraph, query, request) {
   vm.descDatatypeProp = [];
   vm.descPropValue = {};
 
+  var objType = {
+    uri: {type: "uri", value: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"},
+    label: {type: "literal", 'xml:lang': "en", value: "type"},
+  };
+
   vm.raw = [];
   vm.long = [];
 
@@ -27,13 +32,16 @@ function DescribeCtrl ($scope, pGraph, query, request) {
       
       vm.raw = [];
       vm.long = [];
-      
+
       request.execQuery(query.getObjProp(obj.getUri()), function (data) {
         vm.descObjProp = data.results.bindings;
+        vm.descObjProp.unshift(objType);
       });
+
       request.execQuery(query.getDatatypeProp(obj.getUri()), function (data) {
         vm.descDatatypeProp = data.results.bindings;
       });
+
     }
     $scope.$emit('setSelected', obj);
     $scope.$emit('tool', 'describe');

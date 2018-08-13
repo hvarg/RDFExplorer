@@ -2,7 +2,9 @@ angular.module('rdfvis.services').factory('requestService', requestService);
 requestService.$inject = ['settingsService', '$http'];
 
 function requestService (settings, $http) {
-  var label = {};
+  var label = {
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'type' //FIXME
+  };
 
   function toForm (obj) {
     var str = [];
