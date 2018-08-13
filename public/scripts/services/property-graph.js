@@ -80,12 +80,12 @@ function propertyGraphService (req) {
 
   Values.prototype.delete = function (uri) {
     var i = this.data.indexOf(uri);
-    if (i<0) return false;
+    if (i < 0) return false;
     this.data.splice(i, 1);
     if (this.data.length == 0) {
       this.index = -1;
     } else if (this.index == i){
-      this.prev();
+      this.next();
     }
     return true;
   };
@@ -95,10 +95,12 @@ function propertyGraphService (req) {
     return this.data[this.index];
   };
 
+  Values.prototype.isEmpty = function () { return (this.index == -1); };
   Values.prototype.getAll = function () { return this.data; };
   Values.prototype.next = function () { this.index = (this.index+1)%this.data.length; };
-  Values.prototype.prev = function () { this.index = (this.index-1)%this.data.length; };
-  Values.prototype.isEmpty = function () { return (this.index == -1); };
+  Values.prototype.prev = function () {
+    this.index = (this.index == 0) ? this.data.length - 1 : this.index - 1;
+  };
 
   /***** Node.prototype *****/
   Node.prototype.getWidth = function () { return nodeWidth; };
@@ -156,6 +158,16 @@ function propertyGraphService (req) {
     return this.values.isEmpty();
   };
 
+  Node.prototype.nextValue = function () {
+    this.values.next();
+    return this;
+  };
+
+  Node.prototype.prevValue = function () {
+    this.values.prev();
+    return this;
+  };
+
   Node.prototype.delete = function () {
     var i, j, edge, prop, tmp;
     // remove all edges with this node as target.
@@ -185,6 +197,53 @@ function propertyGraphService (req) {
       if (node === this) 
         propertyGraph.nodes.splice(i, 1);
     }
+  };
+
+  Node.prototype.getResults = function (onStart, onEnd) {
+    if (!this.isVariable()) return null;
+    if (onStart) onStart();
+    var self = this;
+    var q  = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n'
+        q += 'SELECT DISTINCT ?uri ?label WHERE {\n'
+        q += '  FILTER (lang(?label) = "en")\n';
+        q += '  ?uri rdfs:label ?label .\n';
+    var tmp;
+    var vEdges = [];
+    var vNodes = [];
+    var queue  = [this];
+
+    while (queue.length > 0) {
+      var cur = queue.pop();
+      vNodes.push(cur);
+      var edges = propertyGraph.edges.filter(e => {
+        return (e.source.parentNode == cur || e.target == cur);
+      });
+      edges.forEach(e => {
+        if (vEdges.indexOf(e) < 0) {
+          vEdges.push(e);
+          tmp = [e.source.parentNode, e.source, e.target];
+          for (i = 0; i < 3; i++) {
+            if (tmp[i].isVariable()) {
+              if (tmp[i] !== cur && vNodes.indexOf(tmp[i]) < 0) queue.push(tmp[i]);
+              if (tmp[i] === self) tmp[i] = '?uri';
+              else tmp[i] = tmp[i].getVariable();
+            } else {
+              //TODO: more than one value
+              tmp[i] = u(tmp[i].getUri());
+            }
+          }
+          q += '  ' + tmp.join(' ') + ' .\n';
+        }
+      });
+    }
+    q += '} limit 10';
+    console.log(q);
+    req.execQuery(q, data => {
+      data.results.bindings.forEach(obj => {
+        self.addUri(obj.uri.value);
+      });
+      if (onEnd) onEnd();
+    });
   };
 
   /**************************/
@@ -222,6 +281,14 @@ function propertyGraphService (req) {
     var uri = this.getUri();
     if (uri) return req.getLabel(uri);
     else return this.variable.get();
+  };
+
+  Property.prototype.getVariable = function () {
+    return this.variable.get();
+  };
+
+  Property.prototype.isVariable = function () {
+    return this.values.isEmpty();
   };
 
   Property.prototype.getUniq = function () {

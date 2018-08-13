@@ -485,6 +485,7 @@ function visualQueryBuilder (pGraph) {
             menu({
               'Describe': function () { d.describe(); },
               'Edit':     function () { d.edit(); },
+              'Collect':  function () { d.getResults(null, function () {thisGraph.updateGraph();}); },
               'Remove':   function () { d.delete(); thisGraph.updateGraph(); }
             });
         })
@@ -516,7 +517,7 @@ function visualQueryBuilder (pGraph) {
           .attr("height", element[0].offsetHeight);
 
     var graph = new GraphCreator(svg, pGraph.nodes, pGraph.edges);
-    var menu = contextMenu().items('Describe', 'Edit', '...', 'Remove');
+    var menu = contextMenu().items('Describe', 'Edit', 'Collect', 'Remove');
     graph.updateGraph();
     
     scope.update = function () {
