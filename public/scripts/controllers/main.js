@@ -5,7 +5,7 @@ MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestSe
 function MainCtrl ($scope, pGraph, query, request, $timeout) {
   var vm = this;
   /* vars */
-  vm.searchInput = '';
+  vm.searchInput = null;
   vm.searchResults = [];
   vm.searchActive = false;
   vm.searchWait = false;
@@ -31,10 +31,13 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   $scope.$on('tool', function(event, data) { vm.tool = data; });
   $scope.$on('setSelected', function(event, data) { vm.selected = data; });
   $scope.$on('newSettings', function(event, data) { vm.lastSearch = ''; });
+  $scope.$on('update', function(event, data) { vm.updateSVG(); });
 
   /* Tools display function */
   function toolToggle (panel) {
     vm.tool = (vm.tool == panel) ? 'none' : panel;
+    if (panel == 'describe' && vm.selected) vm.selected.describe();
+    if (panel == 'edit' && vm.selected) vm.selected.edit();
   }
 
   function searchToggle() { vm.searchActive = !vm.searchActive; }
@@ -56,7 +59,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   }
 
   function search () {
-    if (vm.searchInput && vm.searchInput != vm.lastSearch) {
+    if (vm.searchInput != vm.lastSearch) {
       var input = vm.searchInput;
       vm.lastSearch = input;
       vm.searchWait = true;

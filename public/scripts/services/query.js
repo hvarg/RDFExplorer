@@ -30,16 +30,18 @@ function queryService (settings) {
     q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
     q += '  ?uri rdf:type   ' + u(type) + ' ;\n';
     q += '       rdfs:label ?label .\n';
-    switch (settings.endpoint.type) {
-      case 'virtuoso':
-        q += '  ?label bif:contains "\'' + keyword + '\'" .\n';
-        break;
-      case 'fuseki':
-        q += '  ?uri text:query (rdfs:label "' + keyword + '" '+ limit +') .\n';
-        prefixes.push('text');
-        break;
-      default:
-        q += '  FILTER regex(?label, ".*' + keyword + '.*", "i")\n'
+    if (keyword) {
+      switch (settings.endpoint.type) {
+        case 'virtuoso':
+          q += '  ?label bif:contains "\'' + keyword + '\'" .\n';
+          break;
+        case 'fuseki':
+          q += '  ?uri text:query (rdfs:label "' + keyword + '" '+ limit +') .\n';
+          prefixes.push('text');
+          break;
+        default:
+          q += '  FILTER regex(?label, ".*' + keyword + '.*", "i")\n'
+      }
     }
     q += '  FILTER (lang(?label) = "en")\n';
     q += '} LIMIT ' + limit;
@@ -88,12 +90,24 @@ function queryService (settings) {
     if (offset) q+= ' offset ' + offset;
     return header(['rdfs']) + q;
   }
-  
+
+  function getClasses (uri, limit, offset) {
+    q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
+    q += '  ' + u(uri) + ' a ?uri .\n';
+    q += '  ?uri rdfs:label ?label .\n';
+    q += '  FILTER (lang(?label) = "en")\n';
+    q += '}'
+    if (limit)  q+= ' limit ' + limit;
+    if (offset) q+= ' offset ' + offset;
+    return header(['rdfs']) + q;
+  }
+
   return {
     search: search, 
     getObjProp: getObjProp,
     getDatatypeProp: getDatatypeProp,
     getObjPropValue: getObjPropValues,
     getDatatypePropValue: getDatatypePropValues,
+    getClasses: getClasses,
   };
 }

@@ -1,12 +1,14 @@
 div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   h1(style="text-align: center;") {{ ctrl.selected.getLabel() }}
   hr
+
   div(ng-repeat="(key, value) in ctrl.long track by $index", ng-init="value.more = false;")
     strong {{ value.label.value }} :&nbsp;
     div(ng-if="!value.more" ,style="display: inline;") {{ ctrl.descPropValue[value.uri.value][0].uri.value.slice(0,180) + '...'}}
     div(ng-if="value.more" ,style="display: inline;") {{ ctrl.descPropValue[value.uri.value][0].uri.value }}
     a(href="", ng-if="!value.more", ng-click="value.more = !value.more") [more]
     a(href="", ng-if="value.more", ng-click="value.more = !value.more") [less]
+
   table.table.table-hover
     tbody
       tr(ng-repeat="(key, value) in ctrl.descDatatypeProp track by $index",
