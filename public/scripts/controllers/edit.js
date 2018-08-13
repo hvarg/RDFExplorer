@@ -5,25 +5,60 @@ EditCtrl.$inject = ['$scope', 'propertyGraphService', 'requestService', 'querySe
 function EditCtrl ($scope, pGraph, request, query) {
   var vm = this;
   vm.selected = null;
-  vm.label = null;
-  vm.class = null;
-  vm.loading = false;
-  vm.noResults = false;
+  vm.val = null;
+  vm.var = null;
+  vm.newValue = '';
 
-  vm.getClasses = getClasses;
+  vm.save = setData;
+  vm.cancel = getData;
+  vm.getLabel = request.getLabel;
+  vm.removeValue = removeValue;
+  vm.addValue = addValue;
 
   pGraph.edit = edit;
 
+  function copyObj (obj) { return Object.assign({}, obj); }
+
   function edit (obj) {
     vm.selected = obj;
-
-    $scope.$emit('tool', 'edit');
+    getData();
     $scope.$emit('setSelected', obj);
+    $scope.$emit('tool', 'edit');
   }
 
-  function getClasses (label) {
-    var q = query.search(label, 'http://www.w3.org/2002/07/owl#Class');
-    return request.execQuery(q, data => { return data.results.bindings; });
+  function getData () {
+    vm.val = vm.selected.values.data.slice();
+    vm.var = copyObj(vm.selected.variable);
+  }
+
+  function setData () {
+    if (vm.selected.variable.alias != vm.var.alias) vm.selected.variable.alias = vm.var.alias;
+    if (vm.selected.variable.show != vm.var.show) vm.selected.variable.show = vm.var.show;
+    if (vm.selected.variable.count != vm.var.count) vm.selected.variable.count = vm.var.count;
+    var enter = vm.val.filter(uri => {
+      return (vm.selected.values.data.indexOf(uri) < 0)
+    });
+    var exit = vm.selected.values.data.filter(uri => {
+      return (vm.val.indexOf(uri) < 0);
+    });
+
+    enter.forEach(uri => { vm.selected.values.add(uri); });
+    exit.forEach(uri => { vm.selected.values.delete(uri); });
+    getData();
+    $scope.$emit('update', '');
+  }
+
+  function removeValue (value) {
+    var i = vm.val.indexOf(value);
+    if (i > -1) vm.val.splice(i, 1);
+  }
+
+  function addValue () {
+    var i = vm.val.indexOf(vm.newValue);
+    if (i < 0 && vm.newValue) {
+      vm.val.push(vm.newValue);
+      vm.newValue = '';
+    }
   }
 
 }

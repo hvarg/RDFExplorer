@@ -8,6 +8,7 @@ function propertyGraphService (req) {
       childHeight = 20,
       childPadding = 10;
   var lastNodeId = 0;
+  var lastVarId = 0;
   var uriToNode = {};
   var propertyGraph = {
     // DATA:
@@ -27,19 +28,19 @@ function propertyGraphService (req) {
   function Node () {
     this.id = lastNodeId++;
     this.properties = [];
-    this.uris = [];
-    this.uriIndex = -1;
     this.lastPropDraw = 0;
     this.redraw = false;
     propertyGraph.nodes.push(this);
+    this.variable = new Variable(this);
+    this.values = new Values(this);
   }
-  
+
   function Property (parentNode) {
     this.parentNode = parentNode;
     this.index = parentNode.properties.length;
-    this.uris = [];
-    this.uriIndex = -1;
     parentNode.properties.push(this);
+    this.variable = new Variable(this);
+    this.values = new Values(this);
   }
 
   function Edge (source, target) {
@@ -48,6 +49,57 @@ function propertyGraphService (req) {
     propertyGraph.edges.push(this);
   }
 
+  function Variable (parent) {
+    this.id = lastVarId++;
+    this.filters = [];
+    this.show = true;
+    this.count = false;
+    this.alias = '';
+    //this.parent = parent;
+  }
+
+  function Values (parent) {
+    this.data = [];
+    this.index = -1;
+    //this.parent = parent;
+  }
+
+  /***** Variable.prototype *****/
+  Variable.prototype.get = function () {
+    return '?' + (this.alias ? this.alias : this.id);
+  };
+
+  /***** Values.prototype *****/
+  Values.prototype.add = function (uri) {
+    if (this.data.indexOf(uri) < 0) {
+      this.data.push(uri);
+      if (this.data.length == 1)
+        this.index = 0;
+    }
+  };
+
+  Values.prototype.delete = function (uri) {
+    var i = this.data.indexOf(uri);
+    if (i<0) return false;
+    this.data.splice(i, 1);
+    if (this.data.length == 0) {
+      this.index = -1;
+    } else if (this.index == i){
+      this.prev();
+    }
+    return true;
+  };
+
+  Values.prototype.get = function () {
+    if (this.index < 0) return null;
+    return this.data[this.index];
+  };
+
+  Values.prototype.getAll = function () { return this.data; };
+  Values.prototype.next = function () { this.index = (this.index+1)%this.data.length; };
+  Values.prototype.prev = function () { this.index = (this.index-1)%this.data.length; };
+  Values.prototype.isEmpty = function () { return (this.index == -1); };
+
   /***** Node.prototype *****/
   Node.prototype.getWidth = function () { return nodeWidth; };
   Node.prototype.getBaseHeight = function () { return nodeBaseHeight; };
@@ -55,27 +107,19 @@ function propertyGraphService (req) {
     return nodeBaseHeight + this.lastPropDraw*(childHeight+childPadding);
   };
 
-  Node.prototype.setPosition = function (x , y) {
+  Node.prototype.setPosition = function (x, y) {
     this.x = x;
     this.y = y;
     return this;
   };
 
   Node.prototype.addUri = function (uri) {
-    //TODO: check if already exists and stuff
-    this.uris.push( uri );
-    if (this.uris.length == 1) {
-      this.uriIndex = 0; 
-    }
+    this.values.add(uri);
     uriToNode[uri] = this;
   };
 
   Node.prototype.getUri = function () {
-    if (this.uriIndex >= 0) {
-      return this.uris[this.uriIndex];
-    } else {
-      return null;
-    }
+    return this.values.get();
   }
 
   Node.prototype.getUniq = function () {
@@ -83,12 +127,16 @@ function propertyGraphService (req) {
     return '1'; //TODO
   };
 
+  Node.prototype.getVariable = function () {
+    return this.variable.get();
+  };
+
   Node.prototype.getLabel = function () {
-    if (this.uriIndex >= 0) {
-      return req.getLabel(this.getUri());
+    var uri = this.getUri();
+    if (uri) {
+      return req.getLabel(uri);
     } else {
-      //TODO: check alias and stuff
-      return '?' + this.id;
+      return this.variable.get();
     }
   };
 
@@ -105,7 +153,7 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.isVariable = function () {
-    return (this.uriIndex < 0);
+    return this.values.isEmpty();
   };
 
   Node.prototype.delete = function () {
@@ -163,28 +211,17 @@ function propertyGraphService (req) {
   });
 
   Property.prototype.addUri = function (uri) {
-    //TODO: check if already exists and stuff
-    this.uris.push( uri );
-    if (this.uris.length == 1) {
-      this.uriIndex = 0; 
-    }
+    this.values.add(uri);
   };
 
   Property.prototype.getUri = function () {
-    if (this.uriIndex >= 0) {
-      return this.uris[this.uriIndex];
-    } else {
-      return null;
-    }
+   return this.values.get();
   }
 
   Property.prototype.getLabel = function () {
-    if (this.uriIndex >= 0) {
-      return req.getLabel(this.getUri());
-    } else {
-      //TODO: check alias and stuff
-      return '?' + this.parentNode.id + this.index;
-    }
+    var uri = this.getUri();
+    if (uri) return req.getLabel(uri);
+    else return this.variable.get();
   };
 
   Property.prototype.getUniq = function () {
@@ -253,23 +290,26 @@ function propertyGraphService (req) {
     var v = {}, i, m='', q = '';
     for (i = 0; i < propertyGraph.edges.length; i++) {
       edge = propertyGraph.edges[i];
-      s = edge.source.parentNode.uri ? u(edge.source.parentNode) : ' ?'+ edge.source.parentNode.id;
-      p = edge.source.uri ? u(edge.source) : ' ?'+ edge.source.parentNode.id + edge.source.index;
-      o = edge.target.uri ? u(edge.target) : ' ?'+ edge.target.id;
-      if (s[1]=='?' || p[1] == '?' || o[1] == '?')
-        m += s + p + o + '\n'
-      if (!edge.source.parentNode.uri) v[s] = 1;
-      if (!edge.source.uri) v[p] = 1;
-      if (!edge.target.uri) v[o] = 1;
+      s = edge.source.parentNode.getUri();
+      s = s ? u(s) : edge.source.parentNode.getVariable();
+      p = edge.source.getUri();
+      p = p ? u(p) : edge.source.getVariable();
+      o = edge.target.getUri();
+      o = o ? u(o) : edge.target.getVariable();
+      if (s[0]=='?' || p[0] == '?' || o[0] == '?')
+        m += s + ' ' + p + ' ' + o + '.\n'
+      if (!edge.source.parentNode.getUri()) v[s] = 1;
+      if (!edge.source.getUri()) v[p] = 1;
+      if (!edge.target.getUri()) v[o] = 1;
     }
     for (i in v) {
       q += i;
     }
-    return 'SELECT'+q+' WHERE {\n' +m +'} ';
+    return 'SELECT '+q+' WHERE {\n' +m +'} ';
   }
 
-  function u (l) {
-    return ' <'+l.uri+'>';
+  function u (uri) {
+    return '<'+uri+'>';
   }
   
   return propertyGraph;

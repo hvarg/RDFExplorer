@@ -1,7 +1,8 @@
 div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
-  h1(style="text-align: center;") Editing {{ ctrl.selected.getLabel() }}
+  h1(style="text-align: center;") Editing {{ ctrl.selected.getVariable() }}
   hr
 
+  h5 Variable:
   form
     .form-row
       .input-group.col-md-12
@@ -11,10 +12,27 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         input#edit-var-name.form-control(
             type="text",
             autocomplete="off",
-            ng-model="ctrl.label",
-            placeholder="{{ ctrl.selected.id }}")
-
+            ng-model="ctrl.var.alias",
+            placeholder="{{ ctrl.var.id }}")
     .form-row.mt-2
+      .form-group.form-check.col-md-6
+        input#edit-show(type="checkbox", ng-model="ctrl.var.show")
+        label.form-check-label(for="edit-show") show me
+      .form-group.form-check.col-md-6
+        input#edit-count(type="checkbox", ng-model="ctrl.var.count")
+        label.form-check-label(for="edit-count") count me
+
+  h5 Values:
+  .input-group.input-group-sm.mb-3
+    input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newValue",
+                       aria-label="New value", aria-describedby='edit-button-add')
+    .input-group-append
+      button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue()") add
+
+  div(ng-repeat="(key, value) in ctrl.val", title="{{value}}") {{ ctrl.getLabel(value) || value }}
+    i.pull-right.fa.fa-trash(ng-click="ctrl.removeValue(value);")
+
+    //.form-row.mt-2
       .form-group.col-md-12
         // The typeahead adds a relative div as parent of the label, .input-group-typeahead to fix that.
         .input-group.input-group-typeahead
@@ -33,8 +51,14 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
               uib-typeahead="class as class.label.value for class in ctrl.getClasses($viewValue)",
               typeahead-loading="ctrl.loading",
               typeahead-no-results="ctrl.noResults")
+  
+  br
+  button.pull-right.btn.btn-primary(type="button", ng-click="ctrl.save()") Save
+  button.pull-right.btn.btn-warning(type="button", ng-click="ctrl.cancel()", style="margin-right: 10px;") Cancel
+  br
 
-  div
+  //div
     hr
-    pre class: {{ctrl.class | json}}
-    pre selected: {{ctrl.selected | json}}
+    pre values: {{ctrl.val | json}}
+    pre variable: {{ctrl.var | json}}
+    pre obj: {{ctrl.selected | json}}
