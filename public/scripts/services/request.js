@@ -27,11 +27,11 @@ function requestService (settings, $http) {
           tmp = response.data.results.bindings[i];
           if (tmp.label) label[tmp.uri.value] = tmp.label.value;
         }
-        return callback(response.data);
+        return callback ? callback(response.data) : response.data;
       },
       function onError   (response) {
         console.log('Error ' + response.status + ':' + response.data);
-        return cErr(response);
+        return cErr ? cErr(response) : response;
       }
     );
   }
