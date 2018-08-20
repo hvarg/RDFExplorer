@@ -98,9 +98,10 @@ function visualQueryBuilder (pGraph) {
           });
 
       // listen for key events TODO FIXME
-      d3.select(element[0])
+      d3.select('body')
           .on("keydown", function(){ thisGraph.svgKeyDown.call(thisGraph); })
           .on("keyup", function(){ thisGraph.svgKeyUp.call(thisGraph); });
+
       svg.on("mousedown", function (d) {thisGraph.svgMouseDown.call(thisGraph, d);});
       svg.on("mouseup",   function (d) {thisGraph.svgMouseUp.call(thisGraph, d);});
       svg.on("mouseover", function (d) {thisGraph.focused = true;});
