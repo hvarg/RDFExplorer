@@ -31,6 +31,7 @@ function propertyGraphService (req) {
     this.lastPropDraw = 0;
     this.redraw = false;
     propertyGraph.nodes.push(this);
+    this.isVar = true;
     this.variable = new Variable(this);
     this.values = new Values(this);
   }
@@ -91,8 +92,12 @@ function propertyGraphService (req) {
   };
 
   Values.prototype.get = function () {
-    if (this.index < 0) return null;
-    return this.data[this.index];
+    if (this.isEmpty()) return null;
+    else return this.data[this.index];
+  };
+
+  Values.prototype.getLabel = function () {
+    return req.getLabel(this.get());
   };
 
   Values.prototype.isEmpty = function () { return (this.index == -1); };
@@ -124,21 +129,32 @@ function propertyGraphService (req) {
     return this.values.get();
   }
 
+  Node.prototype.getVariable = function () {
+    return this.variable.get();
+  };
+
   Node.prototype.getUniq = function () {
     // This function returns an unique 'string' that defines the color of this node.
     return '1'; //TODO
   };
 
-  Node.prototype.getVariable = function () {
-    return this.variable.get();
+  Node.prototype.isVariable = function () {
+    return this.isVar;
+  };
+
+  Node.prototype.mkConst = function () {
+    this.isVar = false;
+    return this;
   };
 
   Node.prototype.getLabel = function () {
+    if (this.isVariable()) 
+      return this.getVariable();
     var uri = this.getUri();
     if (uri) {
       return req.getLabel(uri);
     } else {
-      return this.variable.get();
+      return "No URIs";
     }
   };
 
@@ -152,10 +168,6 @@ function propertyGraphService (req) {
         return this.properties[i];
     }
     return null;
-  };
-
-  Node.prototype.isVariable = function () {
-    return this.values.isEmpty();
   };
 
   Node.prototype.nextValue = function () {

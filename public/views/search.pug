@@ -22,4 +22,9 @@ div#search-container(
     div.fakeRect(
         draggable="true",
         ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri.value, '')",
-        ng-repeat="(key, value) in main.searchResults track by $index ") {{ value.label.value }}
+        ng-repeat="(key, value) in main.searchResults track by $index ") 
+      span(style="display: block; margin-bottom: -8px;", title="{{value.uri.value}}") {{ value.label.value }}
+      span(
+          ng-repeat="(k, v) in value.types",
+          title="{{v.uri.value}}"
+          style="font-size:10px;") {{ $last ? v.label.value : v.label.value + ', '}}

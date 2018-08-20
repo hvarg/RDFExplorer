@@ -2,6 +2,15 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
   h1(style="text-align: center;") Editing {{ ctrl.selected.getVariable() }}
   hr
 
+  h5 Possible values:
+  .input-group.input-group-sm.mb-3
+    input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newValue",
+                       aria-label="New value", aria-describedby='edit-button-add')
+    .input-group-append
+      button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue()") add
+  div(ng-repeat="(key, value) in ctrl.val", title="{{value}}") {{ ctrl.getLabel(value) || value }}
+    i.pull-right.fa.fa-trash(ng-click="ctrl.removeValue(value);")
+
   h5 Variable:
   form
     .form-row
@@ -21,16 +30,13 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
       .form-group.form-check.col-md-6
         input#edit-count(type="checkbox", ng-model="ctrl.var.count")
         label.form-check-label(for="edit-count") count me
+    .form-row.mt-2
+      .form-group.form-check.col-md-6
+        input#edit-is-var(type="checkbox", ng-model="ctrl.isVariable")
+        label.form-check-label(for="edit-is-var") Is Variable
+      .form-group.form-check.col-md-6
 
-  h5 Values:
-  .input-group.input-group-sm.mb-3
-    input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newValue",
-                       aria-label="New value", aria-describedby='edit-button-add')
-    .input-group-append
-      button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue()") add
 
-  div(ng-repeat="(key, value) in ctrl.val", title="{{value}}") {{ ctrl.getLabel(value) || value }}
-    i.pull-right.fa.fa-trash(ng-click="ctrl.removeValue(value);")
 
     //.form-row.mt-2
       .form-group.col-md-12

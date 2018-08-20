@@ -480,7 +480,7 @@ function visualQueryBuilder (pGraph) {
         .on("mousedown", function(d){ thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d); })
         .on("mouseup",   function(d){ thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d); })
         .on("click",     function(d){ /* Do something TODO*/ })
-        .on("dblclick",  function(d){ d.describe(); })
+        .on("dblclick",  function(d){ if (d.isVariable()) d.edit(); else d.describe(); })
         .on('contextmenu', function(d){
             menu({
               'Describe': function () { d.describe(); },

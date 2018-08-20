@@ -45,7 +45,22 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   function searchDeactivate() { vm.searchActive = false; }
 
   function onSearch (data) {
-    vm.searchResults = data.results.bindings;
+    var r = {}
+    data.results.bindings.forEach(res => {
+      if (!r[res.uri.value]) r[res.uri.value] = [];
+      r[res.uri.value].push( res );
+    });
+    vm.searchResults = [];
+    for (key in r) {
+      var tmp = {uri: r[key][0].uri, label: r[key][0].label, types: []};
+      r[key].forEach(res => {
+        tmp.types.push( {uri: res.type, label: res.tlabel } );
+      });
+      vm.searchResults.push(tmp);
+    }
+    console.log(vm.searchResults);
+
+    //vm.searchResults = data.results.bindings;
     vm.searchError = false;
     vm.searchWait = false;
     if (vm.searchResults.length == 0) vm.noResults = true;
@@ -64,6 +79,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       vm.lastSearch = input;
       vm.searchWait = true;
       vm.noResults  = false; 
+      console.log(query.search(input));
       request.execQuery(query.search(input), onSearch, onSearchErr);
     }
     vm.searchActive = true;
@@ -88,6 +104,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
 
     // Add the property
     if (prop) {
+      d.mkConst();
       var p = vm.selected.getPropByUri(prop);
       if (!p) {
         p = vm.selected.newProp();

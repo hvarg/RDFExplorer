@@ -40,8 +40,13 @@ function requestService (settings, $http) {
     return label[uri];
   }
 
+  function setLabel (uri, label) {
+    label[uri] = label;
+  }
+
   return {
     execQuery: execQuery,
     getLabel: getLabel,
+    setLabel: setLabel,
   };
 }

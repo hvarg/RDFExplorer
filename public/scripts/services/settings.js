@@ -12,7 +12,7 @@ function settingsService () {
       uri:   { type: "uri", value: "http://dbpedia.org/ontology/Person" },
       label: { type: "literal", "xml:lang": "en", value: "person" }
     },
-    resultLimit: 10,
+    resultLimit: 20,
   }
 
   settings.default = Object.assign({}, settings ); 

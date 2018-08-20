@@ -27,25 +27,29 @@ function queryService (settings) {
     type = type || settings.searchClass.uri.value;
     limit = limit || settings.resultLimit;
     prefixes = ['rdf', 'rdfs'];
-    q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
-    q += '  ?uri rdf:type   ' + u(type) + ' ;\n';
-    q += '       rdfs:label ?label .\n';
+    q  = 'SELECT DISTINCT ?uri ?label ?type ?tlabel WHERE {\n';
+    q += '  { SELECT ?uri ?label WHERE {\n';
+    q += '      ?uri rdfs:label ?label . \n';
+    q += '      FILTER (lang(?label) = "en")\n';
     if (keyword) {
       switch (settings.endpoint.type) {
         case 'virtuoso':
-          q += '  ?label bif:contains "\'' + keyword + '\'" .\n';
+          q += '      ?label bif:contains "\'' + keyword + '\'" .\n';
           break;
         case 'fuseki':
-          q += '  ?uri text:query (rdfs:label "' + keyword + '" '+ limit +') .\n';
+          q += '      ?uri text:query (rdfs:label "' + keyword + '" '+ limit +') .\n';
           prefixes.push('text');
           break;
         default:
-          q += '  FILTER regex(?label, ".*' + keyword + '.*", "i")\n'
+          q += '      FILTER regex(?label, "' + keyword + '", "i")\n'
       }
     }
-    q += '  FILTER (lang(?label) = "en")\n';
-    q += '} LIMIT ' + limit;
+    q += '  } LIMIT ' + limit;
     if (offset) q += ' OFFSET ' + offset;
+    q += '\n  }\n  OPTIONAL {\n';
+    q += '  ?uri rdf:type ?type .\n';
+    q += '  ?type rdfs:label ?tlabel .\n';
+    q += '  FILTER (lang(?tlabel) = "en")\n}}';
     return header(prefixes) + q;
   }
 

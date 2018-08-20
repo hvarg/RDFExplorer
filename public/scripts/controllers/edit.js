@@ -7,6 +7,7 @@ function EditCtrl ($scope, pGraph, request, query) {
   vm.selected = null;
   vm.val = null;
   vm.var = null;
+  vm.isVariable = false;
   vm.newValue = '';
 
   vm.save = setData;
@@ -29,9 +30,11 @@ function EditCtrl ($scope, pGraph, request, query) {
   function getData () {
     vm.val = vm.selected.values.data.slice();
     vm.var = copyObj(vm.selected.variable);
+    vm.isVariable = vm.selected.isVariable();
   }
 
   function setData () {
+    vm.selected.isVar = vm.isVariable;
     if (vm.selected.variable.alias != vm.var.alias) vm.selected.variable.alias = vm.var.alias;
     if (vm.selected.variable.show != vm.var.show) vm.selected.variable.show = vm.var.show;
     if (vm.selected.variable.count != vm.var.count) vm.selected.variable.count = vm.var.count;
