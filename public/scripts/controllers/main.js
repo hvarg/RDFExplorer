@@ -104,7 +104,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
 
     // Add the property
     if (prop) {
-      d.mkConst();
+      if (uri) d.mkConst();
       var p = vm.selected.getPropByUri(prop);
       if (!p) {
         p = vm.selected.newProp();
@@ -118,6 +118,17 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       });
       if (vm.searchResults.length == 0) 
         vm.searchActive = false;
+      // Add other elements;
+      vm.updateSVG();
+      d.variable.setAlias(vm.lastSearch);
+      p = d.newProp();
+      p.addUri('http://www.w3.org/2000/01/rdf-schema#label');
+      o = pGraph.addNode();
+      o.variable.setAlias(vm.lastSearch+'Label');
+      o.variable.addFilter('lang', {lang: 'en'});
+      o.variable.addFilter('text', {keyword: vm.lastSearch});
+      o.setPosition(d.x+100, d.y+100);
+      pGraph.addEdge(p, o);
     }
 
     vm.updateSVG();

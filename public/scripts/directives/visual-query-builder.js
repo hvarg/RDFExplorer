@@ -455,6 +455,7 @@ function visualQueryBuilder (pGraph) {
               .attr("x", -thisProp.getWidth()/2)
               .attr("y", thisProp.getOffsetY())
               .style("stroke", thisGraph.colors(thisProp.getUniq()))
+              .on("click", d => { console.log(thisProp); })
               .on("contextmenu", d => {
                 menu({ 'Remove': function () { thisProp.delete(); thisGraph.updateGraph(); }});
               });

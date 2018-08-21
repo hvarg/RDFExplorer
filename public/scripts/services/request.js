@@ -3,7 +3,8 @@ requestService.$inject = ['settingsService', '$http'];
 
 function requestService (settings, $http) {
   var label = {
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'type' //FIXME
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'type', //FIXME
+    'http://www.w3.org/2000/01/rdf-schema#label': 'label'
   };
 
   function toForm (obj) {

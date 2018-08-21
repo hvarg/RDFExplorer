@@ -18,6 +18,14 @@ visual-query-builder {
   display: none;
 }
 
+span.dropable {
+  background: white;
+  border: 1px solid #d3d3d3;
+  padding: 3px 6px;
+  margin-left: 5px;
+  border-radius: 5px;
+}
+
 /* Search styles */
 #search-container {
   position: absolute;

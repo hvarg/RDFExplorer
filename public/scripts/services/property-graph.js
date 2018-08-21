@@ -1,7 +1,7 @@
 angular.module('rdfvis.services').factory('propertyGraphService', propertyGraphService);
-propertyGraphService.$inject = ['requestService'];
+propertyGraphService.$inject = ['requestService', 'settingsService'];
 
-function propertyGraphService (req) {
+function propertyGraphService (req, settings) {
   var nodeWidth = 220,
       nodeBaseHeight = 30,
       diffParentChild = 20,
@@ -22,6 +22,11 @@ function propertyGraphService (req) {
     // Defined elsewhere:
     describe: null,
     edit: null,
+  }
+
+  var filters = {
+    text: {f: text, data: {keyword: null} },
+    lang: {f: lang, data: {lang: null} },
   }
 
   /** Datatypes **/
@@ -66,8 +71,22 @@ function propertyGraphService (req) {
   }
 
   /***** Variable.prototype *****/
+  Variable.prototype.setAlias = function (alias) {
+    this.alias = alias;
+  };
+
   Variable.prototype.get = function () {
     return '?' + (this.alias ? this.alias : this.id);
+  };
+
+  Variable.prototype.addFilter = function (type, data) {
+    var self = this;
+    if (filters[type]) {
+      self.filters.push( {type: type, data: data, apply: function () {return filters[type].f(self, data)}} );
+      return true;
+    } else {
+      return false;
+    }
   };
 
   /***** Values.prototype *****/
@@ -123,6 +142,10 @@ function propertyGraphService (req) {
   Node.prototype.addUri = function (uri) {
     this.values.add(uri);
     uriToNode[uri] = this;
+  };
+
+  Node.prototype.addLiteral = function (lit) {
+    this.values.add(lit);
   };
 
   Node.prototype.getUri = function () {
@@ -217,12 +240,11 @@ function propertyGraphService (req) {
     var self = this;
     var q  = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n'
         q += 'SELECT DISTINCT ?uri ?label WHERE {\n'
-        q += '  FILTER (lang(?label) = "en")\n';
-        q += '  ?uri rdfs:label ?label .\n';
+        q += '  { SELECT DISTINCT ('+ self.variable.get() +' as ?uri) {\n';
     var tmp;
     var vEdges = [];
     var vNodes = [];
-    var queue  = [this];
+    var queue  = [self];
 
     while (queue.length > 0) {
       var cur = queue.pop();
@@ -237,22 +259,31 @@ function propertyGraphService (req) {
           for (i = 0; i < 3; i++) {
             if (tmp[i].isVariable()) {
               if (tmp[i] !== cur && vNodes.indexOf(tmp[i]) < 0) queue.push(tmp[i]);
-              if (tmp[i] === self) tmp[i] = '?uri';
+              if (tmp[i] === self) tmp[i] = self.variable.get();
               else tmp[i] = tmp[i].getVariable();
             } else {
               //TODO: more than one value
               tmp[i] = u(tmp[i].getUri());
             }
           }
-          q += '  ' + tmp.join(' ') + ' .\n';
+          q += '    ' + tmp.join(' ') + ' .\n';
         }
       });
+      cur.variable.filters.forEach(filter => {
+        q += '    ' + filter.apply();
+      });
     }
-    q += '} limit 10';
+    q += '    } limit 10\n  }\n'
+    q += '  OPTIONAL {\n'
+    q += '    FILTER (lang(?label) = "en")\n';
+    q += '    ?uri rdfs:label ?label .\n';
+    q += '  }\n} limit 10';
     console.log(q);
     req.execQuery(q, data => {
+      console.log(data.results.bindings);
       data.results.bindings.forEach(obj => {
-        self.addUri(obj.uri.value);
+        if (obj.uri.type == "uri") self.addUri(obj.uri.value);
+        if (obj.uri.type == "literal") self.addLiteral(obj.uri.value);
       });
       if (onEnd) onEnd();
     });
@@ -345,6 +376,23 @@ function propertyGraphService (req) {
     if (propertyGraph.edit)
       propertyGraph.edit(this);
   };
+
+  /**************************/
+  /******** Filters *********/
+  function lang (v, data) {
+    return 'FILTER (lang(' + v.get() + ') = "' + data.lang + '")\n';
+  }
+
+  function text (v, data, type) {
+    type = type || 'virtuoso';
+    switch (type) {
+      case 'virtuoso':
+        return v.get() + ' bif:contains "\'' + data.keyword + '\'" .\n';
+        break;
+      default:
+        return 'FILTER regex(' + v.get() + ', "' + data.keyword + '", "i")\n'
+    }
+  }
 
   /**************************/
   /****** Public stuff ******/
