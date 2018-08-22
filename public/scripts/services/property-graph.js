@@ -7,10 +7,8 @@ function propertyGraphService (req, settings) {
       diffParentChild = 20,
       childHeight = 20,
       childPadding = 10;
-  var lastNodeId = 0;
-  var lastVarId = 0;
-  var uriToNode = {};
-  var propertyGraph = {
+
+  var propertyGraph = { //TODO this to the end;
     // DATA:
     nodes: [],
     edges: [],
@@ -24,59 +22,54 @@ function propertyGraphService (req, settings) {
     edit: null,
   }
 
+  var lastNodeId = 0;
+  var lastVarId = 0;
+  var uriToNode = {};
+  var usedAlias = [];
+  var validOpts = ['show', 'count'];
+
   var filters = {
     text: {f: text, data: {keyword: null} },
     lang: {f: lang, data: {lang: null} },
   }
 
-  /** Datatypes **/
-  function Node () {
-    this.id = lastNodeId++;
-    this.properties = [];
-    this.lastPropDraw = 0;
-    this.redraw = false;
-    propertyGraph.nodes.push(this);
-    this.isVar = true;
-    this.variable = new Variable(this);
-    this.values = new Values(this);
-  }
-
-  function Property (parentNode) {
-    this.parentNode = parentNode;
-    this.index = parentNode.properties.length;
-    parentNode.properties.push(this);
-    this.variable = new Variable(this);
-    this.values = new Values(this);
-  }
-
-  function Edge (source, target) {
-    this.source = source;
-    this.target = target;
-    propertyGraph.edges.push(this);
-  }
-
+  /******* Variable TDA ******************************************************/
   function Variable (parent) {
-    this.id = lastVarId++;
+    this.id = lastVarId++; // Secure variable name
+    this.alias = '';       // User defined variable name
     this.filters = [];
-    this.show = true;
-    this.count = false;
-    this.alias = '';
+    this.options = {show: true, count: false};
     //this.parent = parent;
   }
-
-  function Values (parent) {
-    this.data = [];
-    this.index = -1;
-    //this.parent = parent;
-  }
-
-  /***** Variable.prototype *****/
-  Variable.prototype.setAlias = function (alias) {
-    this.alias = alias;
-  };
 
   Variable.prototype.get = function () {
     return '?' + (this.alias ? this.alias : this.id);
+  };
+
+  Variable.prototype.setAlias = function (alias) {
+    if (usedAlias.indexOf(alias) >= 0) return false;
+    if ((i = usedAlias.indexOf(this.alias)) >= 0) { //Remove old alias
+      usedAlias.splice(i, 1);
+    }
+    if (alias) {
+      usedAlias.push( alias );
+      this.alias = alias;
+    } else {
+      this.alias = '';
+    }
+    return true;
+  };
+
+  Variable.prototype.getAlias = function () { return this.alias; };
+
+  Variable.prototype.setOptions = function (opts) {
+    var keys = Object.keys(opts);
+    keys = keys.filter(k => {
+      return (validOpts.indexOf(k) >= 0);
+    });
+    keys.forEach(k => {
+      this.options[k] = opts[k];
+    });
   };
 
   Variable.prototype.addFilter = function (type, data) {
@@ -89,46 +82,154 @@ function propertyGraphService (req, settings) {
     }
   };
 
-  /***** Values.prototype *****/
-  Values.prototype.add = function (uri) {
-    if (this.data.indexOf(uri) < 0) {
-      this.data.push(uri);
-      if (this.data.length == 1)
-        this.index = 0;
+  /******* RDFResource TDA ***************************************************/
+  function RDFResource () {
+    this.isVar = true;
+    this.variable = new Variable(this);
+    this.uris = [];
+    this.cur = -1;
+  }
+
+  RDFResource.prototype.mkVariable = function () {
+    this.isVar = true;
+  };
+
+  RDFResource.prototype.mkConst = function () {
+    this.isVar = false;
+  };
+
+  RDFResource.prototype.isVariable = function () {
+    return this.isVar; 
+  };
+
+  RDFResource.prototype.getUri = function () {
+    if (this.cur >= 0) return this.uris[this.cur];
+    return null;
+  };
+
+  RDFResource.prototype.nextUri = function () {
+    if (this.cur < 0) return null;
+    this.cur = (this.cur + 1) % this.uris.length;
+    return this.getUri();
+  };
+
+  RDFResource.prototype.prevUri = function () {
+    if (this.cur < 0) return null;
+    this.cur = (this.cur == 0) ? (this.uris.length - 1) : (this.cur - 1) ;
+    return this.getUri();
+  };
+
+  RDFResource.prototype.countUri = function () {
+    return this.uris.length;
+  };
+
+  RDFResource.prototype.addUri = function (uri) {
+    if (this.uris.indexOf(uri) < 0) {
+      this.uris.push(uri);
+      if (this.uris.length == 1) this.cur = 0;
     }
   };
 
-  Values.prototype.delete = function (uri) {
-    var i = this.data.indexOf(uri);
+  RDFResource.prototype.removeUri = function (uri) {
+    var i = this.uris.indexOf(uri);
     if (i < 0) return false;
-    this.data.splice(i, 1);
-    if (this.data.length == 0) {
-      this.index = -1;
-    } else if (this.index == i){
-      this.next();
+    this.uris.splice(i, 1);
+    if (this.uris.length == 0) {
+      this.cur = -1;
+    } else if (this.cur == i) {
+      this.nextUri();
     }
     return true;
   };
 
-  Values.prototype.get = function () {
-    if (this.isEmpty()) return null;
-    else return this.data[this.index];
+  RDFResource.prototype.getRepr = function () {
+    if (this.isVariable()) return this.variable.get();
+    if (this.countUri() > 0) return req.getLabel(this.getUri());
+    return null;
   };
 
-  Values.prototype.getLabel = function () {
-    return req.getLabel(this.get());
+  RDFResource.prototype.createQuery = function () {
+    if (!this.isVariable()) return null;
+    var self = this;
+    var q  = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n'
+        q += 'SELECT DISTINCT ?uri ?label WHERE {\n'
+        q += '  { SELECT DISTINCT ('+ self.variable.get() +' as ?uri) {\n';
+    var tmp;
+    var vEdges = [];
+    var vNodes = [];
+    var queue  = [self];
+
+    while (queue.length > 0) {
+      var cur = queue.pop();
+      vNodes.push(cur);
+      var edges = propertyGraph.edges.filter(e => {
+        return (e.source.parentNode == cur || e.target == cur);
+      });
+      edges.forEach(e => {
+        if (vEdges.indexOf(e) < 0) {
+          vEdges.push(e);
+          tmp = [e.source.parentNode, e.source, e.target];
+          for (i = 0; i < 3; i++) {
+            if (tmp[i].isVariable()) {
+              if (tmp[i] !== cur && vNodes.indexOf(tmp[i]) < 0) queue.push(tmp[i]);
+              if (tmp[i] === self) tmp[i] = self.variable.get(); //FIXME ?
+              else tmp[i] = tmp[i].variable.get();
+            } else {
+              //TODO: more than one value
+              tmp[i] = u(tmp[i].getUri());
+            }
+          }
+          q += '    ' + tmp.join(' ') + ' .\n';
+        }
+      });
+      cur.variable.filters.forEach(filter => {
+        q += '    ' + filter.apply();
+      });
+      if (cur.isNode()) {
+        cur.literalRelations().forEach(relation => {
+          tmp = ['','',''];
+          if (relation.parentNode.isVariable()) tmp[0] = relation.parentNode.variable.get();
+          else tmp[0] = u(relation.parentNode.getUri());
+          if (relation.isVariable()) tmp[1] = relation.variable.get();
+          else tmp[1] = u(relation.getUri());
+          tmp[2] = relation.literal.get();
+          q += '    ' + tmp.join(' ') + ' .\n';
+          relation.variable.filters.forEach(filter => { q += '    ' + filter.apply(); });
+          relation.literal.filters.forEach(filter => { q += '    ' + filter.apply(); });
+        });
+      }
+    }
+    q += '    } limit 10\n  }\n'
+    q += '  OPTIONAL {\n'
+    q += '    FILTER (lang(?label) = "en")\n';
+    q += '    ?uri rdfs:label ?label .\n';
+    q += '  }\n} limit 10';
+    console.log(q);
+    return q;
   };
 
-  Values.prototype.isEmpty = function () { return (this.index == -1); };
-  Values.prototype.getAll = function () { return this.data; };
-  Values.prototype.next = function () { this.index = (this.index+1)%this.data.length; };
-  Values.prototype.prev = function () {
-    this.index = (this.index == 0) ? this.data.length - 1 : this.index - 1;
+  /******* Node TDA **********************************************************/
+  function Node () {
+    RDFResource.call(this);
+    this.properties = [];
+    // Representation stuff
+    propertyGraph.nodes.push(this);
+    this.id = lastNodeId++;
+    this.lastPropDraw = 0;
+    this.redraw = false;
+  }
+
+  Node.prototype = Object.create(RDFResource.prototype);
+  Node.prototype.constructor = Node;
+
+  Node.prototype.getWidth = function () {
+    return nodeWidth;
   };
 
-  /***** Node.prototype *****/
-  Node.prototype.getWidth = function () { return nodeWidth; };
-  Node.prototype.getBaseHeight = function () { return nodeBaseHeight; };
+  Node.prototype.getBaseHeight = function () {
+    return nodeBaseHeight;
+  };
+
   Node.prototype.getHeight = function () {
     return nodeBaseHeight + this.lastPropDraw*(childHeight+childPadding);
   };
@@ -140,45 +241,14 @@ function propertyGraphService (req, settings) {
   };
 
   Node.prototype.addUri = function (uri) {
-    this.values.add(uri);
+    RDFResource.prototype.addUri.call(this, uri);
     uriToNode[uri] = this;
-  };
-
-  Node.prototype.addLiteral = function (lit) {
-    this.values.add(lit);
-  };
-
-  Node.prototype.getUri = function () {
-    return this.values.get();
-  }
-
-  Node.prototype.getVariable = function () {
-    return this.variable.get();
   };
 
   Node.prototype.getUniq = function () {
     // This function returns an unique 'string' that defines the color of this node.
-    return '1'; //TODO
-  };
-
-  Node.prototype.isVariable = function () {
-    return this.isVar;
-  };
-
-  Node.prototype.mkConst = function () {
-    this.isVar = false;
-    return this;
-  };
-
-  Node.prototype.getLabel = function () {
-    if (this.isVariable()) 
-      return this.getVariable();
-    var uri = this.getUri();
-    if (uri) {
-      return req.getLabel(uri);
-    } else {
-      return "No URIs";
-    }
+    if (this.isVariable()) return '1';
+    else return '2';
   };
 
   Node.prototype.newProp = function () {
@@ -193,14 +263,16 @@ function propertyGraphService (req, settings) {
     return null;
   };
 
-  Node.prototype.nextValue = function () {
-    this.values.next();
-    return this;
+  Node.prototype.isNode = function () {
+    return true;
   };
 
-  Node.prototype.prevValue = function () {
-    this.values.prev();
-    return this;
+  Node.prototype.isProperty = function () {
+    return false;
+  };
+
+  Node.prototype.literalRelations = function () {
+    return this.properties.filter(p => { return p.isLiteral(); });
   };
 
   Node.prototype.delete = function () {
@@ -236,107 +308,76 @@ function propertyGraphService (req, settings) {
 
   Node.prototype.getResults = function (onStart, onEnd) {
     if (!this.isVariable()) return null;
-    if (onStart) onStart();
     var self = this;
-    var q  = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n'
-        q += 'SELECT DISTINCT ?uri ?label WHERE {\n'
-        q += '  { SELECT DISTINCT ('+ self.variable.get() +' as ?uri) {\n';
-    var tmp;
-    var vEdges = [];
-    var vNodes = [];
-    var queue  = [self];
-
-    while (queue.length > 0) {
-      var cur = queue.pop();
-      vNodes.push(cur);
-      var edges = propertyGraph.edges.filter(e => {
-        return (e.source.parentNode == cur || e.target == cur);
-      });
-      edges.forEach(e => {
-        if (vEdges.indexOf(e) < 0) {
-          vEdges.push(e);
-          tmp = [e.source.parentNode, e.source, e.target];
-          for (i = 0; i < 3; i++) {
-            if (tmp[i].isVariable()) {
-              if (tmp[i] !== cur && vNodes.indexOf(tmp[i]) < 0) queue.push(tmp[i]);
-              if (tmp[i] === self) tmp[i] = self.variable.get();
-              else tmp[i] = tmp[i].getVariable();
-            } else {
-              //TODO: more than one value
-              tmp[i] = u(tmp[i].getUri());
-            }
-          }
-          q += '    ' + tmp.join(' ') + ' .\n';
-        }
-      });
-      cur.variable.filters.forEach(filter => {
-        q += '    ' + filter.apply();
-      });
-    }
-    q += '    } limit 10\n  }\n'
-    q += '  OPTIONAL {\n'
-    q += '    FILTER (lang(?label) = "en")\n';
-    q += '    ?uri rdfs:label ?label .\n';
-    q += '  }\n} limit 10';
-    console.log(q);
+    if (onStart) onStart();
+    var q = this.createQuery();
     req.execQuery(q, data => {
       console.log(data.results.bindings);
       data.results.bindings.forEach(obj => {
-        if (obj.uri.type == "uri") self.addUri(obj.uri.value);
-        if (obj.uri.type == "literal") self.addLiteral(obj.uri.value);
+        if (self.isVariable() && obj.uri.type == "uri") self.addUri(obj.uri.value);
+        else if (obj.uri.type == "literal") console.log(obj.uri);
       });
       if (onEnd) onEnd();
     });
   };
 
-  /**************************/
-  /*** Property.prototype ***/
-  Property.prototype.getWidth = function () { return this.parentNode.getWidth() - diffParentChild; };
-  Property.prototype.getHeight = function () { return childHeight };
+  /******* Property TDA ******************************************************/
+  function Property (parentNode) {
+    RDFResource.call(this);
+    this.parentNode = parentNode;
+    this.isLit = false;
+    this.literal = null;
+    this.index = parentNode.properties.length;
+    parentNode.properties.push(this);
+  }
+
+  Property.prototype = Object.create(RDFResource.prototype);
+  Property.prototype.constructor = Property;
+
+  Object.defineProperty(Property.prototype, 'id', { get: function() { return this.parentNode.id; } }); 
+  Object.defineProperty(Property.prototype, 'y',  { get: function() { return this.parentNode.y;  } }); 
+  Object.defineProperty(Property.prototype, 'x',  { get: function() { return this.parentNode.x; } });
+
+  Property.prototype.getWidth = function () {
+    return this.parentNode.getWidth() - diffParentChild;
+  };
+
+  Property.prototype.getHeight = function () {
+    return childHeight;
+  };
+
   Property.prototype.getOffsetY = function () {
     return this.parentNode.getBaseHeight()/2 + this.index * (this.getHeight() + childPadding);
   };
 
-  Object.defineProperty(Property.prototype, 'x', {
-    get: function() {
-      //return this.parentNode.x - (this.parentNode.getWidth()/2);
-      return this.parentNode.x;
-    }
-  });
-
-  Object.defineProperty(Property.prototype, 'y', {
-    get: function() { return this.parentNode.y; }
-  });
-
-  Object.defineProperty(Property.prototype, 'id', {
-    get: function() { return this.parentNode.id; }
-  });
-
-  Property.prototype.addUri = function (uri) {
-    this.values.add(uri);
-  };
-
-  Property.prototype.getUri = function () {
-   return this.values.get();
-  }
-
-  Property.prototype.getLabel = function () {
-    var uri = this.getUri();
-    if (uri) return req.getLabel(uri);
-    else return this.variable.get();
-  };
-
-  Property.prototype.getVariable = function () {
-    return this.variable.get();
-  };
-
-  Property.prototype.isVariable = function () {
-    return this.values.isEmpty();
+  Property.prototype.getRepr = function () {
+    var repr = RDFResource.prototype.getRepr.call(this);
+    if (repr && this.isLiteral()) return repr + ' -> ' + this.literal.get();
+    else return repr
   };
 
   Property.prototype.getUniq = function () {
-    return '2';
+    if (this.isVariable()) return '3';
+    else return '4';
   };
+
+  Property.prototype.isNode = function () {
+    return false;
+  };
+
+  Property.prototype.isProperty = function () {
+    return true;
+  };
+
+  Property.prototype.isLiteral = function () {
+    return this.isLit;
+  };
+
+  Property.prototype.mkLiteral = function () {
+    this.isLit = true;
+    if (!this.literal) this.literal = new Variable();
+    //TODO
+  }
 
   Property.prototype.delete = function () {
     var thisProp = this;
@@ -355,7 +396,13 @@ function propertyGraphService (req, settings) {
     thisProp.parentNode.redraw = true;
   }
 
-  /**************************/
+  /******* Edge TDA **********************************************************/
+  function Edge (source, target) {
+    this.source = source;
+    this.target = target;
+    propertyGraph.edges.push(this);
+  }
+
   /**** from controllers ****/
   Node.prototype.describe = function () {
     if (propertyGraph.describe)
@@ -418,11 +465,11 @@ function propertyGraphService (req, settings) {
     for (i = 0; i < propertyGraph.edges.length; i++) {
       edge = propertyGraph.edges[i];
       s = edge.source.parentNode.getUri();
-      s = s ? u(s) : edge.source.parentNode.getVariable();
+      s = s ? u(s) : edge.source.parentNode.variable.get();
       p = edge.source.getUri();
-      p = p ? u(p) : edge.source.getVariable();
+      p = p ? u(p) : edge.source.variable.get();
       o = edge.target.getUri();
-      o = o ? u(o) : edge.target.getVariable();
+      o = o ? u(o) : edge.target.variable.get();
       if (s[0]=='?' || p[0] == '?' || o[0] == '?')
         m += s + ' ' + p + ' ' + o + '.\n'
       if (!edge.source.parentNode.getUri()) v[s] = 1;

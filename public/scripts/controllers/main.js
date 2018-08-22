@@ -58,7 +58,6 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       });
       vm.searchResults.push(tmp);
     }
-    console.log(vm.searchResults);
 
     //vm.searchResults = data.results.bindings;
     vm.searchError = false;
@@ -104,7 +103,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
 
     // Add the property
     if (prop) {
-      if (uri) d.mkConst();
+      if (uri) d.mkConst();//TODO
       var p = vm.selected.getPropByUri(prop);
       if (!p) {
         p = vm.selected.newProp();
@@ -123,14 +122,14 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       d.variable.setAlias(vm.lastSearch);
       p = d.newProp();
       p.addUri('http://www.w3.org/2000/01/rdf-schema#label');
-      o = pGraph.addNode();
-      o.variable.setAlias(vm.lastSearch+'Label');
-      o.variable.addFilter('lang', {lang: 'en'});
-      o.variable.addFilter('text', {keyword: vm.lastSearch});
-      o.setPosition(d.x+100, d.y+100);
-      pGraph.addEdge(p, o);
+      p.mkConst();
+      p.mkLiteral();
+      p.literal.setAlias(vm.lastSearch+'Label');
+      p.literal.addFilter('lang', {lang: 'en'});
+      p.literal.addFilter('text', {keyword: vm.lastSearch});
     }
-
+    console.log( p );
+    
     vm.updateSVG();
     $scope.$apply();
   }

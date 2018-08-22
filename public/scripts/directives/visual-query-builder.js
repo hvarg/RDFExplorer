@@ -442,7 +442,7 @@ function visualQueryBuilder (pGraph) {
         for (i = 0; i < d.lastPropDraw; i++) {
           thisProp = d.properties[i];
           d3.select(this).filter("."+consts.innerTextClass)
-              .text( getChunkText(thisProp.getLabel(), thisProp.getWidth(), consts.innerTextClass) );
+              .text( getChunkText(thisProp.getRepr(), thisProp.getWidth(), consts.innerTextClass) );
         }
         /* Create new properties for existing nodes */
         for (;d.lastPropDraw<d.properties.length; d.lastPropDraw++) {
@@ -461,8 +461,31 @@ function visualQueryBuilder (pGraph) {
               });
           thisSelection.append("text")
               .classed(consts.innerTextClass, true)
-              .attr("x", 0).attr("y", thisProp.getOffsetY()+ thisProp.getHeight()/2)
-              .text( getChunkText(thisProp.getLabel(), thisProp.getWidth(), consts.innerTextClass) );
+              .attr("x", thisProp.isLiteral() ? - thisProp.getHeight()/2 : 0)
+              .attr("y", thisProp.getOffsetY()+ thisProp.getHeight()/2)
+              .text( getChunkText(
+                  thisProp.getRepr(),
+                  thisProp.isLiteral() ? thisProp.getWidth() - thisProp.getHeight() : thisProp.getWidth(),
+                  consts.innerTextClass
+                ) 
+              );
+
+          if (thisProp.isLiteral()) {
+            thisSelection.append("rect")
+                .classed(consts.innerRectClass, true)
+                .attr("width", thisProp.getHeight())
+                .attr("height", thisProp.getHeight())
+                .attr("x", thisProp.getWidth()/2 - thisProp.getHeight())
+                .attr("y", thisProp.getOffsetY())
+                .style("stroke", thisGraph.colors(thisProp.getUniq()))
+                .on("click", d => { console.log(thisProp); });
+            thisSelection.append("text")
+              .classed('aw-icon', true)
+              .attr("x", (thisProp.getWidth() - thisProp.getHeight())/2)
+              .attr("y", thisProp.getOffsetY()+ thisProp.getHeight()/2)
+              .text("\uf0b0");
+          }
+
         }
       });
       /* update the main rect */
@@ -470,7 +493,7 @@ function visualQueryBuilder (pGraph) {
           .style("stroke", function (d) { return thisGraph.colors(d.getUniq()); })
           .attr("height", function (d) { return d.getHeight() });
       thisGraph.circles.selectAll("text").filter("."+consts.mainTitleClass)
-          .text( function (d) { return getChunkText(d.getLabel(), d.getWidth(), consts.mainTitleClass); });
+          .text( function (d) { return getChunkText(d.getRepr(), d.getWidth(), consts.mainTitleClass); });
 
       // add new nodes
       var newGs= thisGraph.circles.enter().append("g");
@@ -505,7 +528,7 @@ function visualQueryBuilder (pGraph) {
           .classed(consts.mainTitleClass, true)
           .attr("x", 0).attr("y", 0)
           .text(function (d) {
-            return getChunkText(d.getLabel(), d.getWidth(), consts.mainTitleClass);
+            return getChunkText(d.getRepr(), d.getWidth(), consts.mainTitleClass);
           });
 
       // remove old nodes

@@ -89,6 +89,13 @@ path.link.selected {
   alignment-baseline: central;
   font-size: 14;
 }
+
+.aw-icon {
+  text-anchor: middle;
+  alignment-baseline: central;
+  font-size: 14;
+  font-family: FontAwesome;
+}
 /*.csubtitle {
   text-anchor: end;
   alignment-baseline: after-edge;
