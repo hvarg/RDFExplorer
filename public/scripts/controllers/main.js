@@ -125,7 +125,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       p.mkConst();
       p.mkLiteral();
       p.literal.setAlias(vm.lastSearch+'Label');
-      p.literal.addFilter('lang', {lang: 'en'});
+      p.literal.addFilter('lang', {language: 'en'});
       p.literal.addFilter('text', {keyword: vm.lastSearch});
     }
     console.log( p );

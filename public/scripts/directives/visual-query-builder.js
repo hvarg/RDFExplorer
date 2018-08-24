@@ -439,11 +439,11 @@ function visualQueryBuilder (pGraph) {
           d.lastPropDraw = 0;
         }
         /* Update already drawn properties */
-        for (i = 0; i < d.lastPropDraw; i++) {
-          thisProp = d.properties[i];
-          d3.select(this).filter("."+consts.innerTextClass)
-              .text( getChunkText(thisProp.getRepr(), thisProp.getWidth(), consts.innerTextClass) );
-        }
+        d3.select(this).selectAll("."+consts.innerTextClass).filter((_,i) => {
+          return (i < d.lastPropDraw);
+        }).text((d,i) => {
+          return getChunkText(d.properties[i].getRepr(), d.properties[i].getWidth(), consts.innerTextClass) 
+        });
         /* Create new properties for existing nodes */
         for (;d.lastPropDraw<d.properties.length; d.lastPropDraw++) {
           thisProp = d.properties[d.lastPropDraw];
@@ -457,8 +457,12 @@ function visualQueryBuilder (pGraph) {
               .style("stroke", thisGraph.colors(thisProp.getUniq()))
               .on("click", d => { console.log(thisProp); })
               .on("contextmenu", d => {
-                menu({ 'Remove': function () { thisProp.delete(); thisGraph.updateGraph(); }});
+                menu({
+                  'Edit':   function () { thisProp.edit(); },
+                  'Remove': function () { thisProp.delete(); thisGraph.updateGraph();},
+                });
               });
+
           thisSelection.append("text")
               .classed(consts.innerTextClass, true)
               .attr("x", thisProp.isLiteral() ? - thisProp.getHeight()/2 : 0)
@@ -606,7 +610,9 @@ function contextMenu() {
             .append('g').attr('class', 'context-menu')
             .selectAll('tmp')
             .data(items).enter()
-            .append('g').attr('class', 'menu-entry')
+            //.append('g').attr('class', 'menu-entry')
+            .append('g').classed('menu-entry', true)
+            .classed('disabled', function (d) {return !f[d];})
             .on('click', function (d) { if (f[d]) f[d](); });
 
         d3.selectAll('.menu-entry')

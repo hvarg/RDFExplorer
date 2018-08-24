@@ -1,79 +1,136 @@
 div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
-  h1(style="text-align: center;") Editing {{ ctrl.selected.getVariable() }}
+  h1.ta-center Editing {{ ctrl.selected.variable.get() }}  
+    i(ng-if="!ctrl.isVariable") ({{ ctrl.selected.getUri().getLabel() }})
   hr
-  .examples
-    b Common relations:
-    span.dropable(draggable="true",
-        ondragstart="angular.element(this).scope().drag(event, '', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')",
-        ) rdf:type
-    span.dropable(draggable="true",
-        ondragstart="angular.element(this).scope().drag(event, '', 'http://www.w3.org/2000/01/rdf-schema#label')",
-        ) rdfs:label
 
-  h5(ng-if="ctrl.val.length>0") Possible values:
-  //.input-group.input-group-sm.mb-3
-    input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newValue",
-                       aria-label="New value", aria-describedby='edit-button-add')
-    .input-group-append
-      button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue()") add
-  div(ng-repeat="(key, value) in ctrl.val", title="{{value}}") {{ ctrl.getLabel(value) || value }}
-    i.pull-right.fa.fa-trash(ng-click="ctrl.removeValue(value);")
+  .ed-container.mb-3(ng-if="ctrl.variable")
+    .ed-container-header
+      i.fa(ng-class="ctrl.varActive ? 'fa-chevron-down' : 'fa-chevron-right'",
+           ng-click="ctrl.varActive = !ctrl.varActive")
+      .ed-container-title Variable settings:
+    .ed-container-content(ng-class="{ active: ctrl.varActive }")
+      form
+        .form-row
+          .input-group.col-md-12
+            .input-group-prepend
+              label.input-group-text(for="edit-var-name") Variable name
+            span.edit-var-name-prefix ?
+            input#edit-var-name.form-control(
+                type="text",
+                autocomplete="off",
+                ng-model="ctrl.variable.alias",
+                placeholder="{{ ctrl.variable.id }}")
+        .form-row.mt-2
+          .form-group.form-check.col-md-4
+            input#edit-show(type="checkbox", ng-model="ctrl.variable.options.show")
+            label.form-check-label(for="edit-show") show me
+          .form-group.form-check.col-md-4
+            input#edit-count(type="checkbox", ng-model="ctrl.variable.options.count")
+            label.form-check-label(for="edit-count") count me
+          .form-group.form-check.col-md-4
+            input#edit-is-var(type="checkbox", ng-model="ctrl.isVariable")
+            label.form-check-label(for="edit-is-var") Is Variable
 
-  h5 Variable settings:
-  form
-    .form-row
-      .input-group.col-md-12
-        .input-group-prepend
-          label.input-group-text(for="edit-var-name") Variable name
-        span#edit-var-name-prefix ?
-        input#edit-var-name.form-control(
-            type="text",
-            autocomplete="off",
-            ng-model="ctrl.var.alias",
-            placeholder="{{ ctrl.var.id }}")
-    .form-row.mt-2
-      .form-group.form-check.col-md-4
-        input#edit-show(type="checkbox", ng-model="ctrl.var.show")
-        label.form-check-label(for="edit-show") show me
-      .form-group.form-check.col-md-4
-        input#edit-count(type="checkbox", ng-model="ctrl.var.count")
-        label.form-check-label(for="edit-count") count me
-      .form-group.form-check.col-md-4
-        input#edit-is-var(type="checkbox", ng-model="ctrl.isVariable")
-        label.form-check-label(for="edit-is-var") Is Variable
+      h6 Filters:
+      .ed-filters
+        .form-row.mb-1(ng-repeat="(key, value) in ctrl.variable.filters", style="margin:0;")
+          .input-group.input-group-sm
+            .input-group-prepend
+              label.input-group-text() {{ ctrl.filters[value.type].name }}
+            input.form-control(
+                ng-repeat="(k, v) in ctrl.filters[value.type].data",
+                type="{{ v.type }}",
+                autocomplete="off",
+                ng-model="value.data[k]",
+                placeholder="{{ k }}")
 
-  h5 Filters:
-  div(ng-repeat="(key, value) in ctrl.var.filters", title="{{value}}") {{ value.type }} ({{ value.data }})
-    i.pull-right.fa.fa-trash
+        .form-row.mb-1(style="margin:0;")
+          .input-group.input-group-sm
+            select.custom-select(ng-model="ctrl.newFilterType")
+              option(value="") -- Select a new filter --
+              option(ng-repeat="(key, value) in ctrl.filters", value="{{key}}") {{value.name}}
+            input.form-control(
+                ng-repeat="(k, v) in ctrl.filters[ctrl.newFilterType].data",
+                type="{{ v.type }}",
+                autocomplete="off",
+                ng-init="ctrl.newFilterData[k] = ''",
+                ng-model="ctrl.newFilterData[k]",
+                placeholder="{{ k }}")
+            .input-group-append
+              button.btn.btn-outline-secondary(type="button", ng-click="ctrl.addNewFilter(ctrl.variable)") Add
 
 
-    //.form-row.mt-2
-      .form-group.col-md-12
-        // The typeahead adds a relative div as parent of the label, .input-group-typeahead to fix that.
-        .input-group.input-group-typeahead
-          .input-group-prepend
-            label.input-group-text(for="edit-var-class") Class:
-          input#edit-var-class.form-control(
-              type="text",
-              autocomplete="off",
-              ng-class="{'loading': ctrl.loading, 'error': ctrl.noResults}",
-              placeholder="Write a class name to search",
-              ng-model="ctrl.class",
-              typeahead-template-url="customTemplate.html",
-              typeahead-show-hint="true",
-              uib-typeahead-wait-ms="5000",
-              typeahead-min-length="3",
-              uib-typeahead="class as class.label.value for class in ctrl.getClasses($viewValue)",
-              typeahead-loading="ctrl.loading",
-              typeahead-no-results="ctrl.noResults")
+  .ed-container.mb-3(ng-if="ctrl.literal")
+    .ed-container-header
+      i.fa(ng-class="ctrl.litActive ? 'fa-chevron-down' : 'fa-chevron-right'",
+           ng-click="ctrl.litActive = !ctrl.litActive")
+      .ed-container-title Literal property settings:
+    .ed-container-content(ng-class="{ active: ctrl.litActive }")
+      form
+        .form-row
+          .input-group.col-md-12
+            .input-group-prepend
+              label.input-group-text(for="edit-var-name2") Variable name
+            span.edit-var-name-prefix ?
+            input#edit-var-name2.form-control(
+                type="text",
+                autocomplete="off",
+                ng-model="ctrl.literal.alias",
+                placeholder="{{ ctrl.literal.id }}")
+        .form-row.mt-2
+          .form-group.form-check.col-md-4
+            input#edit-show(type="checkbox", ng-model="ctrl.literal.options.show")
+            label.form-check-label(for="edit-show") show me
+          .form-group.form-check.col-md-4
+            input#edit-count(type="checkbox", ng-model="ctrl.literal.options.count")
+            label.form-check-label(for="edit-count") count me
+
+      h6 Filters:
+      .ed-filters
+        .form-row.mb-1(ng-repeat="(key, value) in ctrl.literal.filters", style="margin:0;")
+          .input-group.input-group-sm
+            .input-group-prepend
+              label.input-group-text() {{ ctrl.filters[value.type].name }}
+            input.form-control(
+                ng-repeat="(k, v) in ctrl.filters[value.type].data",
+                type="{{ v.type }}",
+                autocomplete="off",
+                ng-model="value.data[k]",
+                placeholder="{{ k }}")
+
+        .form-row.mb-1(style="margin:0;")
+          .input-group.input-group-sm
+            select.custom-select(ng-model="ctrl.newFilterType")
+              option(value="") -- Select a new filter --
+              option(ng-repeat="(key, value) in ctrl.filters", value="{{key}}") {{value.name}}
+            input.form-control(
+                ng-repeat="(k, v) in ctrl.filters[ctrl.newFilterType].data",
+                type="{{ v.type }}",
+                autocomplete="off",
+                ng-init="ctrl.newFilterData[k] = ''",
+                ng-model="ctrl.newFilterData[k]",
+                placeholder="{{ k }}")
+            .input-group-append
+              button.btn.btn-outline-secondary(type="button", ng-click="ctrl.addNewFilter(ctrl.literal)") Add
+
+  .ed-container.mb-3
+    .ed-container-header
+      i.fa(ng-class="ctrl.valActive ? 'fa-chevron-down' : 'fa-chevron-right'",
+           ng-click="ctrl.valActive = !ctrl.valActive")
+      .ed-container-title Values:
+    .ed-container-content(ng-class="{ active: ctrl.valActive }")
+      .input-group.input-group-sm.mb-3
+        input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newValue",
+                           aria-label="New value", aria-describedby='edit-button-add')
+        .input-group-append
+          button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue()") add
+      .row.ed-values-elem(ng-repeat="(key, value) in ctrl.uris", title="{{value}}")
+        .col-md-1 
+        .col-md-10 {{ value.getLabel() }}
+        .col-md-1
+          i.pull-right.fa.fa-trash(ng-click="ctrl.removeValue(value);")
+
   
   br
   button.pull-right.btn.btn-primary(type="button", ng-click="ctrl.save()") Save
   button.pull-right.btn.btn-warning(type="button", ng-click="ctrl.cancel()", style="margin-right: 10px;") Cancel
-  br
-
-  //div
-    hr
-    pre values: {{ctrl.val | json}}
-    pre variable: {{ctrl.var | json}}
-    pre obj: {{ctrl.selected | json}}

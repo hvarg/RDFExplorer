@@ -1,48 +1,79 @@
 angular.module('rdfvis.controllers').controller('EditCtrl', EditCtrl);
 
-EditCtrl.$inject = ['$scope', 'propertyGraphService', 'requestService', 'queryService'];
+EditCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService'];
 
-function EditCtrl ($scope, pGraph, request, query) {
+function EditCtrl ($scope, pGraph, query) {
   var vm = this;
   vm.selected = null;
-  vm.val = null;
-  vm.var = null;
-  vm.isVariable = false;
+  vm.isNode = true;
+  vm.isVariable = true;
+  vm.isLiteral = false;
+  vm.uris = [];
+  vm.cur = -1;
+  vm.variable = null;
+  vm.literal  = null;
+
   vm.newValue = '';
+  vm.newFilterType = "";
+  vm.newFilterData = {};
+
+  vm.varActive = false;
+  vm.litActive = false;
+  vm.valActive = false;
 
   vm.save = setData;
   vm.cancel = getData;
-  vm.getLabel = request.getLabel;
   vm.removeValue = removeValue;
   vm.addValue = addValue;
+  vm.addNewFilter = addNewFilter;
 
-  pGraph.edit = edit;
+  pGraph.edit = editSelected;
+  vm.filters = pGraph.filters;
 
-  function copyObj (obj) { return Object.assign({}, obj); }
+  /* Data that can be edited in this panel.
+   * Editable of Node: properties ?
+   * Editable of Property: isLit, literal
+   * Editable of RDFResource: isVar, variable, uris, cur
+   * Editable of Variable: alias, filters, opts */
 
-  function edit (obj) {
-    vm.selected = obj;
-    getData();
-    $scope.$emit('setSelected', obj);
-    $scope.$emit('tool', 'edit');
+  function clearData () {
+    vm.selected = null;
+    vm.isNode = true;
+    vm.isVariable = true;
+    //vm.properties = [];
+    vm.uris = [];
+    vm.cur = -1;
+    vm.isLiteral = false;
+    vm.variable = null;
+    vm.literal  = null;
   }
 
   function getData () {
-    vm.val = vm.selected.values.data.slice();
-    vm.var = copyObj(vm.selected.variable);
+    if (!vm.selected) return null;
+    vm.isNode = vm.selected.isNode();
     vm.isVariable = vm.selected.isVariable();
+    vm.uris = vm.selected.uris.slice();
+    vm.cur = vm.selected.cur;
+    vm.variable = vm.selected.variable;
+    vm.isLiteral = vm.selected.isLiteral();
+    if (vm.isLiteral) {
+      vm.literal = vm.selected.literal;
+    } else {
+      vm.literal = null;
+    }
+    vm.varActive = vm.isVariable;
+    vm.litActive = vm.isLiteral;
+    vm.valActive = (vm.cur >= 0);
   }
 
   function setData () {
-    vm.selected.isVar = vm.isVariable;
-    if (vm.selected.variable.alias != vm.var.alias) vm.selected.variable.alias = vm.var.alias;
-    if (vm.selected.variable.show != vm.var.show) vm.selected.variable.show = vm.var.show;
-    if (vm.selected.variable.count != vm.var.count) vm.selected.variable.count = vm.var.count;
-    var enter = vm.val.filter(uri => {
+    if (vm.isVariable) vm.selected.mkVariable();
+    else vm.selected.mkConst();
+    var enter = vm.uris.filter(uri => {
       return (vm.selected.values.data.indexOf(uri) < 0)
     });
     var exit = vm.selected.values.data.filter(uri => {
-      return (vm.val.indexOf(uri) < 0);
+      return (vm.uris.indexOf(uri) < 0);
     });
 
     enter.forEach(uri => { vm.selected.values.add(uri); });
@@ -51,17 +82,33 @@ function EditCtrl ($scope, pGraph, request, query) {
     $scope.$emit('update', '');
   }
 
+  function copyObj (obj) { return Object.assign({}, obj); }
+
+  function editSelected (obj) {
+    if (obj) vm.selected = obj;
+    getData();
+    $scope.$emit('setSelected', obj);
+    $scope.$emit('tool', 'edit');
+  }
+
   function removeValue (value) {
-    var i = vm.val.indexOf(value);
-    if (i > -1) vm.val.splice(i, 1);
+    var i = vm.uris.indexOf(value);
+    if (i > -1) vm.uris.splice(i, 1);
   }
 
   function addValue () {
-    var i = vm.val.indexOf(vm.newValue);
+    var i = vm.uris.indexOf(vm.newValue);
     if (i < 0 && vm.newValue) {
-      vm.val.push(vm.newValue);
+      vm.uris.push(vm.newValue);
       vm.newValue = '';
     }
+  }
+
+  function addNewFilter (targetVar) {
+    if (vm.newFilterType == "") return false;
+    targetVar.addFilter(vm.newFilterType, copyObj(vm.newFilterData));
+    vm.newFilterType = "";
+    vm.newFilterData = {};
   }
 
 }

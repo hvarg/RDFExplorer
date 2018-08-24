@@ -12,6 +12,10 @@ function propertyGraphService (req, settings) {
     // DATA:
     nodes: [],
     edges: [],
+    filters: {
+      text: {name: 'contains', inputs: 1, data: {keyword: {type: 'text'}}},
+      lang: {name: 'language', inputs: 1, data: {language: {type: "text"}} },
+    },
     // Functions:
     addNode: addNode,
     addEdge: addEdge,
@@ -28,10 +32,25 @@ function propertyGraphService (req, settings) {
   var usedAlias = [];
   var validOpts = ['show', 'count'];
 
-  var filters = {
-    text: {f: text, data: {keyword: null} },
-    lang: {f: lang, data: {lang: null} },
+  /******* Filter TDA ********************************************************/
+  function Filter (variable, type, data) {
+    this.variable = variable;
+    this.type = type;
+    this.data = data;
   }
+
+  Filter.prototype.apply = function () {
+    if (this.type == 'lang') {
+      return 'FILTER (lang(' + this.variable.get() + ') = "' + this.data.language + '")\n';
+    }
+    if (this.type == 'text') { //Only working with virtuoso currently
+        return this.variable.get() + ' bif:contains "\'' + this.data.keyword + '\'" .\n';
+      //return 'FILTER regex(' + v.get() + ', "' + data.keyword + '", "i")\n'
+    }
+    console.log('filter type "'+ type +'" not know.');
+    return null;
+  };
+
 
   /******* Variable TDA ******************************************************/
   function Variable (parent) {
@@ -41,6 +60,10 @@ function propertyGraphService (req, settings) {
     this.options = {show: true, count: false};
     //this.parent = parent;
   }
+
+  Variable.prototype.addFilter = function (type, data) {
+    this.filters.push( new Filter(this, type, data) );
+  };
 
   Variable.prototype.get = function () {
     return '?' + (this.alias ? this.alias : this.id);
@@ -70,16 +93,6 @@ function propertyGraphService (req, settings) {
     keys.forEach(k => {
       this.options[k] = opts[k];
     });
-  };
-
-  Variable.prototype.addFilter = function (type, data) {
-    var self = this;
-    if (filters[type]) {
-      self.filters.push( {type: type, data: data, apply: function () {return filters[type].f(self, data)}} );
-      return true;
-    } else {
-      return false;
-    }
   };
 
   /******* RDFResource TDA ***************************************************/
@@ -275,6 +288,10 @@ function propertyGraphService (req, settings) {
     return this.properties.filter(p => { return p.isLiteral(); });
   };
 
+  Node.prototype.isLiteral = function () {
+    return false;
+  };
+
   Node.prototype.delete = function () {
     var i, j, edge, prop, tmp;
     // remove all edges with this node as target.
@@ -423,23 +440,6 @@ function propertyGraphService (req, settings) {
     if (propertyGraph.edit)
       propertyGraph.edit(this);
   };
-
-  /**************************/
-  /******** Filters *********/
-  function lang (v, data) {
-    return 'FILTER (lang(' + v.get() + ') = "' + data.lang + '")\n';
-  }
-
-  function text (v, data, type) {
-    type = type || 'virtuoso';
-    switch (type) {
-      case 'virtuoso':
-        return v.get() + ' bif:contains "\'' + data.keyword + '\'" .\n';
-        break;
-      default:
-        return 'FILTER regex(' + v.get() + ', "' + data.keyword + '", "i")\n'
-    }
-  }
 
   /**************************/
   /****** Public stuff ******/

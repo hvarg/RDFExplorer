@@ -126,3 +126,7 @@ path.link.selected {
 .menu-entry-rect:hover {
   fill: rgb(200,200,200);
 }
+
+.menu-entry.disabled {
+  cursor: not-allowed;
+}

@@ -45,6 +45,12 @@ function requestService (settings, $http) {
     label[uri] = label;
   }
 
+  String.prototype.getLabel = function () {
+    if (label[this]) return label[this];
+    console.log("label for '" + this + "' not found.");
+    return this;
+  };
+
   return {
     execQuery: execQuery,
     getLabel: getLabel,
