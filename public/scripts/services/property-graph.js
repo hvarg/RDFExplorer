@@ -103,6 +103,26 @@ function propertyGraphService (req, settings) {
     this.cur = -1;
   }
 
+  /**** from controllers ****/
+  RDFResource.prototype.describe = function () {
+    if (propertyGraph.describe)
+      propertyGraph.describe(this);
+  };
+
+  RDFResource.prototype.edit = function () {
+    if (propertyGraph.edit)
+      propertyGraph.edit(this);
+  };
+
+  RDFResource.prototype.onClick = function () {
+    if (this.isVariable()) this.edit();
+    else if (this.countUri() > 0) this.describe();
+    else console.log('This element is not a variable nor has values!')
+  };
+
+  RDFResource.prototype.onDblClick = function () {
+  };
+
   RDFResource.prototype.mkVariable = function () {
     this.isVar = true;
   };
@@ -419,27 +439,6 @@ function propertyGraphService (req, settings) {
     this.target = target;
     propertyGraph.edges.push(this);
   }
-
-  /**** from controllers ****/
-  Node.prototype.describe = function () {
-    if (propertyGraph.describe)
-      propertyGraph.describe(this);
-  };
-
-  Property.prototype.describe = function () {
-    if (propertyGraph.describe)
-      propertyGraph.describe(this);
-  };
-
-  Node.prototype.edit = function () {
-    if (propertyGraph.edit)
-      propertyGraph.edit(this);
-  };
-
-  Property.prototype.edit = function () {
-    if (propertyGraph.edit)
-      propertyGraph.edit(this);
-  };
 
   /**************************/
   /****** Public stuff ******/

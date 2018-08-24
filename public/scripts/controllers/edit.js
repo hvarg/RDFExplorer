@@ -85,10 +85,12 @@ function EditCtrl ($scope, pGraph, query) {
   function copyObj (obj) { return Object.assign({}, obj); }
 
   function editSelected (obj) {
+    clearData();
     if (obj) vm.selected = obj;
     getData();
     $scope.$emit('setSelected', obj);
     $scope.$emit('tool', 'edit');
+    $scope.$apply();
   }
 
   function removeValue (value) {

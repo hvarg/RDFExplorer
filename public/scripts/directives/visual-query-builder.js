@@ -266,29 +266,8 @@ function visualQueryBuilder (pGraph) {
       if (mouseDownNode !== d){
         // we're in a different node: create new edge for mousedown edge and add to graph
         pGraph.addEdge(mouseDownNode, d);
-        /*
-        var relation = query.addResource(),
-            newEdge = query.addTriple(mouseDownNode, relation, d);
-        relation.x = (mouseDownNode.x + d.x) / 2;
-        relation.y = (mouseDownNode.y + d.y) / 2;
-        relation.rad = 0;
-        *TODO first rotation its not working.
-        if (mouseDownNode.y > d.y)
-          relation.rad = 45 - Math.atan((d.x - mouseDownNode.x)/(d.y - mouseDownNode.y)) * (180/Math.PI);
-        else
-          relation.rad = 225 + Math.atan((d.x - mouseDownNode.x)/(mouseDownNode.y - d.y)) * (180/Math.PI);
-        */
         thisGraph.updateGraph();
-        /*
-        var a = String( mouseDownNode.getUri() ),
-            b = String( d.getUri() );
-        if (a && b) request.findRelation(a, b, function (data) {
-          if (data.length == 0) {
-            relation.fault = true;
-            thisGraph.updateGraph();
-          }
-        });
-        else if (a) request.relations(a);
+        /*else if (a) request.relations(a);
         else if (b) request.inverseRelations(b);*/
       } else {
         // we're in the same node
@@ -455,7 +434,8 @@ function visualQueryBuilder (pGraph) {
               .attr("x", -thisProp.getWidth()/2)
               .attr("y", thisProp.getOffsetY())
               .style("stroke", thisGraph.colors(thisProp.getUniq()))
-              .on("click", d => { console.log(thisProp); })
+              .on("click",    d => { thisProp.onClick(); d3.event.stopPropagation(); })
+              .on("dblclick", d => { thisProp.onDblClick(); })
               .on("contextmenu", d => {
                 menu({
                   'Edit':   function () { thisProp.edit(); },
@@ -508,8 +488,8 @@ function visualQueryBuilder (pGraph) {
         .on("mouseout",  function(d){ d3.select(this).classed(consts.connectClass, false); })
         .on("mousedown", function(d){ thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d); })
         .on("mouseup",   function(d){ thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d); })
-        .on("click",     function(d){ /* Do something TODO*/ })
-        .on("dblclick",  function(d){ if (d.isVariable()) d.edit(); else d.describe(); })
+        .on("click",     function(d){ d.onClick(); })
+        .on("dblclick",  function(d){ d.onDblClick(); })
         .on('contextmenu', function(d){
             menu({
               'Describe': function () { d.describe(); },
