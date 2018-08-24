@@ -16,14 +16,21 @@ div#search-container(
           ng-class="{'active': main.searchActive, 'loading': main.searchWait, 'error': main.searchError }")
       span#search-icon.fa.fa-search(aria-hidden="true")
   div#search-results-panel(ng-hide="!main.searchActive")
-    //img(src="/images/spin.svg", style="display: block; margin: 0 auto;", ng-show="main.searchWait")
     div.alert.alert-warning(role="alert", ng-show="main.noResults")
       strong No results found!
+
+    .fakeRect(ng-if="main.searchResults.length>0",
+              style="border-color: blue; text-align: left;",
+              draggable="true", 
+              ondragstart="angular.element(this).scope().drag(event, '', '', 'search')")
+      span.fa.fa-bars(aria-hidden="true").mr-2.ml-2
+      span(title="{{value.uri.value}}") Search by label '{{ main.lastSearch}}'
+
     div.fakeRect(
         draggable="true",
         ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri.value, '')",
         ng-repeat="(key, value) in main.searchResults track by $index ") 
-      span(style="display: block; margin-bottom: -8px;", title="{{value.uri.value}}") {{ value.label.value }}
+      div(title="{{value.uri.value}}", ng-class="{'has-types': value.types.length>0}") {{ value.label.value }}
       span(
           ng-repeat="(k, v) in value.types",
           title="{{v.uri.value}}"

@@ -84,20 +84,27 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     vm.searchActive = true;
   }
 
-  function drag (ev, uri, prop) {
+  function drag (ev, uri, prop, special) {
+    if (!special) special = '';
     ev.dataTransfer.setData("uri", uri);
     ev.dataTransfer.setData("prop", prop);
+    ev.dataTransfer.setData("special", special);
   }
 
   function drop (ev) {
     var z    = vm.getZoom();
     var uri  = ev.dataTransfer.getData("uri");
     var prop = ev.dataTransfer.getData("prop");
+    var special = ev.dataTransfer.getData("special");
+    if (!uri && !prop && !special) return null;
     // Create or get the node.
     var d = pGraph.getNodeByUri(uri);
     if (!d) {
       d = pGraph.addNode();
-      if (uri) d.addUri(uri);
+      if (uri) {
+        d.addUri(uri);
+        d.mkConst();
+      }
     }
     d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
 
@@ -117,9 +124,12 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       });
       if (vm.searchResults.length == 0) 
         vm.searchActive = false;
-      // Add other elements;
-      vm.updateSVG();
+    }
+
+    if (special == 'search') {
+      // From search, create the filters
       d.variable.setAlias(vm.lastSearch);
+      vm.updateSVG();
       p = d.newProp();
       p.addUri('http://www.w3.org/2000/01/rdf-schema#label');
       p.mkConst();
@@ -128,10 +138,12 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       p.literal.addFilter('lang', {language: 'en'});
       p.literal.addFilter('text', {keyword: vm.lastSearch});
     }
-    console.log( p );
     
     vm.updateSVG();
     $scope.$apply();
+  }
+
+  function dropSearch () {
   }
 
   function tutorial () {
