@@ -414,6 +414,7 @@ function visualQueryBuilder (pGraph) {
         if (d.redraw) {
           d3.select(this).selectAll("."+consts.innerTextClass).remove();
           d3.select(this).selectAll("."+consts.innerRectClass).remove();
+          d3.select(this).selectAll(".aw-icon").remove();
           d.redraw = false;
           d.lastPropDraw = 0;
         }

@@ -70,14 +70,14 @@ function EditCtrl ($scope, pGraph, query) {
     if (vm.isVariable) vm.selected.mkVariable();
     else vm.selected.mkConst();
     var enter = vm.uris.filter(uri => {
-      return (vm.selected.values.data.indexOf(uri) < 0)
+      return (vm.selected.uris.indexOf(uri) < 0)
     });
-    var exit = vm.selected.values.data.filter(uri => {
+    var exit = vm.selected.uris.filter(uri => {
       return (vm.uris.indexOf(uri) < 0);
     });
 
-    enter.forEach(uri => { vm.selected.values.add(uri); });
-    exit.forEach(uri => { vm.selected.values.delete(uri); });
+    enter.forEach(uri => { vm.selected.addUri(uri); });
+    exit.forEach(uri => { vm.selected.removeUri(uri); });
     getData();
     $scope.$emit('update', '');
   }
@@ -90,7 +90,8 @@ function EditCtrl ($scope, pGraph, query) {
     getData();
     $scope.$emit('setSelected', obj);
     $scope.$emit('tool', 'edit');
-    $scope.$apply();
+    if (!this.isNode)
+      $scope.$apply();
   }
 
   function removeValue (value) {

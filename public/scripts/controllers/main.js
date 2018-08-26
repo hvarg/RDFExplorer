@@ -97,16 +97,18 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     var prop = ev.dataTransfer.getData("prop");
     var special = ev.dataTransfer.getData("special");
     if (!uri && !prop && !special) return null;
-    // Create or get the node.
-    var d = pGraph.getNodeByUri(uri);
-    if (!d) {
-      d = pGraph.addNode();
-      if (uri) {
-        d.addUri(uri);
-        d.mkConst();
+    // Create or get the node unless this a literal property
+    if (special != 'literal'){
+      var d = pGraph.getNodeByUri(uri);
+      if (!d) {
+        d = pGraph.addNode();
+        if (uri) {
+          d.addUri(uri);
+          d.mkConst();
+        }
       }
+      d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
     }
-    d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
 
     // Add the property
     if (prop) {
@@ -115,9 +117,15 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       if (!p) {
         p = vm.selected.newProp();
         p.addUri(prop);
+        p.mkConst();
       }
-      // Create (selected)--p-->(d) edge
-      pGraph.addEdge(p, d);
+      if (special == 'literal') {
+        // If we are creating a literal property.
+        p.mkLiteral();
+      } else {
+        // If we are not creating a literal property create the edge (selected)--p-->(d)
+        pGraph.addEdge(p, d);
+      }
     } else { // from search, remove the search result
       vm.searchResults = vm.searchResults.filter( obj => {
         return (obj.uri.value != uri);
