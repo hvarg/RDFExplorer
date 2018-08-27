@@ -7,8 +7,6 @@ function visualQueryBuilder (pGraph) {
     link: link,
     restrict: 'EA',
     scope: {
-      update: '=',
-      getZoom: '=',
     },
   };
   return directive;
@@ -520,6 +518,11 @@ function visualQueryBuilder (pGraph) {
       thisGraph.circles.exit().remove();
     };
 
+    GraphCreator.prototype.getZoom = function(){
+      var t = this.zoom.translate();
+      return [t[0], t[1], this.zoom.scale()];
+    }
+
     /** MAIN SVG **/
     var svg = d3.select(element[0]).append("svg")
           .attr("id", "d3vqb")
@@ -530,14 +533,8 @@ function visualQueryBuilder (pGraph) {
     var menu = contextMenu().items('Describe', 'Edit', 'Collect', 'Remove');
     graph.updateGraph();
     
-    scope.update = function () {
-      graph.updateGraph();
-    };
-
-    scope.getZoom = function () {
-      var t = graph.zoom.translate();
-      return [t[0], t[1], graph.zoom.scale()];
-    };
+    //TODO
+    pGraph.connect(element[0], graph);
 
 /*************/
     function getChunkText (text, width, myclass) {
@@ -575,7 +572,7 @@ function contextMenu() {
         items = [], rescale = false;
 
     function menu(f) {
-        var z = scope.getZoom();
+        var z = graph.getZoom();
         var xycoords = d3.mouse(graph.svgG.node());
         //console.log(z, xycoords); TODO: zoom z[2]
         var x = (xycoords[0] + z[0]);

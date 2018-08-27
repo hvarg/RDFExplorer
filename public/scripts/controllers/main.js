@@ -4,6 +4,13 @@ MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestSe
 
 function MainCtrl ($scope, pGraph, query, request, $timeout) {
   var vm = this;
+  /* General stuff */
+  vm.tool = 'none';
+  vm.toolToggle = toolToggle;
+
+  vm.search = search;
+  vm.tutorial = tutorial;
+
   /* vars */
   vm.searchInput = null;
   vm.searchResults = [];
@@ -11,33 +18,27 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   vm.searchWait = false;
   vm.noResults  = false;
   vm.lastSearch = '';
-  vm.tool = 'none';
 
   /* functions */
-  vm.updateSVG = null;
+  vm.updateSVG = pGraph.refresh;
   vm.getZoom = null;
-  vm.tutorial = tutorial;
-  vm.toolToggle = toolToggle;
-  vm.search = search;
   vm.searchToggle = searchToggle;
   vm.searchActivate = searchActivate;
   vm.searchDeactivate = searchDeactivate;
-  vm.test = test;
-  vm.selected = null;
 
   /* scope */
   $scope.drag = drag;
-  $scope.drop = drop;
+  $scope.dragSearch = dragSearch;
   $scope.$on('tool', function(event, data) { vm.tool = data; });
-  $scope.$on('setSelected', function(event, data) { vm.selected = data; });
+  $scope.$on('setSelected', function(event, data) { pGraph.setSelected(data); });
   $scope.$on('newSettings', function(event, data) { vm.lastSearch = ''; });
   $scope.$on('update', function(event, data) { vm.updateSVG(); });
 
   /* Tools display function */
   function toolToggle (panel) {
     vm.tool = (vm.tool == panel) ? 'none' : panel;
-    if (panel == 'describe' && vm.selected) vm.selected.describe();
-    if (panel == 'edit' && vm.selected) vm.selected.edit();
+    if (panel == 'describe' && pGraph.getSelected()) pGraph.getSelected().describe();
+    if (panel == 'edit' && pGraph.getSelected()) pGraph.getSelected().edit();
   }
 
   function searchToggle() { vm.searchActive = !vm.searchActive; }
@@ -91,79 +92,12 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     ev.dataTransfer.setData("special", special);
   }
 
-  function drop (ev) {
-    var z    = vm.getZoom();
-    var uri  = ev.dataTransfer.getData("uri");
-    var prop = ev.dataTransfer.getData("prop");
-    var special = ev.dataTransfer.getData("special");
-    if (!uri && !prop && !special) return null;
-    // Create or get the node unless this a literal property
-    if (special != 'literal'){
-      var d = pGraph.getNodeByUri(uri);
-      if (!d) {
-        d = pGraph.addNode();
-        if (uri) {
-          d.addUri(uri);
-          d.mkConst();
-        }
-      }
-      d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
-    }
-
-    // Add the property
-    if (prop) {
-      if (uri) d.mkConst();//TODO
-      var p = vm.selected.getPropByUri(prop);
-      if (!p) {
-        p = vm.selected.newProp();
-        p.addUri(prop);
-        p.mkConst();
-      }
-      if (special == 'literal') {
-        // If we are creating a literal property.
-        p.mkLiteral();
-      } else {
-        // If we are not creating a literal property create the edge (selected)--p-->(d)
-        pGraph.addEdge(p, d);
-      }
-    } else { // from search, remove the search result
-      vm.searchResults = vm.searchResults.filter( obj => {
-        return (obj.uri.value != uri);
-      });
-      if (vm.searchResults.length == 0) 
-        vm.searchActive = false;
-    }
-
-    if (special == 'search') {
-      // From search, create the filters
-      d.variable.setAlias(vm.lastSearch);
-      vm.updateSVG();
-      p = d.newProp();
-      p.addUri('http://www.w3.org/2000/01/rdf-schema#label');
-      p.mkConst();
-      p.mkLiteral();
-      p.literal.setAlias(vm.lastSearch+'Label');
-      p.literal.addFilter('lang', {language: 'en'});
-      p.literal.addFilter('text', {keyword: vm.lastSearch});
-    }
-    
-    vm.updateSVG();
-    $scope.$apply();
-  }
-
-  function dropSearch () {
+  function dragSearch (ev) {
+    ev.dataTransfer.setData("special", "search");
+    ev.dataTransfer.setData("alias", vm.lastSearch);
   }
 
   function tutorial () {
     introJs().start();
   }
-
-  function test () {
-    console.log(pGraph.toQuery());
-  }
-  //test
-  //$timeout(function () {
-  //  d = pGraph.addNode();
-  //  d.x = 300; d.y = 300; d.uri = "http://dbpedia.org/resource/Barack_Obama"; vm.updateSVG();
-  //}, 200)
 }

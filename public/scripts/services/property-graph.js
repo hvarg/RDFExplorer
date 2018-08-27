@@ -1,7 +1,7 @@
 angular.module('rdfvis.services').factory('propertyGraphService', propertyGraphService);
-propertyGraphService.$inject = ['requestService', 'settingsService'];
+propertyGraphService.$inject = ['requestService'];
 
-function propertyGraphService (req, settings) {
+function propertyGraphService (req) {
   var nodeWidth = 220,
       nodeBaseHeight = 30,
       diffParentChild = 20,
@@ -10,6 +10,7 @@ function propertyGraphService (req, settings) {
 
   var propertyGraph = { //TODO this to the end;
     // DATA:
+    selected: null,
     nodes: [],
     edges: [],
     filters: {
@@ -21,16 +22,25 @@ function propertyGraphService (req, settings) {
     addEdge: addEdge,
     getNodeByUri: getNodeByUri,
     toQuery: toQuery,
+    connect: connect,
+    refresh: refresh,
+    setSelected: setSelected,
+    getSelected: getSelected,
     // Defined elsewhere:
     describe: null,
     edit: null,
+    // From viz:
+    element: null,
+    visual: null,
   }
 
   var lastNodeId = 0;
   var lastVarId = 0;
   var uriToNode = {};
   var usedAlias = [];
-  var validOpts = ['show', 'count'];
+
+
+  function u (uri) { return '<'+uri+'>'; }
 
   /******* Filter TDA ********************************************************/
   function Filter (variable, type, data) {
@@ -85,6 +95,7 @@ function propertyGraphService (req, settings) {
 
   Variable.prototype.getAlias = function () { return this.alias; };
 
+  var validOpts = ['show', 'count'];
   Variable.prototype.setOptions = function (opts) {
     var keys = Object.keys(opts);
     keys = keys.filter(k => {
@@ -115,7 +126,7 @@ function propertyGraphService (req, settings) {
   };
 
   RDFResource.prototype.onClick = function () {
-    if (this.isVariable()) this.edit();
+    if (this.isVariable() || (this.isProperty && this.isLiteral())) this.edit();
     else if (this.countUri() > 0) this.describe();
     else console.log('This element is not a variable nor has values!')
   };
@@ -440,6 +451,94 @@ function propertyGraphService (req, settings) {
     propertyGraph.edges.push(this);
   }
 
+  /***************************************************************************
+  function propertyGraph () {
+    this.nodes = [];
+    this.edges = [];
+    this.filters = {};
+    this.lastNodeId = 0;
+    this.lastVarId = 0;
+    this.usedAlias = [];
+    this.uriToNode = {};
+  }*/
+  /***************************************************************************/
+  /***************************************************************************/
+  function connect (element, graph) {
+    propertyGraph.element = element;
+    propertyGraph.visual = graph;
+    propertyGraph.element.addEventListener("drop", onDrop);
+    propertyGraph.element.addEventListener("dragover", onDragOver);
+  }
+
+  function refresh () {
+    propertyGraph.visual.updateGraph();
+  }
+
+  function setSelected (resource) {
+    propertyGraph.selected = resource;
+  }
+
+  function getSelected () {
+    return propertyGraph.selected;
+  }
+
+  function onDragOver (ev) {
+    ev.preventDefault();
+  }
+
+  function onDrop (ev) {
+    var z    = propertyGraph.visual.getZoom();
+    var uri  = ev.dataTransfer.getData("uri");
+    var prop = ev.dataTransfer.getData("prop");
+    var special = ev.dataTransfer.getData("special");
+    if (!uri && !prop && !special) return null;
+    // Create or get the node unless this a literal property
+    if (special != 'literal'){
+      var d = propertyGraph.getNodeByUri(uri);
+      if (!d) {
+        d = propertyGraph.addNode();
+        if (uri) {
+          d.addUri(uri);
+          d.mkConst();
+        }
+      }
+      d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
+    }
+
+    // Add the property
+    if (prop) {
+      if (uri) d.mkConst();
+      var p = getSelected().getPropByUri(prop);
+      if (!p) {
+        p = getSelected().newProp();
+        p.addUri(prop);
+        p.mkConst();
+      }
+      if (special == 'literal') {
+        // If we are creating a literal property.
+        p.mkLiteral();
+      } else {
+        // If we are not creating a literal property create the edge (selected)--p-->(d)
+        propertyGraph.addEdge(p, d);
+      }
+    }
+    if (special == 'search') {
+      var alias = ev.dataTransfer.getData("alias");
+      // From search, create the filters
+      d.variable.setAlias(alias);
+      refresh();
+      p = d.newProp();
+      p.addUri('http://www.w3.org/2000/01/rdf-schema#label');
+      p.mkConst();
+      p.mkLiteral();
+      p.literal.setAlias(alias+'Label');
+      p.literal.addFilter('lang', {language: 'en'});
+      p.literal.addFilter('text', {keyword: alias});
+    }
+    refresh();
+  }
+
+  /***************************************************************************/
   /**************************/
   /****** Public stuff ******/
   function addNode () {
@@ -481,9 +580,5 @@ function propertyGraphService (req, settings) {
     return 'SELECT '+q+' WHERE {\n' +m +'} ';
   }
 
-  function u (uri) {
-    return '<'+uri+'>';
-  }
-  
   return propertyGraph;
 }

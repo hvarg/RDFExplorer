@@ -22,7 +22,7 @@ div#search-container(
     .fakeRect(ng-if="main.searchResults.length>0",
               style="border-color: blue; text-align: left;",
               draggable="true", 
-              ondragstart="angular.element(this).scope().drag(event, '', '', 'search')")
+              ondragstart="angular.element(this).scope().dragSearch(event)")
       span.fa.fa-bars(aria-hidden="true").mr-2.ml-2
       span(title="{{value.uri.value}}") Search by label '{{ main.lastSearch}}'
 
