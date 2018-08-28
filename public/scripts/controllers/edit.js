@@ -1,8 +1,8 @@
 angular.module('rdfvis.controllers').controller('EditCtrl', EditCtrl);
 
-EditCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService'];
+EditCtrl.$inject = ['$scope', 'propertyGraphService'];
 
-function EditCtrl ($scope, pGraph, query) {
+function EditCtrl ($scope, pGraph) {
   var vm = this;
   vm.selected = null;
   vm.variable = null;

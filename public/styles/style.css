@@ -30,6 +30,10 @@ visual-query-builder {
   cursor: grab;
 }
 
+.tab-hl {
+  box-shadow: inset 0px -25px 25px -35px rgba(0,123,255,1);
+}
+
 /* Do no show introjs number */
 .introjs-helperNumberLayer {
   display: none;

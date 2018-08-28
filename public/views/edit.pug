@@ -1,6 +1,6 @@
 div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
   h1.ta-center Editing {{ ctrl.variable.get() }}  
-    i(ng-if="!ctrl.isVariable") ({{ ctrl.selected.getUri().getLabel() }})
+    //i(ng-if="!ctrl.isVariable") ({{ ctrl.selected.getUri().getLabel() }})
 
   ul.nav.nav-tabs.nav-justified
     li.nav-item
@@ -8,10 +8,10 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         input.no-click(type="checkbox", ng-model="ctrl.isVariable")
         a.ml-1 Variable
     li.nav-item
-      .nav-link(ng-class="{'active': !ctrl.isVariable}", ng-click="ctrl.mkConst()")
+      .nav-link(ng-class="{'active': !ctrl.isVariable, 'tab-hl': ctrl.added>0}", ng-click="ctrl.mkConst()")
         input.no-click(type="checkbox", ng-model="ctrl.isConst")
         a.ml-1 Constraint
-        a.ml-2(ng-if="ctrl.added>0") [+{{ctrl.added}}]
+        b(ng-if="ctrl.added>0").ml-2 [+{{ctrl.added}}]
   
   div.mt-3(ng-if="ctrl.isVariable")
     // Edit variable

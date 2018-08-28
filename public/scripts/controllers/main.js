@@ -37,8 +37,8 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   /* Tools display function */
   function toolToggle (panel) {
     vm.tool = (vm.tool == panel) ? 'none' : panel;
-    if (panel == 'describe' && pGraph.getSelected()) pGraph.getSelected().describe();
-    if (panel == 'edit' && pGraph.getSelected()) pGraph.getSelected().edit();
+    if (vm.tool == 'describe' && pGraph.getSelected()) pGraph.getSelected().describe();
+    if (vm.tool == 'edit' && pGraph.getSelected()) pGraph.getSelected().edit();
   }
 
   function searchToggle() { vm.searchActive = !vm.searchActive; }
@@ -79,7 +79,6 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       vm.lastSearch = input;
       vm.searchWait = true;
       vm.noResults  = false; 
-      console.log(query.search(input));
       request.execQuery(query.search(input), onSearch, onSearchErr);
     }
     vm.searchActive = true;
