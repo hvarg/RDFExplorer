@@ -184,7 +184,9 @@ function propertyGraphService (req) {
     if (this.uris.indexOf(uri) < 0) {
       this.uris.push(uri);
       if (this.uris.length == 1) this.cur = 0;
+      return true;
     }
+    return false;
   };
 
   RDFResource.prototype.removeUri = function (uri) {
@@ -316,8 +318,8 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.addUri = function (uri) {
-    RDFResource.prototype.addUri.call(this, uri);
     uriToNode[uri] = this;
+    return RDFResource.prototype.addUri.call(this, uri);
   };
 
   Node.prototype.getUniq = function () {

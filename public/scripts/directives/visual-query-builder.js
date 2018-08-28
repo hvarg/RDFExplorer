@@ -23,6 +23,7 @@ function visualQueryBuilder (pGraph) {
       thisGraph.colors = d3.scale.category10();
 
       thisGraph.state = {
+        clickedProperty: false,
         selectedNode: null,
         selectedEdge: null,
         mouseDownNode: null,
@@ -31,7 +32,6 @@ function visualQueryBuilder (pGraph) {
         justScaleTransGraph: false,
         lastKeyDown: -1,
         shiftNodeDrag: false,
-        selectedText: null
       };
 
       // define arrow markers for graph links
@@ -435,7 +435,7 @@ function visualQueryBuilder (pGraph) {
               .attr("x", -thisProp.getWidth()/2)
               .attr("y", thisProp.getOffsetY())
               .style("stroke", thisGraph.colors(thisProp.getUniq()))
-              .on("click",    d => { thisProp.onClick(); d3.event.stopPropagation(); })
+              .on("click",    d => { state.clickedProperty = true; thisProp.onClick();})
               .on("dblclick", d => { thisProp.onDblClick(); })
               .on("contextmenu", d => {
                 menu({
@@ -490,7 +490,7 @@ function visualQueryBuilder (pGraph) {
         .on("mouseout",  function(d){ d3.select(this).classed(consts.connectClass, false); })
         .on("mousedown", function(d){ thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d); })
         .on("mouseup",   function(d){ thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d); })
-        .on("click",     function(d){ d.onClick(); })
+        .on("click",     function(d){ if (state.clickedProperty) state.clickedProperty = false; else d.onClick(); })
         .on("dblclick",  function(d){ d.onDblClick(); })
         .on('contextmenu', function(d){
             menu({

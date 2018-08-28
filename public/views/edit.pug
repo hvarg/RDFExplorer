@@ -1,150 +1,165 @@
 div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
-  h1.ta-center Editing {{ ctrl.selected.variable.get() }}  
+  h1.ta-center Editing {{ ctrl.variable.get() }}  
     i(ng-if="!ctrl.isVariable") ({{ ctrl.selected.getUri().getLabel() }})
-  hr
-  input#edit-is-var(type="checkbox", ng-model="ctrl.isVariable")
-  label.form-check-label(for="edit-is-var") Is Variable
-  div(ng-if="!ctrl.isVariable && ctrl.uris.length == 0") To use this resource as constraint you need to add at least one value
 
-  .ed-container.mb-3(ng-if="ctrl.variable")
-    .ed-container-header
-      i.fa(ng-class="ctrl.resActive ? 'fa-chevron-down' : 'fa-chevron-right'",
-           ng-click="ctrl.resActive = !ctrl.resActive")
-      .ed-container-title Partial results:
-    .ed-container-content(ng-class="{ active: ctrl.resActive }")
-      .row.ed-values-elem(ng-if="ctrl.variable.results.length==0") 
-        .col-md-12 Currently this variable has no partial results.
-      .row.ed-values-elem(ng-repeat="(key, value) in ctrl.variable.results", title="{{value.uri.value}}")
-        .col-md-12
-          .ell.ml-1(style="display: inline-block; width: 80%;") {{ value.uri.value.getLabel(); }}
-          i.pull-right.fa.fa-plus(ng-click="ctrl.addValue(value.uri.value);")
+  ul.nav.nav-tabs.nav-justified
+    li.nav-item
+      .nav-link(ng-class="{'active': ctrl.isVariable}", ng-click="ctrl.mkVariable()")
+        input.no-click(type="checkbox", ng-model="ctrl.isVariable")
+        a.ml-1 Variable
+    li.nav-item
+      .nav-link(ng-class="{'active': !ctrl.isVariable}", ng-click="ctrl.mkConst()")
+        input.no-click(type="checkbox", ng-model="ctrl.isConst")
+        a.ml-1 Constraint
+        a.ml-2(ng-if="ctrl.added>0") [+{{ctrl.added}}]
+  
+  div.mt-3(ng-if="ctrl.isVariable")
+    // Edit variable
+    form
+      .form-row
+        .input-group.col-md-12
+          .input-group-prepend
+            label.input-group-text(for="edit-var-name") Variable name
+          span.edit-var-name-prefix ?
+          input#edit-var-name.form-control(
+              type="text",
+              autocomplete="off",
+              ng-model="ctrl.variable.alias",
+              ng-change="ctrl.refresh()",
+              placeholder="{{ ctrl.variable.id }}")
+
+    // Add filters
+    .custom-container-title.no-select.mt-2(
+        ng-class="{'active': ctrl.show.filters}",
+        ng-click="ctrl.show.filters = !ctrl.show.filters"
+        ) Filters
+      i.pull-right.fa(ng-class="ctrl.show.filters ? 'fa-angle-up' : 'fa-angle-down';")
+
+    .custom-container-content(ng-class="{'active': ctrl.show.filters}")
+      .form-row.mt-1(style="margin:0;")
+        .input-group.input-group-sm
+          select.custom-select(ng-model="ctrl.newFilterType")
+            option(value="") -- Select a new filter --
+            option(ng-repeat="(key, value) in ctrl.filters", value="{{key}}") {{value.name}}
+          input.form-control(
+              ng-repeat="(k, v) in ctrl.filters[ctrl.newFilterType].data",
+              type="{{ v.type }}",
+              autocomplete="off",
+              ng-init="ctrl.newFilterData[k] = ''",
+              ng-model="ctrl.newFilterData[k]",
+              placeholder="{{ k }}")
+          .input-group-append
+            button.btn.btn-outline-secondary(type="button", ng-click="ctrl.newFilter(ctrl.variable)") Add
+
+      .form-row.mt-1(ng-repeat="(key, value) in ctrl.variable.filters", style="margin:0;")
+        .input-group.input-group-sm
+          .input-group-prepend
+            label.input-group-text() {{ ctrl.filters[value.type].name }}
+          input.form-control(
+              ng-repeat="(k, v) in ctrl.filters[value.type].data",
+              type="{{ v.type }}",
+              autocomplete="off",
+              ng-model="value.data[k]",
+              placeholder="{{ k }}")
+
+    // Posible solutions
+    .custom-container-title.no-select.mt-2(
+        ng-class="{'active': ctrl.show.results}",
+        ng-click="ctrl.show.results = !ctrl.show.results"
+        ) Possible results:
+      i.pull-right.fa(ng-class="ctrl.show.results ? 'fa-angle-up' : 'fa-angle-down';")
+
+    .custom-container-content(ng-class="{'active': ctrl.show.results}")
+      .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results.
+      .row(ng-repeat="(key, value) in ctrl.variable.results", title="{{value.uri.value}}")
+        .col-md-12(ng-class="{'mt-1': $first}")
+          .ell(style="display: inline-block; width: calc(100% - 50px);") {{ value.uri.value.getLabel(); }}
+          i.pull-right.fa.fa-plus(ng-click="ctrl.addUri(value.uri.value);")
           i.pull-right.fa.fa-eye(ng-click="value.uri.value.describe();")
 
-  .ed-container.mb-3(ng-if="ctrl.variable")
-    .ed-container-header
-      i.fa(ng-class="ctrl.varActive ? 'fa-chevron-down' : 'fa-chevron-right'",
-           ng-click="ctrl.varActive = !ctrl.varActive")
-      .ed-container-title Variable settings:
-    .ed-container-content(ng-class="{ active: ctrl.varActive }")
-      form
-        .form-row
-          .input-group.col-md-12
-            .input-group-prepend
-              label.input-group-text(for="edit-var-name") Variable name
-            span.edit-var-name-prefix ?
-            input#edit-var-name.form-control(
-                type="text",
-                autocomplete="off",
-                ng-model="ctrl.variable.alias",
-                placeholder="{{ ctrl.variable.id }}")
-        .form-row.mt-2
-          .form-group.form-check.col-md-4
-            input#edit-show(type="checkbox", ng-model="ctrl.variable.options.show")
-            label.form-check-label(for="edit-show") show me
-          .form-group.form-check.col-md-4
-            input#edit-count(type="checkbox", ng-model="ctrl.variable.options.count")
-            label.form-check-label(for="edit-count") count me
+  div(ng-if="!ctrl.isVariable")
+    // Constrains
+    .custom-container-title.no-select.mt-2(
+        ng-class="{'active': ctrl.show.const}",
+        ng-click="ctrl.show.const = !ctrl.show.const"
+        ) Constraints
+      i.pull-right.fa(ng-class="ctrl.show.const ? 'fa-angle-up' : 'fa-angle-down';")
 
-      h6 Filters:
-      .ed-filters
-        .form-row.mb-1(ng-repeat="(key, value) in ctrl.variable.filters", style="margin:0;")
-          .input-group.input-group-sm
-            .input-group-prepend
-              label.input-group-text() {{ ctrl.filters[value.type].name }}
-            input.form-control(
-                ng-repeat="(k, v) in ctrl.filters[value.type].data",
-                type="{{ v.type }}",
-                autocomplete="off",
-                ng-model="value.data[k]",
-                placeholder="{{ k }}")
-
-        .form-row.mb-1(style="margin:0;")
-          .input-group.input-group-sm
-            select.custom-select(ng-model="ctrl.newFilterType")
-              option(value="") -- Select a new filter --
-              option(ng-repeat="(key, value) in ctrl.filters", value="{{key}}") {{value.name}}
-            input.form-control(
-                ng-repeat="(k, v) in ctrl.filters[ctrl.newFilterType].data",
-                type="{{ v.type }}",
-                autocomplete="off",
-                ng-init="ctrl.newFilterData[k] = ''",
-                ng-model="ctrl.newFilterData[k]",
-                placeholder="{{ k }}")
-            .input-group-append
-              button.btn.btn-outline-secondary(type="button", ng-click="ctrl.addNewFilter(ctrl.variable)") Add
-
-
-  .ed-container.mb-3(ng-if="ctrl.literal")
-    .ed-container-header
-      i.fa(ng-class="ctrl.litActive ? 'fa-chevron-down' : 'fa-chevron-right'",
-           ng-click="ctrl.litActive = !ctrl.litActive")
-      .ed-container-title Literal property settings:
-    .ed-container-content(ng-class="{ active: ctrl.litActive }")
-      form
-        .form-row
-          .input-group.col-md-12
-            .input-group-prepend
-              label.input-group-text(for="edit-var-name2") Variable name
-            span.edit-var-name-prefix ?
-            input#edit-var-name2.form-control(
-                type="text",
-                autocomplete="off",
-                ng-model="ctrl.literal.alias",
-                placeholder="{{ ctrl.literal.id }}")
-        .form-row.mt-2
-          .form-group.form-check.col-md-4
-            input#edit-show(type="checkbox", ng-model="ctrl.literal.options.show")
-            label.form-check-label(for="edit-show") show me
-          .form-group.form-check.col-md-4
-            input#edit-count(type="checkbox", ng-model="ctrl.literal.options.count")
-            label.form-check-label(for="edit-count") count me
-
-      h6 Filters:
-      .ed-filters
-        .form-row.mb-1(ng-repeat="(key, value) in ctrl.literal.filters", style="margin:0;")
-          .input-group.input-group-sm
-            .input-group-prepend
-              label.input-group-text() {{ ctrl.filters[value.type].name }}
-            input.form-control(
-                ng-repeat="(k, v) in ctrl.filters[value.type].data",
-                type="{{ v.type }}",
-                autocomplete="off",
-                ng-model="value.data[k]",
-                placeholder="{{ k }}")
-
-        .form-row.mb-1(style="margin:0;")
-          .input-group.input-group-sm
-            select.custom-select(ng-model="ctrl.newFilterType")
-              option(value="") -- Select a new filter --
-              option(ng-repeat="(key, value) in ctrl.filters", value="{{key}}") {{value.name}}
-            input.form-control(
-                ng-repeat="(k, v) in ctrl.filters[ctrl.newFilterType].data",
-                type="{{ v.type }}",
-                autocomplete="off",
-                ng-init="ctrl.newFilterData[k] = ''",
-                ng-model="ctrl.newFilterData[k]",
-                placeholder="{{ k }}")
-            .input-group-append
-              button.btn.btn-outline-secondary(type="button", ng-click="ctrl.addNewFilter(ctrl.literal)") Add
-
-  .ed-container.mb-3
-    .ed-container-header
-      i.fa(ng-class="ctrl.valActive ? 'fa-chevron-down' : 'fa-chevron-right'",
-           ng-click="ctrl.valActive = !ctrl.valActive")
-      .ed-container-title Values:
-    .ed-container-content(ng-class="{ active: ctrl.valActive }")
-      .input-group.input-group-sm.mb-3
-        input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newValue",
+    .custom-container-content(ng-class="{'active': ctrl.show.const}")
+      .input-group.input-group-sm.mt-1.mb-1
+        input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newUri",
                            aria-label="New value", aria-describedby='edit-button-add')
         .input-group-append
-          button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue(ctrl.newValue); ctrl.newValue='';") add
-      .row.ed-values-elem(ng-repeat="(key, value) in ctrl.uris", title="{{value}}")
-        .col-md-1 
-        .col-md-10 {{ value.getLabel() }}
-        .col-md-1
+          button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addUri(ctrl.newUri); ctrl.newUri='';") add
+      .alert.alert-warning.alert-sm.mb-1(ng-if="ctrl.selected.countUri() == 0") To use this resource as constraint you need to add at least one value
+      .row(ng-repeat="(key, value) in ctrl.selected.uris", title="{{value}}")
+        .col-md-12
+          .ell(style="display: inline-block; width: calc(100% - 30px);") {{ value.getLabel(); }}
           i.pull-right.fa.fa-trash(ng-click="ctrl.removeValue(value);")
 
-  
-  br
-  button.pull-right.btn.btn-primary(type="button", ng-click="ctrl.save()") Save
-  button.pull-right.btn.btn-warning(type="button", ng-click="ctrl.cancel()", style="margin-right: 10px;") Cancel
+  .mt-4(ng-if="ctrl.isLiteral")
+    h4 
+      i.fa.fa-link.mr-2
+      |Datatype property variable
+    // Edit literal variable
+    form
+      .form-row
+        .input-group.col-md-12
+          .input-group-prepend
+            label.input-group-text(for="edit-lit-name") Variable name
+          span.edit-var-name-prefix ?
+          input#edit-lit-name.form-control(
+              type="text",
+              autocomplete="off",
+              ng-model="ctrl.literal.alias",
+              ng-change="ctrl.refresh()",
+              placeholder="{{ ctrl.literal.id }}")
+
+    // Add filters
+    .custom-container-title.no-select.mt-2(
+        ng-class="{'active': ctrl.show.lfilters}",
+        ng-click="ctrl.show.lfilters = !ctrl.show.lfilters"
+        ) Filters
+      i.pull-right.fa(ng-class="ctrl.show.lfilters ? 'fa-angle-up' : 'fa-angle-down';")
+
+    .custom-container-content(ng-class="{'active': ctrl.show.lfilters}")
+      .form-row.mt-1(style="margin:0;")
+        .input-group.input-group-sm
+          select.custom-select(ng-model="ctrl.newFilterType")
+            option(value="") -- Select a new filter --
+            option(ng-repeat="(key, value) in ctrl.filters", value="{{key}}") {{value.name}}
+          input.form-control(
+              ng-repeat="(k, v) in ctrl.filters[ctrl.newFilterType].data",
+              type="{{ v.type }}",
+              autocomplete="off",
+              ng-init="ctrl.newFilterData[k] = ''",
+              ng-model="ctrl.newFilterData[k]",
+              placeholder="{{ k }}")
+          .input-group-append
+            button.btn.btn-outline-secondary(type="button", ng-click="ctrl.newFilter(ctrl.literal)") Add
+
+      .form-row.mt-1(ng-repeat="(key, value) in ctrl.literal.filters", style="margin:0;")
+        .input-group.input-group-sm
+          .input-group-prepend
+            label.input-group-text() {{ ctrl.filters[value.type].name }}
+          input.form-control(
+              ng-repeat="(k, v) in ctrl.filters[value.type].data",
+              type="{{ v.type }}",
+              autocomplete="off",
+              ng-model="value.data[k]",
+              placeholder="{{ k }}")
+
+    // Posible solutions
+    .custom-container-title.no-select.mt-2(
+        ng-class="{'active': ctrl.show.lresults}",
+        ng-click="ctrl.show.lresults = !ctrl.show.lresults"
+        ) Possible results:
+      i.pull-right.fa(ng-class="ctrl.show.lresults ? 'fa-angle-up' : 'fa-angle-down';")
+
+    .custom-container-content(ng-class="{'active': ctrl.show.lresults}")
+      .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.literal.results.length==0") Currently this variable has no partial results.
+      .row(ng-repeat="(key, value) in ctrl.literal.results", title="{{value.uri.value}}")
+        .col-md-12(ng-class="{'mt-1': $first}")
+          .ell(style="display: inline-block; width: calc(100% - 50px);") {{ value.uri.value.getLabel(); }}
+          i.pull-right.fa.fa-plus(ng-click="ctrl.addUri(value.uri.value);")
+          i.pull-right.fa.fa-eye(ng-click="value.uri.value.describe();")
