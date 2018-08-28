@@ -47,7 +47,6 @@ function requestService (settings, $http) {
 
   String.prototype.getLabel = function () {
     if (label[this]) return label[this];
-    console.log("label for '" + this + "' not found.");
     return this;
   };
 

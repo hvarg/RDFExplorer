@@ -2,6 +2,23 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
   h1.ta-center Editing {{ ctrl.selected.variable.get() }}  
     i(ng-if="!ctrl.isVariable") ({{ ctrl.selected.getUri().getLabel() }})
   hr
+  input#edit-is-var(type="checkbox", ng-model="ctrl.isVariable")
+  label.form-check-label(for="edit-is-var") Is Variable
+  div(ng-if="!ctrl.isVariable && ctrl.uris.length == 0") To use this resource as constraint you need to add at least one value
+
+  .ed-container.mb-3(ng-if="ctrl.variable")
+    .ed-container-header
+      i.fa(ng-class="ctrl.resActive ? 'fa-chevron-down' : 'fa-chevron-right'",
+           ng-click="ctrl.resActive = !ctrl.resActive")
+      .ed-container-title Partial results:
+    .ed-container-content(ng-class="{ active: ctrl.resActive }")
+      .row.ed-values-elem(ng-if="ctrl.variable.results.length==0") 
+        .col-md-12 Currently this variable has no partial results.
+      .row.ed-values-elem(ng-repeat="(key, value) in ctrl.variable.results", title="{{value.uri.value}}")
+        .col-md-12
+          .ell.ml-1(style="display: inline-block; width: 80%;") {{ value.uri.value.getLabel(); }}
+          i.pull-right.fa.fa-plus(ng-click="ctrl.addValue(value.uri.value);")
+          i.pull-right.fa.fa-eye(ng-click="value.uri.value.describe();")
 
   .ed-container.mb-3(ng-if="ctrl.variable")
     .ed-container-header
@@ -27,9 +44,6 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
           .form-group.form-check.col-md-4
             input#edit-count(type="checkbox", ng-model="ctrl.variable.options.count")
             label.form-check-label(for="edit-count") count me
-          .form-group.form-check.col-md-4
-            input#edit-is-var(type="checkbox", ng-model="ctrl.isVariable")
-            label.form-check-label(for="edit-is-var") Is Variable
 
       h6 Filters:
       .ed-filters
@@ -123,7 +137,7 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newValue",
                            aria-label="New value", aria-describedby='edit-button-add')
         .input-group-append
-          button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue()") add
+          button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue(ctrl.newValue); ctrl.newValue='';") add
       .row.ed-values-elem(ng-repeat="(key, value) in ctrl.uris", title="{{value}}")
         .col-md-1 
         .col-md-10 {{ value.getLabel() }}

@@ -96,7 +96,7 @@ function visualQueryBuilder (pGraph) {
           });
 
       // listen for key events TODO FIXME
-      d3.select('body')
+      d3.select(element[0])
           .on("keydown", function(){ thisGraph.svgKeyDown.call(thisGraph); })
           .on("keyup", function(){ thisGraph.svgKeyUp.call(thisGraph); });
 
@@ -416,12 +416,14 @@ function visualQueryBuilder (pGraph) {
           d.redraw = false;
           d.lastPropDraw = 0;
         }
+
         /* Update already drawn properties */
         d3.select(this).selectAll("."+consts.innerTextClass).filter((_,i) => {
           return (i < d.lastPropDraw);
         }).text((d,i) => {
           return getChunkText(d.properties[i].getRepr(), d.properties[i].getWidth(), consts.innerTextClass) 
         });
+
         /* Create new properties for existing nodes */
         for (;d.lastPropDraw<d.properties.length; d.lastPropDraw++) {
           thisProp = d.properties[d.lastPropDraw];
@@ -437,8 +439,9 @@ function visualQueryBuilder (pGraph) {
               .on("dblclick", d => { thisProp.onDblClick(); })
               .on("contextmenu", d => {
                 menu({
-                  'Edit':   function () { thisProp.edit(); },
-                  'Remove': function () { thisProp.delete(); thisGraph.updateGraph();},
+                  'Edit':     function () { thisProp.edit(); },
+                  'Collect':  function () { thisProp.getResults(null, function () {thisGraph.updateGraph();}); },
+                  'Remove':   function () { thisProp.delete(); thisGraph.updateGraph();},
                 });
               });
 

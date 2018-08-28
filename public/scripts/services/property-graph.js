@@ -16,6 +16,9 @@ function propertyGraphService (req) {
     filters: {
       text: {name: 'contains', inputs: 1, data: {keyword: {type: 'text'}}},
       lang: {name: 'language', inputs: 1, data: {language: {type: "text"}} },
+      regex: {name: 'regex', inputs: 1, data: {regex: {type: "text"}} },
+      leq: {name: 'less than', inputs: 1, data: {number: {type: "number"}} },
+      geq: {name: 'more than', inputs: 1, data: {number: {type: "number"}} },
     },
     // Functions:
     addNode: addNode,
@@ -57,6 +60,15 @@ function propertyGraphService (req) {
         return this.variable.get() + ' bif:contains "\'' + this.data.keyword + '\'" .\n';
       //return 'FILTER regex(' + v.get() + ', "' + data.keyword + '", "i")\n'
     }
+    if (this.type == 'regex') {
+        return 'FILTER regex(' + this.variable.get() + ', "' + this.data.regex + '")\n'
+    }
+    if (this.type == 'leq') {
+        return 'FILTER (' + this.variable.get() + ' <' + this.data.number + ')\n'
+    }
+    if (this.type == 'geq') {
+        return 'FILTER (' + this.variable.get() + ' >' + this.data.number + ')\n'
+    }
     console.log('filter type "'+ type +'" not know.');
     return null;
   };
@@ -68,6 +80,7 @@ function propertyGraphService (req) {
     this.alias = '';       // User defined variable name
     this.filters = [];
     this.options = {show: true, count: false};
+    this.results = [];
     //this.parent = parent;
   }
 
@@ -193,11 +206,13 @@ function propertyGraphService (req) {
   };
 
   RDFResource.prototype.createQuery = function () {
+    //FIXME: do not return if this is unbound
     if (!this.isVariable()) return null;
     var self = this;
-    var q  = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n'
-        q += 'SELECT DISTINCT ?uri ?label WHERE {\n'
-        q += '  { SELECT DISTINCT ('+ self.variable.get() +' as ?uri) {\n';
+    var q = '';
+    var header  = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n'
+        header += 'SELECT DISTINCT ?uri ?label WHERE {\n'
+        header += '  { SELECT DISTINCT ('+ self.variable.get() +' as ?uri) {\n';
     var tmp;
     var vEdges = [];
     var vNodes = [];
@@ -207,7 +222,7 @@ function propertyGraphService (req) {
       var cur = queue.pop();
       vNodes.push(cur);
       var edges = propertyGraph.edges.filter(e => {
-        return (e.source.parentNode == cur || e.target == cur);
+        return (e.source.parentNode == cur || e.target == cur || e.source == cur);
       });
       edges.forEach(e => {
         if (vEdges.indexOf(e) < 0) {
@@ -243,6 +258,8 @@ function propertyGraphService (req) {
         });
       }
     }
+    if (q) q = header + q;
+    else return null;
     q += '    } limit 10\n  }\n'
     q += '  OPTIONAL {\n'
     q += '    FILTER (lang(?label) = "en")\n';
@@ -250,6 +267,20 @@ function propertyGraphService (req) {
     q += '  }\n} limit 10';
     console.log(q);
     return q;
+  };
+
+  RDFResource.prototype.getResults = function (onStart, onEnd) {
+    if (!this.isVariable()) return null;
+    var self = this;
+    if (onStart) onStart();
+    var q = this.createQuery();
+    if (q) {
+      req.execQuery(q, data => {
+        self.variable.results = data.results.bindings;
+        console.log(self.variable.results);
+        if (onEnd) onEnd();
+      });
+    }
   };
 
   /******* Node TDA **********************************************************/
@@ -352,21 +383,6 @@ function propertyGraphService (req) {
       if (node === this) 
         propertyGraph.nodes.splice(i, 1);
     }
-  };
-
-  Node.prototype.getResults = function (onStart, onEnd) {
-    if (!this.isVariable()) return null;
-    var self = this;
-    if (onStart) onStart();
-    var q = this.createQuery();
-    req.execQuery(q, data => {
-      console.log(data.results.bindings);
-      data.results.bindings.forEach(obj => {
-        if (self.isVariable() && obj.uri.type == "uri") self.addUri(obj.uri.value);
-        else if (obj.uri.type == "literal") console.log(obj.uri);
-      });
-      if (onEnd) onEnd();
-    });
   };
 
   /******* Property TDA ******************************************************/

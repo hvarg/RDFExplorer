@@ -32,6 +32,14 @@ g.selected:hover circle{
   fill: rgb(250, 232, 255);
 }
 
+.selected {
+  stroke-dasharray: 4;
+}
+
+.connect-node {
+  stroke-dasharray: 3 1;
+}
+
 path.link {
   fill: none;
   stroke: #333;

@@ -4,66 +4,82 @@ DescribeCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'reque
 
 function DescribeCtrl ($scope, pGraph, query, request) {
   var vm = this;
-  var lastSelectedUri = null;
-  vm.selected = null;
+  vm.selectedUri = '';
+  vm.selectedObj = null;
+
   vm.descObjProp = [];
   vm.descDatatypeProp = [];
   vm.descPropValue = {};
+  vm.raw = [];
+  vm.long = [];
 
   var objType = {
     uri: {type: "uri", value: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"},
     label: {type: "literal", 'xml:lang': "en", value: "type"},
   };
 
-  vm.raw = [];
-  vm.long = [];
-
-  pGraph.describe = describe;
+  pGraph.describe = describeObj;
   vm.getObjPropValue = getObjPropValue;
   vm.getDatatypePropValue = getDatatypePropValue;
-  vm.getNext = getNext;
-  vm.getPrev = getPrev;
+  vm.getNext = describeNext;
+  vm.getPrev = describePrev;
 
   function reload () {
     vm.descObjProp = [];
     vm.descDatatypeProp = [];
     vm.descPropValue = {};
-    
     vm.raw = [];
     vm.long = [];
 
-    request.execQuery(query.getObjProp(vm.selected.getUri()), function (data) {
+    request.execQuery(query.getObjProp(vm.selectedUri), function (data) {
       vm.descObjProp = data.results.bindings;
       vm.descObjProp.unshift(objType);
     });
 
-    request.execQuery(query.getDatatypeProp(vm.selected.getUri()), function (data) {
+    request.execQuery(query.getDatatypeProp(vm.selectedUri), function (data) {
       vm.descDatatypeProp = data.results.bindings;
     });
   }
 
-  function describe (obj) {
-    if (obj.getUri() != lastSelectedUri) {
-      lastSelectedUri = obj.getUri();
-      vm.selected = obj;
+  function describe (uri) {
+    if (vm.selectedUri != uri) {
+      vm.selectedUri = uri;
+      vm.selectedObj = null;
       reload();
     }
-    $scope.$emit('setSelected', obj);
     $scope.$emit('tool', 'describe');
-  };
-
-  function getNext () {
-    if (vm.selected.nextValue().getUri() != lastSelectedUri) {
-      lastSelectedUri = vm.selected.getUri();
-      reload();
-    }
   }
 
-  function getPrev () {
-    if (vm.selected.prevValue().getUri() != lastSelectedUri) {
-      lastSelectedUri = vm.selected.getUri();
-      reload();
+  function describeObj (obj) {
+    if (!obj.isVariable()) describe(obj.getUri());
+    if (obj.isVariable() && obj.variable.results.length>0) describe(obj.variable.results[0].uri.value)
+    vm.selectedObj = obj;
+    $scope.$emit('setSelected', obj);
+  };
+
+  function describeNext () {
+    if (!vm.selectedObj) return null;
+    var obj = vm.selectedObj;
+    if (vm.selectedObj.isVariable() && vm.selectedObj.variable.results.length > 0) {
+      var i = vm.selectedObj.variable.results.findIndex(el => { return el.uri.value == vm.selectedUri});
+      if (i >= 0) describe(vm.selectedObj.variable.results[(i+1)%vm.selectedObj.variable.results.length].uri.value);
+    } else {
+      describe(vm.selectedObj.nextUri());
     }
+    vm.selectedObj = obj;
+  }
+
+  function describePrev () {
+    if (!vm.selectedObj) return null;
+    var obj = vm.selectedObj;
+    if (vm.selectedObj.isVariable() && vm.selectedObj.variable.results.length > 0) {
+      var i = vm.selectedObj.variable.results.findIndex(el => { return el.uri.value == vm.selectedUri});
+      if (i == 0) describe(vm.selectedObj.variable.results[vm.selectedObj.variable.results.length-1].uri.value);
+      if (i > 0) describe(vm.selectedObj.variable.results[i - 1].uri.value);
+    } else {
+      describe(vm.selectedObj.prevUri());
+    }
+    vm.selectedObj = obj;
   }
 
   function getObjPropValue (uri, prop) {
@@ -99,5 +115,9 @@ function DescribeCtrl ($scope, pGraph, query, request) {
         return false;
       });
     });
+  };
+
+  String.prototype.describe = function () {
+    describe(this);
   };
 }

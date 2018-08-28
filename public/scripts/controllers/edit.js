@@ -20,12 +20,14 @@ function EditCtrl ($scope, pGraph, query) {
   vm.varActive = false;
   vm.litActive = false;
   vm.valActive = false;
+  vm.resActive = true;
 
   vm.save = setData;
   vm.cancel = getData;
   vm.removeValue = removeValue;
   vm.addValue = addValue;
   vm.addNewFilter = addNewFilter;
+  vm.describe = $scope.describe;
 
   pGraph.edit = editSelected;
   vm.filters = pGraph.filters;
@@ -56,6 +58,9 @@ function EditCtrl ($scope, pGraph, query) {
     vm.cur = vm.selected.cur;
     vm.variable = vm.selected.variable;
     vm.isLiteral = vm.selected.isLiteral();
+    if (vm.isVariable) {
+      vm.selected.getResults();
+    }
     if (vm.isLiteral) {
       vm.literal = vm.selected.literal;
     } else {
@@ -99,12 +104,16 @@ function EditCtrl ($scope, pGraph, query) {
     if (i > -1) vm.uris.splice(i, 1);
   }
 
-  function addValue () {
-    var i = vm.uris.indexOf(vm.newValue);
-    if (i < 0 && vm.newValue) {
-      vm.uris.push(vm.newValue);
-      vm.newValue = '';
+  function addValue (newValue) {
+    vm.valActive = true;
+    var i = vm.uris.indexOf(newValue);
+    if (i < 0 && newValue) {
+      vm.uris.push(newValue);
     }
+    // remove value from results
+    vm.variable.results = vm.variable.results.filter(r => {
+      return (r.uri.value != newValue);
+    });
   }
 
   function addNewFilter (targetVar) {

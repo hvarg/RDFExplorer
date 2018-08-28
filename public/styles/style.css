@@ -327,10 +327,6 @@ span.dropable {
   max-height: 300px;
 }
 
-.ta-center {
-  text-align: center;
-}
-
 .ed-values {
   margin-top: 16px;
   border: 1px solid #d3d3d3;
@@ -347,4 +343,14 @@ span.dropable {
   z-index: 10;
   width: 20px;
   text-align: right;
+}
+
+.ta-center {
+  text-align: center;
+}
+
+.ell {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }

@@ -1,8 +1,14 @@
 div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
-  div(ng-if="ctrl.selected.values.data.length > 1")
-    i.pull-right.fa.fa-chevron-right(ng-click="ctrl.getNext()")
-    i.pull-left.fa.fa-chevron-left(ng-click="ctrl.getPrev()")
-  h1(style="text-align: center;") {{ ctrl.selected.values.getLabel() }}
+  // Show first the state of the selected element
+  .ta-center(ng-if="ctrl.selectedObj && ctrl.selectedUri")
+    i.pull-right.fa.fa-chevron-right.mt-1(ng-click="ctrl.getNext()")
+    | {{ ctrl.selectedUri }}
+    i.pull-left.fa.fa-chevron-left.mt-1(ng-click="ctrl.getPrev()")
+    hr(style="margin: 3px 0px;")
+
+  // Show when no URI selected
+  h3.ta-center(ng-if="!ctrl.selectedUri") No URIs to describe
+  h2.ta-center {{ ctrl.selectedUri.getLabel() }}
   hr
 
   div(ng-repeat="(key, value) in ctrl.long track by $index", ng-init="value.more = false;")
@@ -15,14 +21,16 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   table.table.table-hover
     tbody
       tr(ng-repeat="(key, value) in ctrl.descDatatypeProp track by $index",
-         ng-init="ctrl.getDatatypePropValue(ctrl.selected.getUri(), value.uri.value)")
-        th {{ value.label.value }}
+         ng-init="ctrl.getDatatypePropValue(ctrl.selectedUri, value.uri.value)")
+        th(draggable="true",
+          ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().value.uri.value, 'literal')",
+        ) {{ value.label.value }}
         td
           div(ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] track by $index") {{ v.uri.value }}
 
   div.propRect(
       ng-repeat="(key, value) in ctrl.descObjProp track by $index",
-      ng-init="ctrl.getObjPropValue(ctrl.selected.getUri(), value.uri.value); value.active = false; value.filter = '';",
+      ng-init="ctrl.getObjPropValue(ctrl.selectedUri, value.uri.value); value.active = false; value.filter = '';",
       ng-class="{'active': value.active}")
     div.head
       div.text-truncate(style="display:inline-block; width:100%;",
