@@ -55,7 +55,9 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     for (key in r) {
       var tmp = {uri: r[key][0].uri, label: r[key][0].label, types: []};
       r[key].forEach(res => {
-        tmp.types.push( {uri: res.type, label: res.tlabel } );
+        if (res.type) {
+          tmp.types.push( {uri: res.type, label: res.tlabel } );
+        }
       });
       vm.searchResults.push(tmp);
     }

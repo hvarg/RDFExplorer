@@ -106,7 +106,11 @@ span.dropable {
 }
 
 .has-types {
-  margin-bottom: -8px;
+}
+
+.classes {
+   font-size:10px;
+   line-height: 10px;
 }
 
 /* Right-top tools styles */
@@ -147,7 +151,7 @@ span.dropable {
   width: 220px;
   min-height: 30px;
   /*line-height: 30px; multiline */
-  padding-top: 3px;
+  padding: 3px;
   font-weight: bold;
   text-align: center;
   font-size: 14;

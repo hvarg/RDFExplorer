@@ -20,18 +20,16 @@ div#search-container(
       strong No results found!
 
     .fakeRect(ng-if="main.searchResults.length>0",
-              style="border-color: blue; text-align: left;",
+              style="border-color: blue;",
               draggable="true", 
               ondragstart="angular.element(this).scope().dragSearch(event)")
-      span.fa.fa-bars(aria-hidden="true").mr-2.ml-2
-      span(title="{{value.uri.value}}") Search by label '{{ main.lastSearch}}'
+      span.fa.fa-bars(aria-hidden="true").mt-1.ml-2.pull-left
+      span(title="{{value.uri.value}}") Drag this search
 
-    div.fakeRect(
+    .fakeRect(
         draggable="true",
         ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri.value, '')",
         ng-repeat="(key, value) in main.searchResults track by $index ") 
-      div(title="{{value.uri.value}}", ng-class="{'has-types': value.types.length>0}") {{ value.label.value }}
-      span(
-          ng-repeat="(k, v) in value.types",
-          title="{{v.uri.value}}"
-          style="font-size:10px;") {{ $last ? v.label.value : v.label.value + ', '}}
+      div(title="{{value.uri.value}}") {{ value.label.value }}
+      .classes
+        span(ng-repeat="(k, v) in value.types", title="{{v.uri.value}}") {{ $last ? v.label.value : v.label.value + ', '}}
