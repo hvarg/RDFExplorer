@@ -78,8 +78,10 @@ function queryService (settings) {
   function getObjPropValues (uri, prop, limit, offset) {
     q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
     q += '  ' + u(uri) + ' ' + u(prop) + ' ?uri .\n';
-    q += '  ?uri rdfs:label ?label .\n';
-    q += '  FILTER (lang(?label) = "en")\n';
+    q += '  OPTIONAL {\n';
+    q += '    ?uri rdfs:label ?label .\n';
+    q += '    FILTER (lang(?label) = "en")\n';
+    q += '  }\n'
     q += '}'
     if (limit)  q+= ' limit ' + limit;
     if (offset) q+= ' offset ' + offset;

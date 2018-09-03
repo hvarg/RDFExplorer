@@ -47,6 +47,11 @@ function requestService (settings, $http) {
 
   String.prototype.getLabel = function () {
     if (label[this]) return label[this];
+    for (var i in settings.prefixes) {
+      if (this.includes(settings.prefixes[i].uri)) {
+        return this.replace(settings.prefixes[i].uri, settings.prefixes[i].prefix+':');
+      }
+    }
     return this;
   };
 

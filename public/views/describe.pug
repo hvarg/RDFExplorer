@@ -43,7 +43,8 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
           input.form-control(type="text", ng-model="value.filter")
     hr
     div.fakeRect-container
+      //pre {{ ctrl.descPropValue[value.uri.value] | json }}
       div.fakeRect(
-          ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] | filter: {label : { value : value.filter} } track by $index"
+          ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] | filter: {$ : { value : value.filter} } track by $index"
           ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().v.uri.value,  angular.element(this).scope().value.uri.value)",
-          draggable="true") {{ v.label.value }}
+          draggable="true") {{ v.label.value || v.uri.value.getLabel() }}
