@@ -26,7 +26,7 @@ function requestService (settings, $http) {
         var tmp;
         for (var i = 0; i < response.data.results.bindings.length; i++) {
           tmp = response.data.results.bindings[i];
-          if (tmp.label) label[tmp.uri.value] = tmp.label.value;
+          if (tmp.label && tmp.uri) label[tmp.uri.value] = tmp.label.value;
         }
         return callback ? callback(response.data) : response.data;
       },
