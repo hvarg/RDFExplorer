@@ -1,13 +1,6 @@
-div#search-container(
-    data-position="right-aligned",
-    data-step="2",
-    data-intro='The results of your search appear here..')
+div#search-container
   div#search-input-container
-    form(
-        data-position="bottom-right-aligned",
-        data-step="1",
-        data-intro='Hello!, you can search something here..',
-        ng-submit="main.search()")
+    form#step1(ng-submit="main.search()")
       input#search-input.form-control(
           autocomplete="off",
           type="text",

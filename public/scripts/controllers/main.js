@@ -29,10 +29,11 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   /* scope */
   $scope.drag = drag;
   $scope.dragSearch = dragSearch;
-  $scope.$on('tool', function(event, data) { vm.tool = data; });
-  $scope.$on('setSelected', function(event, data) { pGraph.setSelected(data); });
   $scope.$on('newSettings', function(event, data) { vm.lastSearch = ''; });
-  $scope.$on('update', function(event, data) { vm.updateSVG(); });
+  $scope.$on('tool', function(event, data) {
+    vm.tool = data; 
+    document.getElementById('right-panel').scrollTop=0;
+  });
 
   /* Tools display function */
   function toolToggle (panel) {
@@ -99,6 +100,17 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   }
 
   function tutorial () {
-    introJs().start();
+    var intro = introJs();
+    intro.setOptions({
+      steps: [
+        { intro: 'Hello, this tutorial will guide you in the exploration of a RDF dataset.'},
+        { element: '#step1', intro: 'You can start searching <b>resources</b> here', position: 'bottom-right-aligned'},
+        { element: '#search-container', intro: 'Search results will be displayed here', position: 'right-aligned'},
+        { element: '#d3vqb', intro: 'You can drag and drop the search results here', position: 'right-aligned'},
+        { intro: 'You can also create new resource using <i> shift+click </i> and new edges pressing <i> shift </i> and dragging from one resource to another'},
+        { element: '#right-buttons', intro: 'More tools are displayed here', position: 'left-aligned'},
+      ]
+    });
+    intro.start();
   }
 }
