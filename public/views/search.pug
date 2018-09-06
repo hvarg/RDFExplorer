@@ -13,7 +13,7 @@ div#search-container
       strong No results found!
 
     .fakeRect(ng-if="main.searchResults.length>0",
-              style="border-color: blue;",
+              style="border-color: #2ca02c;",
               draggable="true", 
               ondragstart="angular.element(this).scope().dragSearch(event)")
       span.fa.fa-bars(aria-hidden="true").mt-1.ml-2.pull-left
@@ -21,6 +21,7 @@ div#search-container
 
     .fakeRect(
         draggable="true",
+        style="border-color: #1f77b4;",
         ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri.value, '')",
         ng-repeat="(key, value) in main.searchResults track by $index ") 
       div(title="{{value.uri.value}}") {{ value.label.value }}

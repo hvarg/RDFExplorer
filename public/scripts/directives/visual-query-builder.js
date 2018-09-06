@@ -21,6 +21,10 @@ function visualQueryBuilder (pGraph) {
       thisGraph.edges = edges || [];
       thisGraph.focused = true;
       thisGraph.colors = d3.scale.category10();
+      thisGraph.colors('2');
+      thisGraph.colors('4');
+      thisGraph.colors('1');
+      thisGraph.colors('3');
 
       thisGraph.state = {
         clickedProperty: false,
@@ -422,7 +426,7 @@ function visualQueryBuilder (pGraph) {
           return (i < d.lastPropDraw);
         }).text((d,i) => {
           return getChunkText(d.properties[i].getRepr(), d.properties[i].getWidth(), consts.innerTextClass) 
-        });
+        }); //TODO update color!
 
         /* Create new properties for existing nodes */
         for (;d.lastPropDraw<d.properties.length; d.lastPropDraw++) {

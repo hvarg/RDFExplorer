@@ -33,7 +33,7 @@ g.selected:hover circle{
 }
 
 .selected {
-  stroke-dasharray: 4;
+  /*stroke-dasharray: 4;*/
 }
 
 .connect-node {

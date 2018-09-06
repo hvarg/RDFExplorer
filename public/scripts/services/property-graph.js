@@ -267,7 +267,7 @@ function propertyGraphService (req) {
     q += '    FILTER (lang(?label) = "en")\n';
     q += '    ?uri rdfs:label ?label .\n';
     q += '  }\n} limit 10';
-    console.log(q);
+    //console.log(q);
     return q;
   };
 
@@ -282,7 +282,7 @@ function propertyGraphService (req) {
     if (q) {
       req.execQuery(q, data => {
         self.variable.results = data.results.bindings;
-        console.log(self.variable.results);
+        //console.log(self.variable.results);
         if (onEnd) onEnd();
       });
     }
@@ -434,6 +434,7 @@ function propertyGraphService (req) {
   };
 
   Property.prototype.getUniq = function () {
+    if (this.isLiteral()) return '5';
     if (this.isVariable()) return '3';
     else return '4';
   };

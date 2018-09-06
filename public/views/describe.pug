@@ -50,7 +50,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     span.pull-right [{{ ctrl.selected.objects.length }}]
 
   div(ng-if="ctrl.show.objects")
-    .propRect(ng-repeat="prop in ctrl.selected.objects", ng-class="{'active': prop.active}")
+    .propRect(ng-repeat="prop in ctrl.selected.objects", ng-class="{'active': prop.active}", style="border-color: #ff7f0e;")
       .head(ng-click="prop.active = !prop.active")
         .text-truncate(style="display:inline-block; width:100%;",
             ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri)",
@@ -62,7 +62,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
             input.form-control(type="text", ng-model="prop.filter")
       hr
       .fakeRect-container
-        .fakeRect(
+        .fakeRect(style="border-color: #1f77b4;",
             ng-repeat="obj in ctrl.selected.results[prop.uri] | filter: prop.filter track by $index"
             ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().obj.uri, angular.element(this).scope().prop.uri)",
             draggable="true") {{ obj.uri.getLabel() }}
