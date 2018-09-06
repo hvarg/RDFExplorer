@@ -1,50 +1,81 @@
 div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
-  // Show first the state of the selected element
-  .ta-center(ng-if="ctrl.selectedObj && ctrl.selectedUri")
+  // Show the state of the selected element
+  .ta-center(ng-if="ctrl.selected.source")
+    //TODO: add disable on chevron when no next or prev.
     i.pull-left.fa.fa-chevron-left.mt-1(ng-click="ctrl.getPrev()")
-    .ell(style="display: inline-block; width: calc(100% - 40px);") {{ ctrl.selectedUri }}
+    a.ell(href="{{ctrl.selected.uri}}", target="_blank", style="display: inline-block; width: calc(100% - 40px);") {{ ctrl.selected.uri }}
     i.pull-right.fa.fa-chevron-right.mt-1(ng-click="ctrl.getNext()")
     hr(style="margin: 3px 0px;")
 
   // Show when no URI selected
-  h3.ta-center(ng-if="!ctrl.selectedUri") No URIs to describe
-  h2.ta-center {{ ctrl.selectedUri.getLabel() }}
-  hr
+  h3.ta-center.mb-0(ng-if="!ctrl.selected") No URIs to describe
+  h3.ta-center.mb-0.wrap {{ ctrl.selected.uri.getLabel() }}
+  hr(style="margin: 3px 0px;")
 
-  div(ng-repeat="(key, value) in ctrl.long track by $index", ng-true="value.more = false;")
-    strong {{ value.label.value }} :&nbsp;
-    div(ng-if="!value.more" ,style="display: inline;") {{ ctrl.descPropValue[value.uri.value][0].uri.value.slice(0,180) + '...'}}
-    div(ng-if="value.more" ,style="display: inline;") {{ ctrl.descPropValue[value.uri.value][0].uri.value }}
-    a(href="", ng-if="!value.more", ng-click="value.more = !value.more") [more]
-    a(href="", ng-if="value.more", ng-click="value.more = !value.more") [less]
+  // TODO: Carousel or something to see more images.
+  img.c-img(ng-if="ctrl.selected.image.length>0", src="{{ctrl.selected.results[ctrl.selected.image[0].uri][0]}}")
 
-  table.table.table-hover
-    tbody
-      tr(ng-repeat="(key, value) in ctrl.descDatatypeProp track by $index",
-         ng-init="ctrl.getDatatypePropValue(ctrl.selectedUri, value.uri.value)")
-        th.grab-hand(draggable="true",
-            ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().value.uri.value, 'literal')",
-            ) {{ value.label.value }}
-        td
-          div(ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] track by $index") {{ v.uri.value }}
+  // Text properties (long text)
+  div(ng-repeat="prop in ctrl.selected.text", ng-init="prop.active = {}")
+    .text-container(ng-repeat="value in ctrl.selected.results[prop.uri]",
+                    ng-class="{'active': prop.active[$index]}")
+      b.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
+                  draggable="true") {{ prop.uri.getLabel() }}:&nbsp;
+      .more-less
+        span {{ prop.active[$index] ? '' : '... '}}
+        a(href="", ng-click="prop.active[$index] = !prop.active[$index]") [{{prop.active[$index] ? 'less' : 'more'}}]
+      span {{ value }}
 
-  div.propRect(
-      ng-repeat="(key, value) in ctrl.descObjProp track by $index",
-      ng-init="ctrl.getObjPropValue(ctrl.selectedUri, value.uri.value); value.active = true; value.filter = '';",
-      ng-class="{'active': value.active}")
-    div.head(ng-click="value.active = !value.active")
-      div.text-truncate(style="display:inline-block; width:100%;",
-          ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().value.uri.value)",
-          draggable="true") {{ value.label.value }}
-      div.info
-        span.pull-right.fa(aria-hidden="true", ng-class="value.active ? 'fa-chevron-up' : 'fa-chevron-down'")
-        div.inner-addon.right-addon(ng-click="$event.stopPropagation();")
-          i.fa.fa-search(aria-hidden="true")
-          input.form-control(type="text", ng-model="value.filter")
-    hr
-    div.fakeRect-container
-      //pre {{ ctrl.descPropValue[value.uri.value] | json }}
-      div.fakeRect(
-          ng-repeat="(k, v) in ctrl.descPropValue[value.uri.value] | filter: {$ : { value : value.filter} } track by $index"
-          ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().v.uri.value,  angular.element(this).scope().value.uri.value)",
-          draggable="true") {{ v.label.value || v.uri.value.getLabel() }}
+  // Datatype properties (table) TODO: search for property 
+  h5.mb-2.mt-3.clickable.no-select(ng-click="ctrl.show.datatype = !ctrl.show.datatype", ng-if="ctrl.selected.datatype.length > 0")
+    i.fa.mr-2(ng-class="ctrl.show.datatype ? 'fa-eye' : 'fa-eye-slash'")
+    | Datatype properties
+    span.pull-right [{{ ctrl.selected.datatype.length }}]
+
+  .dt-table.container(ng-if="ctrl.show.datatype")
+    .row.wrap(ng-repeat="prop in ctrl.selected.datatype")
+      b.col-md-4.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
+                           draggable="true") {{ prop.uri.getLabel() }}:
+      .col-md-8
+        div(ng-repeat="value in ctrl.selected.results[prop.uri]", ng-class="{'active': prop['ac'+$index]}")
+          div(ng-if="value.length < 80") {{ value }}
+          div(ng-if="value.length > 80") {{ prop['ac'+$index] ? value : value.slice(0,80)+'...' }}
+            a.pull-right(href="", ng-click="prop['ac'+$index] = !prop['ac'+$index]")
+              | [{{prop['ac'+$index] ? 'less': 'more'}}]
+
+  // Object properties (dragable rectangles)
+  h5.mb-2.mt-3.clickable.no-select(ng-click="ctrl.show.objects = !ctrl.show.objects", ng-if="ctrl.selected.objects.length > 0")
+    i.fa.mr-2(ng-class="ctrl.show.objects ? 'fa-eye' : 'fa-eye-slash'")
+    | Object properties
+    span.pull-right [{{ ctrl.selected.objects.length }}]
+
+  div(ng-if="ctrl.show.objects")
+    .propRect(ng-repeat="prop in ctrl.selected.objects", ng-class="{'active': prop.active}")
+      .head(ng-click="prop.active = !prop.active")
+        .text-truncate(style="display:inline-block; width:100%;",
+            ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri)",
+            draggable="true") {{ prop.uri.getLabel() }}
+        .info
+          span.pull-right.fa(aria-hidden="true", ng-class="prop.active ? 'fa-chevron-up' : 'fa-chevron-down'")
+          .inner-addon.right-addon(ng-click="$event.stopPropagation();")
+            i.fa.fa-search(aria-hidden="true")
+            input.form-control(type="text", ng-model="prop.filter")
+      hr
+      .fakeRect-container
+        .fakeRect(
+            ng-repeat="obj in ctrl.selected.results[prop.uri] | filter: prop.filter track by $index"
+            ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().obj.uri, angular.element(this).scope().prop.uri)",
+            draggable="true") {{ obj.uri.getLabel() }}
+
+  // External links
+  h5.mb-2.mt-3.clickable.no-select(ng-click="ctrl.show.external = !ctrl.show.external", ng-if="ctrl.selected.external.length > 0")
+    i.fa.mr-2(ng-class="ctrl.show.external ? 'fa-eye' : 'fa-eye-slash'")
+    | External links
+    span.pull-right [{{ ctrl.selected.external.length }}]
+
+  div(ng-if="ctrl.show.external")
+    div(ng-repeat="prop in ctrl.selected.external")
+      b.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
+                  draggable="true") {{ prop.uri.getLabel() }}:
+      a.ell.ml-2(ng-repeat="value in ctrl.selected.results[prop.uri]", href="{{value}}", target="_blank",
+                 style="display: inline-block; width: calc(100% - 12px);") {{ value }}

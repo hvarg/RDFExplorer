@@ -176,7 +176,7 @@ function propertyGraphService (req) {
     return this.getUri();
   };
 
-  RDFResource.prototype.countUri = function () {
+  RDFResource.prototype.countUri = function () { //TODO: Replace with hasUri
     return this.uris.length;
   };
 
@@ -203,7 +203,7 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.getRepr = function () {
     if (this.isVariable()) return this.variable.get();
-    if (this.countUri() > 0) return req.getLabel(this.getUri());
+    if (this.countUri() > 0) return this.getUri().getLabel();
     return null;
   };
 
@@ -272,7 +272,10 @@ function propertyGraphService (req) {
   };
 
   RDFResource.prototype.getResults = function (onStart, onEnd) {
-    if (!this.isVariable()) return null;
+    if (!this.isVariable()) {
+      console.log('this resource is a constraint!');
+      return null;
+    }
     var self = this;
     if (onStart) onStart();
     var q = this.createQuery();
@@ -284,6 +287,14 @@ function propertyGraphService (req) {
       });
     }
   };
+
+  RDFResource.prototype.hasResults = function () {
+    return (this.variable.results.length > 0);
+  }
+
+  RDFResource.prototype.getResult = function () {
+    return this.variable.results[0].uri.value;
+  }
 
   /******* Node TDA **********************************************************/
   function Node () {

@@ -26,6 +26,10 @@ visual-query-builder {
   pointer-events: none;
 }
 
+.clickable {
+  cursor:pointer;
+}
+
 .grab-hand {
   cursor: grab;
 }
@@ -37,14 +41,6 @@ visual-query-builder {
 /* Do no show introjs number */
 .introjs-helperNumberLayer {
   display: none;
-}
-
-span.dropable {
-  background: white;
-  border: 1px solid #d3d3d3;
-  padding: 3px 6px;
-  margin-left: 5px;
-  border-radius: 5px;
 }
 
 /* Search styles */
@@ -141,6 +137,58 @@ span.dropable {
 }
 
 /* resources representation for describe */
+.c-img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 300px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.dt-table > .row {
+  border-bottom: 1px solid #d3d3d3;
+}
+
+.dt-table > .row:hover {
+  background-color: rgba(0,0,0,.075);
+}
+
+.dt-table > .row > .col-md-4,
+.dt-table > .row > .col-md-8 {
+  padding: 0px 3px;
+}
+
+.text-container {
+  font-size: 1em;
+  line-height: 1.2em;
+  max-height: 4.8em;
+  overflow: hidden;
+  position: relative;
+}
+
+.text-container.active {
+  max-height: 100%;
+}
+
+.more-less {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  background: white;
+}
+
+.wrap {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-word;
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
 .fakeRect {
   cursor:grab;
   pointer-events: auto;

@@ -46,7 +46,17 @@ function settingsService () {
     {prefix: 'umbel-sc',  uri: "http://umbel.org/umbel/sc/"},
     {prefix: 'dul',       uri: "http://www.ontologydesignpatterns.org/ont/dul/DUL.owl"},
     {prefix: 'schema',    uri: "http://schema.org/"},
+    {prefix: 'vrank',     uri: "http://purl.org/voc/vrank#"},
+    {prefix: 'skos',      uri: "http://www.w3.org/2004/02/skos/core#"},
+    {prefix: 'prov',      uri: "http://www.w3.org/ns/prov#"},
   ];
+
+  // selected = {uri: '', object: [], datatype: [], text: [], extra: [], image: [], values: {}},
+  settings.describe = {
+    text: ["http://dbpedia.org/ontology/abstract"],
+    image: ["http://dbpedia.org/ontology/thumbnail"],
+    external: ["http://dbpedia.org/ontology/wikiPageExternalLink"],
+  }
 
   return settings;
 }
