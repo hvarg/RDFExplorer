@@ -2,4 +2,13 @@ div(ng-show="main.tool == 'sparql'", ng-controller="SparqlCtrl as ctrl")
   h1(style="text-align: center;", ng-click="ctrl.updateQuery()") Sparql queries
   hr
 
-  #sparql-textarea
+  h3(ng-if="ctrl.queries.length==0") No queries
+
+  div(ng-repeat="(key, query) in ctrl.queries", ng-init="query.show = true;")
+    h5.mt-2.clickable.no-select(ng-click="query.show = !query.show")
+      i.fa.mr-2(ng-class="query.show ? 'fa-eye' : 'fa-eye-slash'")
+      | Query {{ $index }}
+    div(ng-if="query.show")
+      b contains:
+      .bordered.clickable.mr-1(ng-repeat="res in query.resources", ng-click="res.edit()") {{ res.getRepr() }}
+      sparql-edit(query="query")

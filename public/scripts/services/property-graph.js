@@ -430,7 +430,7 @@ function propertyGraphService (req) {
 
   Property.prototype.getRepr = function () {
     var repr = RDFResource.prototype.getRepr.call(this);
-    if (repr && this.isLiteral()) return repr + ' -> ' + this.literal.get();
+    if (repr && this.isLiteral()) return repr + ' → ' + this.literal.get();
     else return repr
   };
 
@@ -707,12 +707,10 @@ function propertyGraphService (req) {
       });
 
       queries.push({
-        resources: toSolve,
+        resources: Array.from(toSolve),
         data: {select: select, where: body, filters: filters, values: values, prefixes: prefixes },
         get: function () {
           // Use this function to get the query.
-          console.log(this);
-
           var q = 'SELECT DISTINCT ' + this.data.select.join(' ') + ' WHERE {\n'
           this.data.where.forEach(triple => {
             q += '  ' + triple.join(' ') + ' .\n';

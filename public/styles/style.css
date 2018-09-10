@@ -38,6 +38,13 @@ visual-query-builder {
   padding: 1px 3px;
 }
 
+.bordered {
+  display: inline-block;
+  border: 1px solid #9467bd;
+  border-radius: 4px;
+  padding: 1px 3px;
+}
+
 .tab-hl {
   box-shadow: inset 0px -25px 25px -35px rgba(0,123,255,1);
 }
@@ -45,6 +52,13 @@ visual-query-builder {
 /* Do no show introjs number */
 .introjs-helperNumberLayer {
   display: none;
+}
+
+/* Code mirror height */
+.CodeMirror {
+  height: unset;
+  border: 1px solid #d3d3d3;
+  margin-top: 3px;
 }
 
 /* Search styles */
