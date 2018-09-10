@@ -12,12 +12,13 @@ div#search-container
     div.alert.alert-warning(role="alert", ng-show="main.noResults")
       strong No results found!
 
-    .fakeRect(ng-if="main.searchResults.length>0",
-              style="border-color: #2ca02c;",
-              draggable="true", 
-              ondragstart="angular.element(this).scope().dragSearch(event)")
-      span.fa.fa-bars(aria-hidden="true").mt-1.ml-2.pull-left
-      span(title="{{value.uri.value}}") Drag this search
+    #search-query
+      .fakeRect(ng-if="main.searchResults.length>0",
+                style="border-color: #2ca02c;",
+                draggable="true", 
+                ondragstart="angular.element(this).scope().dragSearch(event)")
+        span.fa.fa-bars(aria-hidden="true").mt-1.ml-2.pull-left
+        span(title="{{value.uri.value}}") Drag this search
 
     .fakeRect(
         draggable="true",
