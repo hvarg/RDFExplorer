@@ -596,6 +596,7 @@ function propertyGraphService (req) {
   }
 
   function toQuery (resources) {
+    // If no resources => all resources.
     if (!resources || resources.length == 0) {
       resources = [];
       propertyGraph.nodes.forEach(node => {
@@ -622,7 +623,7 @@ function propertyGraphService (req) {
         var cur = queue.pop();
         toSolve.add(cur);
 
-        // Add edges
+        // Add edges who contains this resource (cur)
         var edges = propertyGraph.edges.filter(e => { return e.contains(cur); });
         edges.forEach(e => {
           triples.add(e);
@@ -633,15 +634,16 @@ function propertyGraphService (req) {
           });
         });
 
-        // Add filters
+        // Add filters of this resource
         cur.variable.filters.forEach(f => { filters.add(f); });
 
-        // Add datatype properties
         if (cur.isNode()) {
+          // If is a node, add all literal relations.
           cur.literalRelations().forEach(r => {
             if (!toSolve.has(r)) queue.push(r);
           });
         } else if (cur.isProperty() && cur.isLiteral()) {
+          // If is a literal property add filters, this resource to literals and parent to queue.
           literals.add(cur);
           cur.literal.filters.forEach(f => { filters.add(f); });
           if (cur.parentNode.isVariable()) {
@@ -663,8 +665,8 @@ function propertyGraphService (req) {
 
       // Check triples
       var prefixes = new Set();
-      var body = [];
       var values = new Set();
+      var body = [];
       var tmp, pre;
       triples.forEach(e => {
         tmp = [];
@@ -704,28 +706,43 @@ function propertyGraphService (req) {
         body.push(tmp);
       });
 
-      
-      // Create query
-      q = 'SELECT DISTINCT ' + select.join(' ') + ' WHERE {\n'
-      body.forEach(triple => {
-        q += '  ' + triple.join(' ') + ' .\n';
+      queries.push({
+        resources: toSolve,
+        data: {select: select, where: body, filters: filters, values: values, prefixes: prefixes },
+        get: function () {
+          // Use this function to get the query.
+          console.log(this);
+
+          var q = 'SELECT DISTINCT ' + this.data.select.join(' ') + ' WHERE {\n'
+          this.data.where.forEach(triple => {
+            q += '  ' + triple.join(' ') + ' .\n';
+          });
+
+          this.data.filters.forEach(f => {q += '  ' + f.apply(); });
+
+          this.data.values.forEach(v => {
+            q += '  VALUES ' + v.variable.get() + ' {' + v.uris.map(u => {
+              pre = u.toPrefix();
+              if (pre[1]) this.data.prefixes.add(pre[1]);
+              return pre[0];
+            }).join(' ') + '}\n';
+          });
+          q += '}';
+
+          if (this.data.limit) q += ' limit ' + this.data.limit;
+          if (this.data.offset) q += ' offset ' + this.data.offset;
+
+          console.log(this.data.prefixes);
+          var h = '';
+          this.data.prefixes.forEach(p => {
+            h += 'PREFIX ' + p.prefix + ': <' + p.uri + '>\n'
+          });
+
+          return h + q;
+        },
       });
-
-      filters.forEach(f => { q += '  ' + f.apply(); });
-
-      values.forEach(v => {
-        q += '  VALUES ' + v.variable.get() + ' {' + v.uris.map(u => {
-          pre = u.toPrefix();
-          if (pre[1]) prefixes.add(pre[1]);
-          return pre[0];
-        }).join(' ') + '}\n';
-      });
-      q += '}';
-
-      queries.push({toSolve: toSolve, triples: triples, filters: filters, literals: literals, str: q});
     }
-    console.log(queries);
-    return q;
+    return queries;
   }
 
   return propertyGraph;
