@@ -43,7 +43,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
     vm.selected = selected;
 
     request.execQuery(query.getProperties(selected.uri), function (data) {
-      var properties = data.results.bindings;
+      var properties = data.results.bindings.filter(p => {return (!cfg.exclude.includes(p.uri.value))});
       properties.forEach(r => {
         var obj = {uri: r.uri.value};
         if (r.label) obj.label = r.label.value;
@@ -57,10 +57,10 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
         } else if (cfg.text.includes(obj.uri)) {
           selected.text.push(obj);
           loadDatatype( obj.uri );
-        } else if (r.kind.value == "1") {
+        } else if (cfg.objects.includes(obj.uri) || r.kind.value == "1") {
           selected.objects.push(obj);
           loadObject( obj.uri );
-        } else if (r.kind.value == "2") {
+        } else if (cfg.datatype.includes(obj.uri) || r.kind.value == "2") {
           selected.datatype.push(obj);
           loadDatatype( obj.uri );
         } else if (r.kind.value == "0") {
@@ -79,6 +79,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
           });
         }
 
+      sort();
       });
     });
 
@@ -106,6 +107,12 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
         if (s.label) obj.label = s.label.value;
         return obj;
       });
+    });
+  }
+
+  function sort () {
+    vm.selected.objects.sort(function (a,b) {
+      return cfg.objects.indexOf(b.uri) - cfg.objects.indexOf(a.uri);
     });
   }
 

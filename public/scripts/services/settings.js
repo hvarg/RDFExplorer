@@ -53,9 +53,12 @@ function settingsService () {
 
   // selected = {uri: '', object: [], datatype: [], text: [], extra: [], image: [], values: {}},
   settings.describe = {
+    exclude: ["http://purl.org/voc/vrank#hasRank"],
+    objects: ["http://www.w3.org/1999/02/22-rdf-syntax-ns#type"],
+    datatype: [],
     text: ["http://dbpedia.org/ontology/abstract"],
     image: ["http://dbpedia.org/ontology/thumbnail"],
-    external: ["http://dbpedia.org/ontology/wikiPageExternalLink"],
+    external: ["http://dbpedia.org/ontology/wikiPageExternalLink", "http://xmlns.com/foaf/0.1/homepage"],
   }
 
   return settings;

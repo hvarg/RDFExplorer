@@ -34,8 +34,9 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
 
   .dt-table.container(ng-if="ctrl.show.datatype")
     .row.wrap(ng-repeat="prop in ctrl.selected.datatype")
-      b.col-md-4.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
-                           draggable="true") {{ prop.uri.getLabel() }}:
+      .col-md-4
+        b.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
+                    draggable="true") {{ prop.uri.getLabel() }}:
       .col-md-8
         div(ng-repeat="value in ctrl.selected.results[prop.uri]", ng-class="{'active': prop['ac'+$index]}")
           div(ng-if="value.length < 80") {{ value }}
