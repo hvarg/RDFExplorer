@@ -4,6 +4,13 @@ MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestSe
 
 function MainCtrl ($scope, pGraph, query, request, $timeout) {
   var vm = this;
+  /* General stuff */
+  vm.tool = 'none';
+  vm.toolToggle = toolToggle;
+
+  vm.search = search;
+  vm.tutorial = tutorial;
+
   /* vars */
   vm.searchInput = null;
   vm.searchResults = [];
@@ -11,33 +18,28 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   vm.searchWait = false;
   vm.noResults  = false;
   vm.lastSearch = '';
-  vm.tool = 'none';
 
   /* functions */
-  vm.updateSVG = null;
+  vm.updateSVG = pGraph.refresh;
   vm.getZoom = null;
-  vm.tutorial = tutorial;
-  vm.toolToggle = toolToggle;
-  vm.search = search;
   vm.searchToggle = searchToggle;
   vm.searchActivate = searchActivate;
   vm.searchDeactivate = searchDeactivate;
-  vm.test = test;
-  vm.selected = null;
 
   /* scope */
   $scope.drag = drag;
-  $scope.drop = drop;
-  $scope.$on('tool', function(event, data) { vm.tool = data; });
-  $scope.$on('setSelected', function(event, data) { vm.selected = data; });
+  $scope.dragSearch = dragSearch;
   $scope.$on('newSettings', function(event, data) { vm.lastSearch = ''; });
-  $scope.$on('update', function(event, data) { vm.updateSVG(); });
+  $scope.$on('tool', function(event, data) {
+    vm.tool = data; 
+    document.getElementById('right-panel').scrollTop=0;
+  });
 
   /* Tools display function */
   function toolToggle (panel) {
     vm.tool = (vm.tool == panel) ? 'none' : panel;
-    if (panel == 'describe' && vm.selected) vm.selected.describe();
-    if (panel == 'edit' && vm.selected) vm.selected.edit();
+    if (vm.tool == 'describe' && pGraph.getSelected()) pGraph.getSelected().describe();
+    if (vm.tool == 'edit' && pGraph.getSelected()) pGraph.getSelected().edit();
   }
 
   function searchToggle() { vm.searchActive = !vm.searchActive; }
@@ -54,11 +56,12 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     for (key in r) {
       var tmp = {uri: r[key][0].uri, label: r[key][0].label, types: []};
       r[key].forEach(res => {
-        tmp.types.push( {uri: res.type, label: res.tlabel } );
+        if (res.type) {
+          tmp.types.push( {uri: res.type, label: res.tlabel } );
+        }
       });
       vm.searchResults.push(tmp);
     }
-    console.log(vm.searchResults);
 
     //vm.searchResults = data.results.bindings;
     vm.searchError = false;
@@ -79,61 +82,49 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
       vm.lastSearch = input;
       vm.searchWait = true;
       vm.noResults  = false; 
-      console.log(query.search(input));
       request.execQuery(query.search(input), onSearch, onSearchErr);
     }
     vm.searchActive = true;
   }
 
-  function drag (ev, uri, prop) {
+  function drag (ev, uri, prop, special) {
+    if (!special) special = '';
     ev.dataTransfer.setData("uri", uri);
     ev.dataTransfer.setData("prop", prop);
+    ev.dataTransfer.setData("special", special);
   }
 
-  function drop (ev) {
-    var z    = vm.getZoom();
-    var uri  = ev.dataTransfer.getData("uri");
-    var prop = ev.dataTransfer.getData("prop");
-    // Create or get the node.
-    var d = pGraph.getNodeByUri(uri);
-    if (!d) {
-      d = pGraph.addNode();
-      if (uri) d.addUri(uri);
-    }
-    d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
-
-    // Add the property
-    if (prop) {
-      d.mkConst();
-      var p = vm.selected.getPropByUri(prop);
-      if (!p) {
-        p = vm.selected.newProp();
-        p.addUri(prop);
-      }
-      // Create (selected)--p-->(d) edge
-      pGraph.addEdge(p, d);
-    } else { // from search, remove the search result
-      vm.searchResults = vm.searchResults.filter( obj => {
-        return (obj.uri.value != uri);
-      });
-      if (vm.searchResults.length == 0) 
-        vm.searchActive = false;
-    }
-
-    vm.updateSVG();
-    $scope.$apply();
+  function dragSearch (ev) {
+    ev.dataTransfer.setData("special", "search");
+    ev.dataTransfer.setData("alias", vm.lastSearch);
   }
 
   function tutorial () {
-    introJs().start();
+    var intro = introJs();
+    intro.setOptions({
+      steps: [
+        { intro: 'Hello, this tutorial will guide you in the exploration of a RDF dataset and the creation of SPARQL queries.'},
+        { element: '#step1', intro: 'You can start searching <b>resources</b> here', position: 'bottom-right-aligned'},
+        { element: '#search-container', intro: 'As example, let us search <i>Euler</i>...', position: 'top-right-aligned'},
+        { element: '#search-results-panel', intro: 'Search results will be displayed here, blue elements are resources that match our search', position: 'right-aligned'},
+        { element: '#search-query', intro: 'If the search has results, the first element always its going to be the search itself, this element has green borders because its a <b>variable</b>', position: 'top-right-aligned'},
+        { element: '#search-results-panel', intro: 'We can drag these results...', position: 'right-aligned'},
+        { element: '#d3vqb', intro: '... and drop it here, this space is the query creator.', position: 'right-aligned'},
+        { element: '#d3vqb', intro: 'Using <i> shift+click </i> we can create new resources, and pressing <i> shift </i> and dragging from one resource to another will create an edge', position: 'right-aligned'},
+        { element: '#d3vqb', intro: 'You can also create new resource using <i> shift+click </i> and new edges pressing <i> shift </i> and dragging from one resource to another'},
+        { element: '#right-buttons', intro: 'More tools are displayed here', position: 'left-aligned'},
+      ]
+    });
+    intro.start().onbeforechange(function () {
+      switch (intro._currentStep) {
+        case 2:
+          $timeout(s=>{vm.searchInput  = 'E'}, 300);
+          $timeout(s=>{vm.searchInput += 'u'}, 600);
+          $timeout(s=>{vm.searchInput += 'l'}, 900);
+          $timeout(s=>{vm.searchInput += 'e'}, 1200);
+          $timeout(s=>{vm.searchInput += 'r'; search();}, 1500);
+          break;
+      }
+    });
   }
-
-  function test () {
-    console.log(pGraph.toQuery());
-  }
-  //test
-  //$timeout(function () {
-  //  d = pGraph.addNode();
-  //  d.x = 300; d.y = 300; d.uri = "http://dbpedia.org/resource/Barack_Obama"; vm.updateSVG();
-  //}, 200)
 }

@@ -9,9 +9,11 @@ function SparqlCtrl ($scope, pGraph) {
   var defaultValue = "# Not enought elements to create a query!"
 
   function updateQuery () {
-    var q = pGraph.toQuery() || defaultValue;
-    console.log('>', q);
-    vm.editor.getDoc().setValue(q);
+    var queries = pGraph.toQuery();
+    console.log(queries[0].get());
+    
+    
+    vm.editor.getDoc().setValue(defaultValue);
   }
 
   vm.editor = CodeMirror(document.getElementById("sparql-textarea"), {

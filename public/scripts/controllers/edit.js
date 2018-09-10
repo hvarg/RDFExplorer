@@ -1,67 +1,84 @@
 angular.module('rdfvis.controllers').controller('EditCtrl', EditCtrl);
 
-EditCtrl.$inject = ['$scope', 'propertyGraphService', 'requestService', 'queryService'];
+EditCtrl.$inject = ['$scope', 'propertyGraphService'];
 
-function EditCtrl ($scope, pGraph, request, query) {
+function EditCtrl ($scope, pGraph) {
   var vm = this;
   vm.selected = null;
-  vm.val = null;
-  vm.var = null;
-  vm.isVariable = false;
-  vm.newValue = '';
+  vm.variable = null;
+  vm.literal  = null;
 
-  vm.save = setData;
-  vm.cancel = getData;
-  vm.getLabel = request.getLabel;
-  vm.removeValue = removeValue;
-  vm.addValue = addValue;
+  vm.isVariable = true;
+  vm.isConst    = false;
+  vm.isNode     = true;
+  vm.isLiteral  = false;
 
-  pGraph.edit = edit;
+  vm.added  = 0;
+  vm.newFilterType = "";
+  vm.newFilterData = {};
 
-  function copyObj (obj) { return Object.assign({}, obj); }
+  vm.show  = {filters: true, results: true, const: true, lfilters: true, lresults: true}
 
-  function edit (obj) {
-    vm.selected = obj;
-    getData();
-    $scope.$emit('setSelected', obj);
+  pGraph.edit = editResource;
+  vm.refresh  = pGraph.refresh;
+  vm.filters  = pGraph.filters;
+
+  vm.mkVariable = mkVariable;
+  vm.mkConst    = mkConst;
+  vm.addUri     = addUri;
+  vm.rmUri      = rmUri;
+  vm.newFilter  = newFilter;
+
+  function editResource (resource) {
+    if (resource) {
+      vm.selected   = resource;
+      vm.variable   = resource.variable;
+      vm.isVariable = resource.isVariable();
+      vm.isConst    = !vm.isVariable;
+      vm.isNode     = resource.isNode();
+      vm.isLiteral  = resource.isLiteral();
+      vm.literal    = vm.isLiteral ? resource.literal : null;
+      if (vm.isVariable) vm.selected.getResults();
+      pGraph.setSelected(resource);
+    }
     $scope.$emit('tool', 'edit');
   }
 
-  function getData () {
-    vm.val = vm.selected.values.data.slice();
-    vm.var = copyObj(vm.selected.variable);
-    vm.isVariable = vm.selected.isVariable();
+  function mkVariable () {
+    vm.selected.mkVariable();
+    vm.selected.getResults();
+    vm.isVariable = true;
+    vm.isConst = false;
+    vm.refresh();
   }
 
-  function setData () {
-    vm.selected.isVar = vm.isVariable;
-    if (vm.selected.variable.alias != vm.var.alias) vm.selected.variable.alias = vm.var.alias;
-    if (vm.selected.variable.show != vm.var.show) vm.selected.variable.show = vm.var.show;
-    if (vm.selected.variable.count != vm.var.count) vm.selected.variable.count = vm.var.count;
-    var enter = vm.val.filter(uri => {
-      return (vm.selected.values.data.indexOf(uri) < 0)
-    });
-    var exit = vm.selected.values.data.filter(uri => {
-      return (vm.val.indexOf(uri) < 0);
-    });
-
-    enter.forEach(uri => { vm.selected.values.add(uri); });
-    exit.forEach(uri => { vm.selected.values.delete(uri); });
-    getData();
-    $scope.$emit('update', '');
+  function mkConst () {
+    vm.added = 0;
+    vm.selected.mkConst();
+    vm.isVariable = false;
+    vm.isConst = true;
+    vm.refresh();
   }
 
-  function removeValue (value) {
-    var i = vm.val.indexOf(value);
-    if (i > -1) vm.val.splice(i, 1);
-  }
-
-  function addValue () {
-    var i = vm.val.indexOf(vm.newValue);
-    if (i < 0 && vm.newValue) {
-      vm.val.push(vm.newValue);
-      vm.newValue = '';
+  function addUri (newUri) {
+    if (newUri) {
+      if (vm.selected.addUri(newUri)) vm.added += 1
     }
+  }
+
+  function rmUri (uri) {
+    return vm.selected.removeUri(uri)
+  }
+
+  function newFilter (targetVar) {
+    if (vm.newFilterType == "") return false;
+    targetVar.addFilter(vm.newFilterType, copyObj(vm.newFilterData));
+    vm.newFilterType = "";
+    vm.newFilterData = {};
+  }
+
+  function copyObj (obj) {
+    return Object.assign({}, obj);
   }
 
 }

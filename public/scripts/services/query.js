@@ -53,48 +53,6 @@ function queryService (settings) {
     return header(prefixes) + q;
   }
 
-  function getObjProp (uri, limit, offset) {
-    q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
-    q += '  ' + u(uri) + ' ?uri [] .\n';
-    q += '  ?uri a owl:ObjectProperty ; rdfs:label ?label\n';
-    q += '  FILTER (lang(?label) = "en")\n';
-    q += '}'
-    if (limit)  q+= ' limit ' + limit;
-    if (offset) q+= ' offset ' + offset;
-    return header(['rdfs', 'owl']) + q;
-  }
-  
-  function getDatatypeProp (uri, limit, offset) {
-    q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
-    q += '  ' + u(uri) + ' ?uri [] .\n';
-    q += '  ?uri a owl:DatatypeProperty ; rdfs:label ?label\n';
-    q += '  FILTER (lang(?label) = "en")\n';
-    q += '}'
-    if (limit)  q+= ' limit ' + limit;
-    if (offset) q+= ' offset ' + offset;
-    return header(['rdfs', 'owl']) + q;
-  }
-
-  function getObjPropValues (uri, prop, limit, offset) {
-    q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
-    q += '  ' + u(uri) + ' ' + u(prop) + ' ?uri .\n';
-    q += '  ?uri rdfs:label ?label .\n';
-    q += '  FILTER (lang(?label) = "en")\n';
-    q += '}'
-    if (limit)  q+= ' limit ' + limit;
-    if (offset) q+= ' offset ' + offset;
-    return header(['rdfs']) + q;
-  }
-
-  function getDatatypePropValues (uri, prop, limit, offset) {
-    q  = 'SELECT DISTINCT ?uri WHERE {\n';
-    q += '  ' + u(uri) + ' ' + u(prop) + ' ?uri .\n';
-    q += '}'
-    if (limit)  q+= ' limit ' + limit;
-    if (offset) q+= ' offset ' + offset;
-    return header(['rdfs']) + q;
-  }
-
   function getClasses (uri, limit, offset) {
     q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
     q += '  ' + u(uri) + ' a ?uri .\n';
@@ -106,12 +64,56 @@ function queryService (settings) {
     return header(['rdfs']) + q;
   }
 
+  function getProperties (uri) {
+    return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
+           'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' +
+           'PREFIX owl: <http://www.w3.org/2002/07/owl#>\n' +
+           'SELECT DISTINCT ?uri ?label ?kind WHERE {\n' +
+           '  <' + uri + '> ?uri [] .\n' +
+           '  OPTIONAL { ?uri rdfs:label ?label . FILTER (lang(?label) = "en")}\n' +
+           '  BIND(\n' +
+           '    IF(EXISTS { ?uri rdf:type owl:ObjectProperty},\n' +
+           '      1,\n' +
+           '      IF(EXISTS {?uri rdf:type owl:DatatypeProperty},\n' +
+           '        2,\n' +
+           '        0))\n' +
+           '    as ?kind)\n' +
+           '}';
+  }
+
+  function countValuesType (uri, prop) {
+    return 'SELECT (sum(?u) as ?uris) (sum(?l) as ?lits) WHERE {\n' + 
+           '  <' + uri + '> <' + prop + '> ?o .\n' +
+           '  BIND(IF(ISURI(?o),1,0) AS ?u)\n' +
+           '  BIND(IF(!ISURI(?o),1,0) AS ?l)\n}';
+  }
+
+  function getPropUri (uri, prop) {
+    return 'SELECT ?uri WHERE {\n' + 
+           '  <' + uri + '> <' + prop + '> ?uri .\n}'
+  }
+
+  function getPropObject (uri, prop) {
+    return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
+           'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' +
+           'SELECT DISTINCT ?uri ?label WHERE {\n' +
+           '  <' + uri + '> <' + prop + '> ?uri .\n' +
+           '  OPTIONAL { ?uri rdfs:label ?label . FILTER (lang(?label) = "en")}\n}';
+  }
+
+  function getPropDatatype (uri, prop) {
+    return 'SELECT DISTINCT ?lit WHERE {\n' +
+           '  <' + uri + '> <' + prop + '> ?lit .\n' +
+           '  FILTER (lang(?lit) = "" || lang(?lit) = "en")\n}'
+  }
+
   return {
     search: search, 
-    getObjProp: getObjProp,
-    getDatatypeProp: getDatatypeProp,
-    getObjPropValue: getObjPropValues,
-    getDatatypePropValue: getDatatypePropValues,
+    getProperties: getProperties,
     getClasses: getClasses,
+    countValuesType: countValuesType,
+    getPropUri: getPropUri,
+    getPropObject: getPropObject,
+    getPropDatatype: getPropDatatype,
   };
 }

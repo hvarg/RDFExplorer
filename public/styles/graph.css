@@ -32,6 +32,14 @@ g.selected:hover circle{
   fill: rgb(250, 232, 255);
 }
 
+.selected {
+  /*stroke-dasharray: 4;*/
+}
+
+.connect-node {
+  stroke-dasharray: 3 1;
+}
+
 path.link {
   fill: none;
   stroke: #333;
@@ -73,14 +81,14 @@ path.link.selected {
   font-size: 16;
 }
 
-.innerRect {
+.innerRect, .small-box {
   font-family: serif;
   fill: #f3f3f3;
   stroke-width: 1px;
   stroke: blue;
 }
 
-.innerRect:hover {
+.innerRect:hover, .small-box:hover {
   fill: #f0f0f0;
 }
 
@@ -88,6 +96,13 @@ path.link.selected {
   text-anchor: middle;
   alignment-baseline: central;
   font-size: 14;
+}
+
+.aw-icon {
+  text-anchor: middle;
+  alignment-baseline: central;
+  font-size: 14;
+  font-family: FontAwesome;
 }
 /*.csubtitle {
   text-anchor: end;
@@ -118,4 +133,8 @@ path.link.selected {
 
 .menu-entry-rect:hover {
   fill: rgb(200,200,200);
+}
+
+.menu-entry.disabled {
+  cursor: not-allowed;
 }

@@ -3,7 +3,8 @@ requestService.$inject = ['settingsService', '$http'];
 
 function requestService (settings, $http) {
   var label = {
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'type' //FIXME
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'type', //FIXME
+    'http://www.w3.org/2000/01/rdf-schema#label': 'label'
   };
 
   function toForm (obj) {
@@ -25,7 +26,7 @@ function requestService (settings, $http) {
         var tmp;
         for (var i = 0; i < response.data.results.bindings.length; i++) {
           tmp = response.data.results.bindings[i];
-          if (tmp.label) label[tmp.uri.value] = tmp.label.value;
+          if (tmp.label && tmp.uri) label[tmp.uri.value] = tmp.label.value;
         }
         return callback ? callback(response.data) : response.data;
       },
@@ -42,6 +43,26 @@ function requestService (settings, $http) {
 
   function setLabel (uri, label) {
     label[uri] = label;
+  }
+
+  String.prototype.getLabel = function () {
+    if (label[this]) return label[this];
+    for (var i in settings.prefixes) {
+      if (this.includes(settings.prefixes[i].uri)) {
+        return this.replace(settings.prefixes[i].uri, settings.prefixes[i].prefix+':');
+      }
+    }
+    return this;
+  };
+
+  String.prototype.toPrefix = function () {
+    for (var i in settings.prefixes) {
+      if (this.includes(settings.prefixes[i].uri)) {
+        return [this.replace(settings.prefixes[i].uri, settings.prefixes[i].prefix+':'),
+                settings.prefixes[i]];
+      }
+    }
+    return ['<' + this + '>', null];
   }
 
   return {

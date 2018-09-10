@@ -7,8 +7,6 @@ function visualQueryBuilder (pGraph) {
     link: link,
     restrict: 'EA',
     scope: {
-      update: '=',
-      getZoom: '=',
     },
   };
   return directive;
@@ -24,7 +22,14 @@ function visualQueryBuilder (pGraph) {
       thisGraph.focused = true;
       thisGraph.colors = d3.scale.category10();
 
+      thisGraph.colors('2');
+      thisGraph.colors('4');
+      thisGraph.colors('1');
+      thisGraph.colors('3');
+      thisGraph.colors('5');
+
       thisGraph.state = {
+        clickedProperty: false,
         selectedNode: null,
         selectedEdge: null,
         mouseDownNode: null,
@@ -33,7 +38,6 @@ function visualQueryBuilder (pGraph) {
         justScaleTransGraph: false,
         lastKeyDown: -1,
         shiftNodeDrag: false,
-        selectedText: null
       };
 
       // define arrow markers for graph links
@@ -98,7 +102,7 @@ function visualQueryBuilder (pGraph) {
           });
 
       // listen for key events TODO FIXME
-      d3.select('body')
+      d3.select(element[0])
           .on("keydown", function(){ thisGraph.svgKeyDown.call(thisGraph); })
           .on("keyup", function(){ thisGraph.svgKeyUp.call(thisGraph); });
 
@@ -266,29 +270,8 @@ function visualQueryBuilder (pGraph) {
       if (mouseDownNode !== d){
         // we're in a different node: create new edge for mousedown edge and add to graph
         pGraph.addEdge(mouseDownNode, d);
-        /*
-        var relation = query.addResource(),
-            newEdge = query.addTriple(mouseDownNode, relation, d);
-        relation.x = (mouseDownNode.x + d.x) / 2;
-        relation.y = (mouseDownNode.y + d.y) / 2;
-        relation.rad = 0;
-        *TODO first rotation its not working.
-        if (mouseDownNode.y > d.y)
-          relation.rad = 45 - Math.atan((d.x - mouseDownNode.x)/(d.y - mouseDownNode.y)) * (180/Math.PI);
-        else
-          relation.rad = 225 + Math.atan((d.x - mouseDownNode.x)/(mouseDownNode.y - d.y)) * (180/Math.PI);
-        */
         thisGraph.updateGraph();
-        /*
-        var a = String( mouseDownNode.getUri() ),
-            b = String( d.getUri() );
-        if (a && b) request.findRelation(a, b, function (data) {
-          if (data.length == 0) {
-            relation.fault = true;
-            thisGraph.updateGraph();
-          }
-        });
-        else if (a) request.relations(a);
+        /*else if (a) request.relations(a);
         else if (b) request.inverseRelations(b);*/
       } else {
         // we're in the same node
@@ -429,47 +412,12 @@ function visualQueryBuilder (pGraph) {
       thisGraph.circles.attr("transform", function (d) {
         return "translate(" + d.x + "," + d.y + ")";
       });
-      thisGraph.circles.each(function (d,i) { //FIXME this is not the best way to do this.
-        var thisProp, thisSelection, i;
-        /* Remove properties */
-        if (d.redraw) {
-          d3.select(this).selectAll("."+consts.innerTextClass).remove();
-          d3.select(this).selectAll("."+consts.innerRectClass).remove();
-          d.redraw = false;
-          d.lastPropDraw = 0;
-        }
-        /* Update already drawn properties */
-        for (i = 0; i < d.lastPropDraw; i++) {
-          thisProp = d.properties[i];
-          d3.select(this).filter("."+consts.innerTextClass)
-              .text( getChunkText(thisProp.getLabel(), thisProp.getWidth(), consts.innerTextClass) );
-        }
-        /* Create new properties for existing nodes */
-        for (;d.lastPropDraw<d.properties.length; d.lastPropDraw++) {
-          thisProp = d.properties[d.lastPropDraw];
-          thisSelection = d3.select(this);
-          thisSelection.append("rect")
-              .classed(consts.innerRectClass, true)
-              .attr("width", thisProp.getWidth())
-              .attr("height", thisProp.getHeight())
-              .attr("x", -thisProp.getWidth()/2)
-              .attr("y", thisProp.getOffsetY())
-              .style("stroke", thisGraph.colors(thisProp.getUniq()))
-              .on("contextmenu", d => {
-                menu({ 'Remove': function () { thisProp.delete(); thisGraph.updateGraph(); }});
-              });
-          thisSelection.append("text")
-              .classed(consts.innerTextClass, true)
-              .attr("x", 0).attr("y", thisProp.getOffsetY()+ thisProp.getHeight()/2)
-              .text( getChunkText(thisProp.getLabel(), thisProp.getWidth(), consts.innerTextClass) );
-        }
-      });
-      /* update the main rect */
+
       thisGraph.circles.selectAll("rect").filter("."+consts.mainRectClass)
           .style("stroke", function (d) { return thisGraph.colors(d.getUniq()); })
           .attr("height", function (d) { return d.getHeight() });
       thisGraph.circles.selectAll("text").filter("."+consts.mainTitleClass)
-          .text( function (d) { return getChunkText(d.getLabel(), d.getWidth(), consts.mainTitleClass); });
+          .text( function (d) { return getChunkText(d.getRepr(), d.getWidth(), consts.mainTitleClass); });
 
       // add new nodes
       var newGs= thisGraph.circles.enter().append("g");
@@ -480,8 +428,8 @@ function visualQueryBuilder (pGraph) {
         .on("mouseout",  function(d){ d3.select(this).classed(consts.connectClass, false); })
         .on("mousedown", function(d){ thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d); })
         .on("mouseup",   function(d){ thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d); })
-        .on("click",     function(d){ /* Do something TODO*/ })
-        .on("dblclick",  function(d){ if (d.isVariable()) d.edit(); else d.describe(); })
+        .on("click",     function(d){ if (state.clickedProperty) state.clickedProperty = false; else d.onClick(); })
+        .on("dblclick",  function(d){ d.onDblClick(); })
         .on('contextmenu', function(d){
             menu({
               'Describe': function () { d.describe(); },
@@ -504,12 +452,83 @@ function visualQueryBuilder (pGraph) {
           .classed(consts.mainTitleClass, true)
           .attr("x", 0).attr("y", 0)
           .text(function (d) {
-            return getChunkText(d.getLabel(), d.getWidth(), consts.mainTitleClass);
+            return getChunkText(d.getRepr(), d.getWidth(), consts.mainTitleClass);
           });
+      newGs.append("g").classed('props', true);
 
       // remove old nodes
       thisGraph.circles.exit().remove();
+
+      // Properties
+      thisGraph.circles.each(function (d, i) {
+        var sel = d3.select(this).selectAll(".props");
+        var props = sel.selectAll('g').data(d.properties, function (p) {return p.id;});
+        //UPDATE
+        props.selectAll("rect")
+            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .attr("y", p => { return + p.getOffsetY()});
+        props.selectAll('.'+consts.innerTextClass)
+            .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
+            .text(p => { return getChunkText(p.getRepr(), p.getWidth(), consts.innerTextClass); });
+        props.selectAll('.aw-icon')
+            .attr("y", p => { return p.getOffsetY()+ p.getHeight()/2; })
+            .text(p => {return p.literal.filters.length > 0 ? "\uf0b0" : "\uf06e"});
+
+        //ENTER
+        var newP = props.enter().append('g');
+
+        newP.append("rect")
+            .classed(consts.innerRectClass, true)
+            .attr("width",  p => {return p.getWidth()})
+            .attr("height", p => {return p.getHeight()})
+            .attr("x", p => { return - p.getWidth()/2})
+            .attr("y", p => { return + p.getOffsetY()})
+            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .on("click",    p => { state.clickedProperty = true; p.onClick();})
+            .on("dblclick", p => { p.onDblClick(); })
+            .on("contextmenu", p => {
+              console.log(p);
+              menu({
+                'Edit':     function () { p.edit(); },
+                'Collect':  function () { p.getResults(null, function () {thisGraph.updateGraph();}); },
+                'Remove':   function () { p.delete(); thisGraph.updateGraph();},
+              });
+            });
+
+        newP.append("text")
+            .classed(consts.innerTextClass, true)
+            .attr("x", p => { return (p.isLiteral() ? - p.getHeight()/2 : 0); })
+            .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
+            .text( p => { 
+              return getChunkText(
+                p.getRepr(),
+                p.isLiteral() ? p.getWidth() - p.getHeight() : p.getWidth(),
+                consts.innerTextClass)});
+
+        newP.filter(p=>{return p.isLiteral()}).append("rect")
+            .classed('small-box', true)
+            .attr("width",  p => { return p.getHeight(); })
+            .attr("height", p => { return p.getHeight(); })
+            .attr("x", p => { return p.getWidth()/2 - p.getHeight(); })
+            .attr("y", p => { return p.getOffsetY(); })
+            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .on("click", p => { state.clickedProperty = true; p.onClick();});
+
+        newP.filter(p=>{return p.isLiteral()}).append("text")
+            .classed('aw-icon', true)
+            .attr("x", p => { return (p.getWidth() - p.getHeight())/2; })
+            .attr("y", p => { return p.getOffsetY()+ p.getHeight()/2; })
+            .text(p => {return p.literal.filters.length > 0 ? "\uf0b0" : "\uf06e"});
+
+        props.exit().remove();
+
+      });
     };
+
+    GraphCreator.prototype.getZoom = function(){
+      var t = this.zoom.translate();
+      return [t[0], t[1], this.zoom.scale()];
+    }
 
     /** MAIN SVG **/
     var svg = d3.select(element[0]).append("svg")
@@ -521,14 +540,8 @@ function visualQueryBuilder (pGraph) {
     var menu = contextMenu().items('Describe', 'Edit', 'Collect', 'Remove');
     graph.updateGraph();
     
-    scope.update = function () {
-      graph.updateGraph();
-    };
-
-    scope.getZoom = function () {
-      var t = graph.zoom.translate();
-      return [t[0], t[1], graph.zoom.scale()];
-    };
+    //TODO
+    pGraph.connect(element[0], graph);
 
 /*************/
     function getChunkText (text, width, myclass) {
@@ -566,7 +579,7 @@ function contextMenu() {
         items = [], rescale = false;
 
     function menu(f) {
-        var z = scope.getZoom();
+        var z = graph.getZoom();
         var xycoords = d3.mouse(graph.svgG.node());
         //console.log(z, xycoords); TODO: zoom z[2]
         var x = (xycoords[0] + z[0]);
@@ -582,7 +595,9 @@ function contextMenu() {
             .append('g').attr('class', 'context-menu')
             .selectAll('tmp')
             .data(items).enter()
-            .append('g').attr('class', 'menu-entry')
+            //.append('g').attr('class', 'menu-entry')
+            .append('g').classed('menu-entry', true)
+            .classed('disabled', function (d) {return !f[d];})
             .on('click', function (d) { if (f[d]) f[d](); });
 
         d3.selectAll('.menu-entry')
