@@ -21,10 +21,12 @@ function visualQueryBuilder (pGraph) {
       thisGraph.edges = edges || [];
       thisGraph.focused = true;
       thisGraph.colors = d3.scale.category10();
+
       thisGraph.colors('2');
       thisGraph.colors('4');
       thisGraph.colors('1');
       thisGraph.colors('3');
+      thisGraph.colors('5');
 
       thisGraph.state = {
         clickedProperty: false,
@@ -410,75 +412,7 @@ function visualQueryBuilder (pGraph) {
       thisGraph.circles.attr("transform", function (d) {
         return "translate(" + d.x + "," + d.y + ")";
       });
-      thisGraph.circles.each(function (d,i) { //FIXME this is not the best way to do this.
-        var thisProp, thisSelection, i;
-        /* Remove properties */
-        if (d.redraw) {
-          d3.select(this).selectAll("."+consts.innerTextClass).remove();
-          d3.select(this).selectAll("."+consts.innerRectClass).remove();
-          d3.select(this).selectAll(".aw-icon").remove();
-          d.redraw = false;
-          d.lastPropDraw = 0;
-        }
 
-        /* Update already drawn properties */
-        d3.select(this).selectAll("."+consts.innerTextClass).filter((_,i) => {
-          return (i < d.lastPropDraw);
-        }).text((d,i) => {
-          return getChunkText(d.properties[i].getRepr(), d.properties[i].getWidth(), consts.innerTextClass) 
-        }); //TODO update color!
-
-        /* Create new properties for existing nodes */
-        for (;d.lastPropDraw<d.properties.length; d.lastPropDraw++) {
-          thisProp = d.properties[d.lastPropDraw];
-          thisSelection = d3.select(this);
-          thisSelection.append("rect")
-              .classed(consts.innerRectClass, true)
-              .attr("width", thisProp.getWidth())
-              .attr("height", thisProp.getHeight())
-              .attr("x", -thisProp.getWidth()/2)
-              .attr("y", thisProp.getOffsetY())
-              .style("stroke", thisGraph.colors(thisProp.getUniq()))
-              .on("click",    d => { state.clickedProperty = true; thisProp.onClick();})
-              .on("dblclick", d => { thisProp.onDblClick(); })
-              .on("contextmenu", d => {
-                menu({
-                  'Edit':     function () { thisProp.edit(); },
-                  'Collect':  function () { thisProp.getResults(null, function () {thisGraph.updateGraph();}); },
-                  'Remove':   function () { thisProp.delete(); thisGraph.updateGraph();},
-                });
-              });
-
-          thisSelection.append("text")
-              .classed(consts.innerTextClass, true)
-              .attr("x", thisProp.isLiteral() ? - thisProp.getHeight()/2 : 0)
-              .attr("y", thisProp.getOffsetY()+ thisProp.getHeight()/2)
-              .text( getChunkText(
-                  thisProp.getRepr(),
-                  thisProp.isLiteral() ? thisProp.getWidth() - thisProp.getHeight() : thisProp.getWidth(),
-                  consts.innerTextClass
-                ) 
-              );
-
-          if (thisProp.isLiteral()) {
-            thisSelection.append("rect")
-                .classed(consts.innerRectClass, true)
-                .attr("width", thisProp.getHeight())
-                .attr("height", thisProp.getHeight())
-                .attr("x", thisProp.getWidth()/2 - thisProp.getHeight())
-                .attr("y", thisProp.getOffsetY())
-                .style("stroke", thisGraph.colors(thisProp.getUniq()))
-                .on("click", d => { console.log(thisProp); });
-            thisSelection.append("text")
-              .classed('aw-icon', true)
-              .attr("x", (thisProp.getWidth() - thisProp.getHeight())/2)
-              .attr("y", thisProp.getOffsetY()+ thisProp.getHeight()/2)
-              .text("\uf0b0");
-          }
-
-        }
-      });
-      /* update the main rect */
       thisGraph.circles.selectAll("rect").filter("."+consts.mainRectClass)
           .style("stroke", function (d) { return thisGraph.colors(d.getUniq()); })
           .attr("height", function (d) { return d.getHeight() });
@@ -520,9 +454,75 @@ function visualQueryBuilder (pGraph) {
           .text(function (d) {
             return getChunkText(d.getRepr(), d.getWidth(), consts.mainTitleClass);
           });
+      newGs.append("g").classed('props', true);
 
       // remove old nodes
       thisGraph.circles.exit().remove();
+
+      // Properties
+      thisGraph.circles.each(function (d, i) {
+        var sel = d3.select(this).selectAll(".props");
+        var props = sel.selectAll('g').data(d.properties, function (p) {return p.id;});
+        //UPDATE
+        props.selectAll("rect")
+            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .attr("y", p => { return + p.getOffsetY()});
+        props.selectAll('.'+consts.innerTextClass)
+            .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
+            .text(p => { return getChunkText(p.getRepr(), p.getWidth(), consts.innerTextClass); });
+        props.selectAll('.aw-icon')
+            .attr("y", p => { return p.getOffsetY()+ p.getHeight()/2; })
+            .text(p => {return p.literal.filters.length > 0 ? "\uf0b0" : "\uf06e"});
+
+        //ENTER
+        var newP = props.enter().append('g');
+
+        newP.append("rect")
+            .classed(consts.innerRectClass, true)
+            .attr("width",  p => {return p.getWidth()})
+            .attr("height", p => {return p.getHeight()})
+            .attr("x", p => { return - p.getWidth()/2})
+            .attr("y", p => { return + p.getOffsetY()})
+            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .on("click",    p => { state.clickedProperty = true; p.onClick();})
+            .on("dblclick", p => { p.onDblClick(); })
+            .on("contextmenu", p => {
+              console.log(p);
+              menu({
+                'Edit':     function () { p.edit(); },
+                'Collect':  function () { p.getResults(null, function () {thisGraph.updateGraph();}); },
+                'Remove':   function () { p.delete(); thisGraph.updateGraph();},
+              });
+            });
+
+        newP.append("text")
+            .classed(consts.innerTextClass, true)
+            .attr("x", p => { return (p.isLiteral() ? - p.getHeight()/2 : 0); })
+            .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
+            .text( p => { 
+              return getChunkText(
+                p.getRepr(),
+                p.isLiteral() ? p.getWidth() - p.getHeight() : p.getWidth(),
+                consts.innerTextClass)});
+
+        newP.filter(p=>{return p.isLiteral()}).append("rect")
+            .classed('small-box', true)
+            .attr("width",  p => { return p.getHeight(); })
+            .attr("height", p => { return p.getHeight(); })
+            .attr("x", p => { return p.getWidth()/2 - p.getHeight(); })
+            .attr("y", p => { return p.getOffsetY(); })
+            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .on("click", p => { state.clickedProperty = true; p.onClick();});
+
+        newP.filter(p=>{return p.isLiteral()}).append("text")
+            .classed('aw-icon', true)
+            .attr("x", p => { return (p.getWidth() - p.getHeight())/2; })
+            .attr("y", p => { return p.getOffsetY()+ p.getHeight()/2; })
+            .text(p => {return p.literal.filters.length > 0 ? "\uf0b0" : "\uf06e"});
+
+        props.exit().remove();
+
+      });
     };
 
     GraphCreator.prototype.getZoom = function(){

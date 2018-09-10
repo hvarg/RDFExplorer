@@ -81,14 +81,14 @@ path.link.selected {
   font-size: 16;
 }
 
-.innerRect {
+.innerRect, .small-box {
   font-family: serif;
   fill: #f3f3f3;
   stroke-width: 1px;
   stroke: blue;
 }
 
-.innerRect:hover {
+.innerRect:hover, .small-box:hover {
   fill: #f0f0f0;
 }
 

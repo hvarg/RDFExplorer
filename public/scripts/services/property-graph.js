@@ -38,6 +38,7 @@ function propertyGraphService (req) {
   }
 
   var lastNodeId = 0;
+  var lastPropId = 0;
   var lastVarId = 0;
   var uriToNode = {};
   var usedAlias = [];
@@ -319,7 +320,7 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.getHeight = function () {
-    return nodeBaseHeight + this.lastPropDraw*(childHeight+childPadding);
+    return nodeBaseHeight + this.properties.length*(childHeight+childPadding);
   };
 
   Node.prototype.setPosition = function (x, y) {
@@ -401,6 +402,7 @@ function propertyGraphService (req) {
   /******* Property TDA ******************************************************/
   function Property (parentNode) {
     RDFResource.call(this);
+    this.id = lastPropId++;
     this.parentNode = parentNode;
     this.isLit = false;
     this.literal = null;
@@ -411,7 +413,6 @@ function propertyGraphService (req) {
   Property.prototype = Object.create(RDFResource.prototype);
   Property.prototype.constructor = Property;
 
-  Object.defineProperty(Property.prototype, 'id', { get: function() { return this.parentNode.id; } }); 
   Object.defineProperty(Property.prototype, 'y',  { get: function() { return this.parentNode.y;  } }); 
   Object.defineProperty(Property.prototype, 'x',  { get: function() { return this.parentNode.x; } });
 
