@@ -55,6 +55,16 @@ function requestService (settings, $http) {
     return this;
   };
 
+  String.prototype.toPrefix = function () {
+    for (var i in settings.prefixes) {
+      if (this.includes(settings.prefixes[i].uri)) {
+        return [this.replace(settings.prefixes[i].uri, settings.prefixes[i].prefix+':'),
+                settings.prefixes[i]];
+      }
+    }
+    return ['<' + this + '>', null];
+  }
+
   return {
     execQuery: execQuery,
     getLabel: getLabel,

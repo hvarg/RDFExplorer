@@ -482,6 +482,12 @@ function propertyGraphService (req) {
     propertyGraph.edges.push(this);
   }
 
+  Edge.prototype.contains = function (resource) {
+    return (this.source.parentNode == resource ||
+            this.target == resource ||
+            this.source == resource);
+  }
+
   /***************************************************************************
   function propertyGraph () {
     this.nodes = [];
@@ -589,26 +595,137 @@ function propertyGraphService (req) {
     return uriToNode[uri] || null;
   }
 
-  function toQuery () {
-    var v = {}, i, m='', q = '';
-    for (i = 0; i < propertyGraph.edges.length; i++) {
-      edge = propertyGraph.edges[i];
-      s = edge.source.parentNode.getUri();
-      s = s ? u(s) : edge.source.parentNode.variable.get();
-      p = edge.source.getUri();
-      p = p ? u(p) : edge.source.variable.get();
-      o = edge.target.getUri();
-      o = o ? u(o) : edge.target.variable.get();
-      if (s[0]=='?' || p[0] == '?' || o[0] == '?')
-        m += s + ' ' + p + ' ' + o + '.\n'
-      if (!edge.source.parentNode.getUri()) v[s] = 1;
-      if (!edge.source.getUri()) v[p] = 1;
-      if (!edge.target.getUri()) v[o] = 1;
+  function toQuery (resources) {
+    if (!resources || resources.length == 0) {
+      resources = [];
+      propertyGraph.nodes.forEach(node => {
+        resources.push(node);
+        node.properties.forEach(prop => {
+          resources.push(prop);
+        });
+      });
     }
-    for (i in v) {
-      q += i;
+
+    resources = resources.filter(r => { return r.isVariable() || (r.isProperty() && r.isLiteral()); });
+
+    var queries = [];
+
+    while (resources.length > 0) {
+      var toSolve = new Set();
+      var triples = new Set();
+      var filters = new Set();
+      var literals = new Set();
+
+      var queue = [resources.pop()];
+      
+      while (queue.length > 0) {
+        var cur = queue.pop();
+        toSolve.add(cur);
+
+        // Add edges
+        var edges = propertyGraph.edges.filter(e => { return e.contains(cur); });
+        edges.forEach(e => {
+          triples.add(e);
+          [e.source.parentNode, e.source, e.target].forEach(r => {
+            if (r.isVariable()) {
+              if (!toSolve.has(r)) queue.push(r);
+            }
+          });
+        });
+
+        // Add filters
+        cur.variable.filters.forEach(f => { filters.add(f); });
+
+        // Add datatype properties
+        if (cur.isNode()) {
+          cur.literalRelations().forEach(r => {
+            if (!toSolve.has(r)) queue.push(r);
+          });
+        } else if (cur.isProperty() && cur.isLiteral()) {
+          literals.add(cur);
+          cur.literal.filters.forEach(f => { filters.add(f); });
+          if (cur.parentNode.isVariable()) {
+            if (!toSolve.has(cur.parentNode)) queue.push(cur.parentNode);
+          }
+        }
+      }
+
+      // Remove this query resources from requested elements and add variables to select
+      var select = [];
+      toSolve.forEach(r => {
+        // remove
+        var index = resources.indexOf(r);
+        if (index >= 0) resources.splice(index, 1);
+        // add
+        if (r.isVariable()) select.push( r.variable.get() );
+        if (r.isProperty() && r.isLiteral()) select.push( r.literal.get() );
+      });
+
+      // Check triples
+      var prefixes = new Set();
+      var body = [];
+      var values = new Set();
+      var tmp, pre;
+      triples.forEach(e => {
+        tmp = [];
+        [e.source.parentNode, e.source, e.target].forEach(r => {
+          if (r.isVariable()) tmp.push(r.variable.get());
+          else {
+            if (r.uris.length == 1) {
+              pre = r.getUri().toPrefix();
+              if (pre[1]) prefixes.add(pre[1]);
+              tmp.push(pre[0]);
+            } else {
+              tmp.push(r.variable.get());
+              values.add(r);
+            }
+          }
+        });
+        body.push(tmp);
+      });
+
+      // Check literals
+      literals.forEach(lit => { 
+        tmp = [];
+        [lit.parentNode, lit].forEach(r => {
+          if (r.isVariable()) tmp.push(r.variable.get());
+          else {
+            if (r.uris.length == 1) {
+              pre = r.getUri().toPrefix();
+              if (pre[1]) prefixes.add(pre[1]);
+              tmp.push(pre[0]);
+            } else {
+              tmp.push(r.variable.get());
+              values.add(r);
+            }
+          }
+        });
+        tmp.push( lit.literal.get() );
+        body.push(tmp);
+      });
+
+      
+      // Create query
+      q = 'SELECT DISTINCT ' + select.join(' ') + ' WHERE {\n'
+      body.forEach(triple => {
+        q += '  ' + triple.join(' ') + ' .\n';
+      });
+
+      filters.forEach(f => { q += '  ' + f.apply(); });
+
+      values.forEach(v => {
+        q += '  VALUES ' + v.variable.get() + ' {' + v.uris.map(u => {
+          pre = u.toPrefix();
+          if (pre[1]) prefixes.add(pre[1]);
+          return pre[0];
+        }).join(' ') + '}\n';
+      });
+      q += '}';
+
+      queries.push({toSolve: toSolve, triples: triples, filters: filters, literals: literals, str: q});
     }
-    return 'SELECT '+q+' WHERE {\n' +m +'} ';
+    console.log(queries);
+    return q;
   }
 
   return propertyGraph;
