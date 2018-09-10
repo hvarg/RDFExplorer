@@ -3,7 +3,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   .ta-center(ng-if="ctrl.selected.source")
     //TODO: add disable on chevron when no next or prev.
     i.pull-left.fa.fa-chevron-left.mt-1(ng-click="ctrl.getPrev()")
-    a.ell(href="{{ctrl.selected.uri}}", target="_blank", style="display: inline-block; width: calc(100% - 40px);") {{ ctrl.selected.uri }}
+    a.ell(href="{{ctrl.selected.uri}}", target="_blank", style="width: calc(100% - 40px);") {{ ctrl.selected.uri }}
     i.pull-right.fa.fa-chevron-right.mt-1(ng-click="ctrl.getNext()")
     hr(style="margin: 3px 0px;")
 
@@ -78,5 +78,5 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     div(ng-repeat="prop in ctrl.selected.external")
       b.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
                   draggable="true") {{ prop.uri.getLabel() }}:
-      a.ell.ml-2(ng-repeat="value in ctrl.selected.results[prop.uri]", href="{{value}}", target="_blank",
-                 style="display: inline-block; width: calc(100% - 12px);") {{ value }}
+      a.ell.ml-2(ng-repeat="value in ctrl.selected.results[prop.uri]", style="width: calc(100% - 12px);",
+                 href="{{value}}", target="_blank") {{ value }}

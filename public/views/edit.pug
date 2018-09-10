@@ -73,9 +73,8 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
       .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results.
       .row(ng-repeat="(key, value) in ctrl.variable.results", title="{{value.uri.value}}")
         .col-md-12(ng-class="{'mt-1': $first}")
-          .ell(style="display: inline-block; width: calc(100% - 50px);") {{ value.uri.value.getLabel(); }}
-          i.pull-right.fa.fa-plus(ng-click="ctrl.addUri(value.uri.value);")
-          i.pull-right.fa.fa-eye(ng-click="value.uri.value.describe();")
+          a.ell(style="width: calc(100% - 50px);", href="", ng-click="value.uri.value.describe()") {{ value.uri.value.getLabel(); }}
+          i.pull-right.fa.fa-plus.mr-3(ng-click="ctrl.addUri(value.uri.value);")
 
   div(ng-if="!ctrl.isVariable")
     // Constrains
@@ -87,15 +86,15 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
 
     .custom-container-content(ng-class="{'active': ctrl.show.const}")
       .input-group.input-group-sm.mt-1.mb-1
-        input.form-control(type='url', placeholder="Add a new value", ng-model="ctrl.newUri",
+        input.form-control(type='url', placeholder="Add a new URI", ng-model="ctrl.newUri",
                            aria-label="New value", aria-describedby='edit-button-add')
         .input-group-append
           button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addUri(ctrl.newUri); ctrl.newUri='';") add
       .alert.alert-warning.alert-sm.mb-1(ng-if="ctrl.selected.countUri() == 0") To use this resource as constraint you need to add at least one value
-      .row(ng-repeat="(key, value) in ctrl.selected.uris", title="{{value}}")
+      .row(ng-repeat="(key, value) in ctrl.selected.uris")
         .col-md-12
-          .ell(style="display: inline-block; width: calc(100% - 30px);") {{ value.getLabel(); }}
-          i.pull-right.fa.fa-trash(ng-click="ctrl.removeValue(value);")
+          a.ell(style="width: calc(100% - 30px);", title="{{value}}", href="", ng-click="value.describe();") {{ value.getLabel(); }}
+          i.clickable.pull-right.fa.fa-trash.mt-1(ng-click="ctrl.selected.removeUri(value);")
 
   .mt-4(ng-if="ctrl.isLiteral")
     h4 
@@ -160,6 +159,6 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
       .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.literal.results.length==0") Currently this variable has no partial results.
       .row(ng-repeat="(key, value) in ctrl.literal.results", title="{{value.uri.value}}")
         .col-md-12(ng-class="{'mt-1': $first}")
-          .ell(style="display: inline-block; width: calc(100% - 50px);") {{ value.uri.value.getLabel(); }}
+          .ell(style="width: calc(100% - 50px);") {{ value.uri.value.getLabel(); }}
           i.pull-right.fa.fa-plus(ng-click="ctrl.addUri(value.uri.value);")
           i.pull-right.fa.fa-eye(ng-click="value.uri.value.describe();")
