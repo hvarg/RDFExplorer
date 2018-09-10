@@ -194,7 +194,7 @@ visual-query-builder {
 }
 
 .fakeRect {
-  cursor:grab;
+  cursor: grab;
   pointer-events: auto;
   font-family: serif;
   background-color: #f8f8f8;
@@ -202,7 +202,6 @@ visual-query-builder {
   border-radius: 6px;
   width: 220px;
   min-height: 30px;
-  /*line-height: 30px; multiline */
   padding: 3px;
   font-weight: bold;
   text-align: center;
@@ -306,7 +305,7 @@ visual-query-builder {
 .propRect > .fakeRect-container > .fakeRect {
   width: auto;
   display: inline-block;
-  margin-right: 6px;
+  margin: 3px 3px;
   padding: 3px;
 }
 
