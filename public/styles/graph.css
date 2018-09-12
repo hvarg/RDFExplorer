@@ -63,6 +63,13 @@ path.link.selected {
   stroke: rgb(229, 172, 247);
 }
 
+.highlight {
+  pointer-events: none;
+  position: fixed;
+  box-shadow: 0 0 10px rgba(81, 203, 238, 1);
+  z-index: 0;
+}
+
 .mainRect {
   font-family: serif;
   fill: #f8f8f8;

@@ -39,7 +39,6 @@ function EditCtrl ($scope, pGraph) {
       vm.isLiteral  = resource.isLiteral();
       vm.literal    = vm.isLiteral ? resource.literal : null;
       if (vm.isVariable) vm.selected.getResults();
-      pGraph.setSelected(resource);
     }
     $scope.$emit('tool', 'edit');
   }

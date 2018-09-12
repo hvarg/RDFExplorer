@@ -23,7 +23,6 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
   }
 
   function describeObj (obj) {
-    pGraph.setSelected(obj);
     $scope.$emit('tool', 'describe');
     var uri = obj.isVariable() ? (obj.hasResults() ? obj.getResult() : null) : obj.getUri();
     if (uri && (!vm.selected || vm.selected.uri != uri)) {

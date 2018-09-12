@@ -34,7 +34,6 @@ function propertyGraphService (req) {
     toQuery: toQuery,
     connect: connect,
     refresh: refresh,
-    setSelected: setSelected,
     getSelected: getSelected,
     // Defined elsewhere:
     describe: null,
@@ -137,11 +136,13 @@ function propertyGraphService (req) {
 
   /**** from controllers ****/
   RDFResource.prototype.describe = function () {
+    this.select();
     if (propertyGraph.describe)
       propertyGraph.describe(this);
   };
 
   RDFResource.prototype.edit = function () {
+    this.select();
     if (propertyGraph.edit)
       propertyGraph.edit(this);
   };
@@ -153,6 +154,10 @@ function propertyGraphService (req) {
   };
 
   RDFResource.prototype.onDblClick = function () {
+  };
+
+  RDFResource.prototype.select = function () {
+    propertyGraph.selected = this;
   };
 
   RDFResource.prototype.mkVariable = function () {
@@ -518,10 +523,6 @@ function propertyGraphService (req) {
     propertyGraph.visual.updateGraph();
   }
 
-  function setSelected (resource) {
-    propertyGraph.selected = resource;
-  }
-
   function getSelected () {
     return propertyGraph.selected;
   }
@@ -579,6 +580,7 @@ function propertyGraphService (req) {
       p.literal.addFilter('lang', {language: 'en'});
       p.literal.addFilter('text', {keyword: alias});
     }
+    if (d) d.select();
     refresh();
   }
 

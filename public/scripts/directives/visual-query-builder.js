@@ -84,6 +84,9 @@ function visualQueryBuilder (pGraph) {
       thisGraph.circles = svgG.append("g").selectAll("g");
       thisGraph.paths = svgG.append("g").selectAll("g");
 
+      // highlight
+      thisGraph.hl = d3.select(element[0]).append("div").attr("class", "highlight").style("opacity", 0);
+
       thisGraph.drag = d3.behavior.drag()
           .origin(function(d){ return {x: d.x, y: d.y}; })
           .on("drag", function(args){
@@ -130,7 +133,8 @@ function visualQueryBuilder (pGraph) {
             d3.select('body').style("cursor", "auto");
           });
 
-      svg.call(dragSvg).on("dblclick.zoom", null);
+      svg.call(dragSvg).on("dblclick.zoom", null)
+                       .on("wheel.zoom", null);
 
       // listen for resize
       window.onresize = function(){thisGraph.updateWindow(svg);};
@@ -263,6 +267,7 @@ function visualQueryBuilder (pGraph) {
       if (mouseDownNode !== d){
         // we're in a different node: create new edge for mousedown edge and add to graph
         pGraph.addEdge(mouseDownNode, d);
+        d.select();
         thisGraph.updateGraph();
         /*else if (a) request.relations(a);
         else if (b) request.inverseRelations(b);*/
@@ -311,6 +316,7 @@ function visualQueryBuilder (pGraph) {
         var xycoords = d3.mouse(thisGraph.svgG.node()),
             d = pGraph.addNode();
         d.setPosition(xycoords[0],xycoords[1]);
+        d.select();
 
         thisGraph.updateGraph();
       } else if (state.shiftNodeDrag){
@@ -360,6 +366,7 @@ function visualQueryBuilder (pGraph) {
       this.state.justScaleTransGraph = true;
       d3.select("." + this.consts.graphClass)
         .attr("transform", "translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")");
+      this.updatehl();
     };
 
     GraphCreator.prototype.updateWindow = function(svg){
@@ -421,7 +428,11 @@ function visualQueryBuilder (pGraph) {
         .on("mouseout",  function(d){ d3.select(this).classed(consts.connectClass, false); })
         .on("mousedown", function(d){ thisGraph.circleMouseDown.call(thisGraph, d3.select(this), d); })
         .on("mouseup",   function(d){ thisGraph.circleMouseUp.call(thisGraph, d3.select(this), d); })
-        .on("click",     function(d){ if (state.clickedProperty) state.clickedProperty = false; else d.onClick(); })
+        .on("click",     function(d){
+            if (state.clickedProperty) state.clickedProperty = false;
+            else d.onClick();
+            thisGraph.updatehl();
+          })
         .on("dblclick",  function(d){ d.onDblClick(); })
         .on('contextmenu', function(d){
             menu({
@@ -516,12 +527,32 @@ function visualQueryBuilder (pGraph) {
         props.exit().remove();
 
       });
+
+      thisGraph.updatehl();
     };
 
-    GraphCreator.prototype.getZoom = function(){
+    GraphCreator.prototype.getZoom = function() {
       var t = this.zoom.translate();
       return [t[0], t[1], this.zoom.scale()];
-    }
+    };
+
+    GraphCreator.prototype.updatehl = function () {
+      var selected = pGraph.getSelected();
+      if (selected) {
+        var z = this.getZoom();
+        var x = selected.x - selected.getWidth()/2;
+        var y = selected.isProperty() ? selected.y + selected.getOffsetY() : selected.y - selected.getBaseHeight()/2;
+
+        this.hl.style("left", (x+z[0]) + "px")
+               .style("top",  (y+z[1]) + "px")
+               .style("width", selected.getWidth() + "px")
+               .style("height", selected.getHeight() + "px")
+               .transition().duration(500).style("opacity", 1);
+
+      } else {
+        this.hl.transition().duration(500).style("opacity", 0);
+      }
+    };
 
     /** MAIN SVG **/
     var svg = d3.select(element[0]).append("svg")
