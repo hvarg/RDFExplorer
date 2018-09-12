@@ -20,6 +20,5 @@ function sparqlEdit () {
         lineWrapping: true,
     });
     ed.getDoc().setValue(scope.query.get());
-    console.log(scope.query);
   }
 }

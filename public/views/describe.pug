@@ -16,11 +16,11 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   img.c-img(ng-if="ctrl.selected.image.length>0", src="{{ctrl.selected.results[ctrl.selected.image[0].uri][0]}}")
 
   // Text properties (long text)
-  div(ng-repeat="prop in ctrl.selected.text", ng-init="prop.active = {}")
+  div(ng-repeat="prop in ctrl.selected.text track by $index", ng-init="prop.active = {}")
     .text-container(ng-repeat="value in ctrl.selected.results[prop.uri]",
                     ng-class="{'active': prop.active[$index]}")
-      b.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
-                  draggable="true") {{ prop.uri.getLabel() }}:&nbsp;
+      .literal(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
+               draggable="true") {{ prop.uri.getLabel() }}:&nbsp;
       .more-less
         span {{ prop.active[$index] ? '' : '... '}}
         a(href="", ng-click="prop.active[$index] = !prop.active[$index]") [{{prop.active[$index] ? 'less' : 'more'}}]
@@ -33,12 +33,13 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     span.pull-right [{{ ctrl.selected.datatype.length }}]
 
   .dt-table.container(ng-if="ctrl.show.datatype")
-    .row.wrap(ng-repeat="prop in ctrl.selected.datatype")
+    .row.wrap.align-items-center(ng-repeat="prop in ctrl.selected.datatype track by $index")
       .col-md-4
-        b.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
-                    draggable="true") {{ prop.uri.getLabel() }}:
+        .literal(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
+                    draggable="true") {{ prop.uri.getLabel() }}
+        .pull-right :
       .col-md-8
-        div(ng-repeat="value in ctrl.selected.results[prop.uri]", ng-class="{'active': prop['ac'+$index]}")
+        div(ng-repeat="value in ctrl.selected.results[prop.uri] track by $index", ng-class="{'active': prop['ac'+$index]}")
           div(ng-if="value.length < 80") {{ value }}
           div(ng-if="value.length > 80") {{ prop['ac'+$index] ? value : value.slice(0,80)+'...' }}
             a.pull-right(href="", ng-click="prop['ac'+$index] = !prop['ac'+$index]")
@@ -51,7 +52,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     span.pull-right [{{ ctrl.selected.objects.length }}]
 
   div(ng-if="ctrl.show.objects")
-    .propRect(ng-repeat="prop in ctrl.selected.objects", ng-class="{'active': prop.active}", style="border-color: #ff7f0e;")
+    .propRect(ng-repeat="prop in ctrl.selected.objects track by $index", ng-class="{'active': prop.active}", style="border-color: #ff7f0e;")
       .head(ng-click="prop.active = !prop.active")
         .text-truncate(style="display:inline-block; width:100%;",
             ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri)",
@@ -75,8 +76,8 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     span.pull-right [{{ ctrl.selected.external.length }}]
 
   div(ng-if="ctrl.show.external")
-    div(ng-repeat="prop in ctrl.selected.external")
-      b.grab-hand(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
+    div(ng-repeat="prop in ctrl.selected.external tack by $index")
+      .literal(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
                   draggable="true") {{ prop.uri.getLabel() }}:
-      a.ell.ml-2(ng-repeat="value in ctrl.selected.results[prop.uri]", style="width: calc(100% - 12px);",
+      a.ell.ml-2(ng-repeat="value in ctrl.selected.results[prop.uri] tack by $index", style="width: calc(100% - 12px);",
                  href="{{value}}", target="_blank") {{ value }}

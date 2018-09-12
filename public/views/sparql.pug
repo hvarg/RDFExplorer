@@ -10,5 +10,6 @@ div(ng-show="main.tool == 'sparql'", ng-controller="SparqlCtrl as ctrl")
       | Query {{ $index }}
     div(ng-if="query.show")
       b contains:
-      .bordered.clickable.mr-1(ng-repeat="res in query.resources", ng-click="res.edit()") {{ res.getRepr() }}
+      .bordered.clickable.mr-1(style="border-color: {{res.getColor()}};",
+          ng-repeat="res in query.resources", ng-click="res.edit()") {{ res.getRepr() }}
       sparql-edit(query="query")

@@ -30,19 +30,12 @@ visual-query-builder {
   cursor:pointer;
 }
 
-.grab-hand {
-  cursor: grab;
-  display: inline-block;
-  border: 1px solid #9467bd;
-  border-radius: 4px;
-  padding: 1px 3px;
-}
-
 .bordered {
   display: inline-block;
-  border: 1px solid #9467bd;
+  border: 2px solid #9467bd;
   border-radius: 4px;
   padding: 1px 3px;
+  background-color: #f8f8f8;
 }
 
 .tab-hl {
@@ -169,6 +162,10 @@ visual-query-builder {
 }
 
 .dt-table > .row:hover {
+  background-color: rgba(0,0,0,.050);
+}
+
+.dt-table > .row > .col-md-8 > div:hover {
   background-color: rgba(0,0,0,.075);
 }
 
@@ -180,7 +177,8 @@ visual-query-builder {
 .text-container {
   font-size: 1em;
   line-height: 1.2em;
-  max-height: 4.8em;
+  /*max-height: 5.25em;*/
+  max-height: calc(4.8em + 7px);
   overflow: hidden;
   position: relative;
 }
@@ -207,6 +205,29 @@ visual-query-builder {
   hyphens: auto;
 }
 
+.literal {
+  cursor: grab;
+  display: inline-block;
+  padding: 2px 3px;
+  border: 2px solid #9467bd;
+  border-radius: 4px;
+  background-color: #f8f8f8;
+  font-family: serif;
+  font-weight: bold;
+  text-align: center;
+  box-sizing: border-box;
+  font-family: "Helvetica Neue";
+  font-size: 1em;
+  line-height: 1.2em;
+  max-height: calc(3*1.2em + 6px);
+  overflow: hidden;
+}
+
+.dt-table > .row > .col-md-4 > .literal {
+  width: calc(100% - 8px);
+  margin: 3px 0px;
+}
+
 .fakeRect {
   cursor: grab;
   pointer-events: auto;
@@ -219,7 +240,6 @@ visual-query-builder {
   padding: 3px;
   font-weight: bold;
   text-align: center;
-  font-size: 14;
   box-sizing: border-box;
   font-family: "Helvetica Neue";
   margin-bottom: 6px;
@@ -235,7 +255,6 @@ visual-query-builder {
   padding-top: 3px;
   font-weight: bold;
   text-align: center;
-  font-size: 14;
   box-sizing: border-box;
   font-family: "Helvetica Neue";
   margin-bottom: 6px;

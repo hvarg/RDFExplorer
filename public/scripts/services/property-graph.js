@@ -20,6 +20,13 @@ function propertyGraphService (req) {
       leq: {name: 'less than', inputs: 1, data: {number: {type: "number"}} },
       geq: {name: 'more than', inputs: 1, data: {number: {type: "number"}} },
     },
+    colors: {
+      rConst: '#1f77b4',
+      rVar:   '#2ca02c',
+      pConst: '#ff7f0e',
+      pVar:   '#d62728',
+      pLit:   '#9467bd',
+    },
     // Functions:
     addNode: addNode,
     addEdge: addEdge,
@@ -334,10 +341,10 @@ function propertyGraphService (req) {
     return RDFResource.prototype.addUri.call(this, uri);
   };
 
-  Node.prototype.getUniq = function () {
+  Node.prototype.getColor = function () {
     // This function returns an unique 'string' that defines the color of this node.
-    if (this.isVariable()) return '1';
-    else return '2';
+    if (this.isVariable()) return propertyGraph.colors.rVar;
+    else return propertyGraph.colors.rConst;
   };
 
   Node.prototype.newProp = function () {
@@ -434,10 +441,10 @@ function propertyGraphService (req) {
     else return repr
   };
 
-  Property.prototype.getUniq = function () {
-    if (this.isLiteral()) return '5';
-    if (this.isVariable()) return '3';
-    else return '4';
+  Property.prototype.getColor = function () {
+    if (this.isLiteral()) return propertyGraph.colors.pLit;
+    if (this.isVariable()) return propertyGraph.colors.pVar;
+    else return propertyGraph.colors.pConst;
   };
 
   Property.prototype.isNode = function () {
@@ -730,7 +737,6 @@ function propertyGraphService (req) {
           if (this.data.limit) q += ' limit ' + this.data.limit;
           if (this.data.offset) q += ' offset ' + this.data.offset;
 
-          console.log(this.data.prefixes);
           var h = '';
           this.data.prefixes.forEach(p => {
             h += 'PREFIX ' + p.prefix + ': <' + p.uri + '>\n'

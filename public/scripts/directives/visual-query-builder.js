@@ -20,13 +20,6 @@ function visualQueryBuilder (pGraph) {
       thisGraph.nodes = nodes || [];
       thisGraph.edges = edges || [];
       thisGraph.focused = true;
-      thisGraph.colors = d3.scale.category10();
-
-      thisGraph.colors('2');
-      thisGraph.colors('4');
-      thisGraph.colors('1');
-      thisGraph.colors('3');
-      thisGraph.colors('5');
 
       thisGraph.state = {
         clickedProperty: false,
@@ -414,7 +407,7 @@ function visualQueryBuilder (pGraph) {
       });
 
       thisGraph.circles.selectAll("rect").filter("."+consts.mainRectClass)
-          .style("stroke", function (d) { return thisGraph.colors(d.getUniq()); })
+          .style("stroke", function (d) { return d.getColor(); })
           .attr("height", function (d) { return d.getHeight() });
       thisGraph.circles.selectAll("text").filter("."+consts.mainTitleClass)
           .text( function (d) { return getChunkText(d.getRepr(), d.getWidth(), consts.mainTitleClass); });
@@ -447,7 +440,7 @@ function visualQueryBuilder (pGraph) {
           .attr("height", function (d) { return d.getHeight() })
           .attr("y", function (d) { return -(d.getBaseHeight()/2) })
           .attr("rx",borderRadius).attr("ry",borderRadius)
-          .style("stroke", function (d) {return thisGraph.colors(d.getUniq())});
+          .style("stroke", function (d) {return d.getColor()});
       newGs.append("text")
           .classed(consts.mainTitleClass, true)
           .attr("x", 0).attr("y", 0)
@@ -465,7 +458,7 @@ function visualQueryBuilder (pGraph) {
         var props = sel.selectAll('g').data(d.properties, function (p) {return p.id;});
         //UPDATE
         props.selectAll("rect")
-            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .style("stroke", p => { return p.getColor(); })
             .attr("y", p => { return + p.getOffsetY()});
         props.selectAll('.'+consts.innerTextClass)
             .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
@@ -483,7 +476,7 @@ function visualQueryBuilder (pGraph) {
             .attr("height", p => {return p.getHeight()})
             .attr("x", p => { return - p.getWidth()/2})
             .attr("y", p => { return + p.getOffsetY()})
-            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .style("stroke", p => { return p.getColor(); })
             .on("click",    p => { state.clickedProperty = true; p.onClick();})
             .on("dblclick", p => { p.onDblClick(); })
             .on("contextmenu", p => {
@@ -511,7 +504,7 @@ function visualQueryBuilder (pGraph) {
             .attr("height", p => { return p.getHeight(); })
             .attr("x", p => { return p.getWidth()/2 - p.getHeight(); })
             .attr("y", p => { return p.getOffsetY(); })
-            .style("stroke", p => { return thisGraph.colors(p.getUniq()); })
+            .style("stroke", p => { return p.getColor(); })
             .on("click", p => { state.clickedProperty = true; p.onClick();});
 
         newP.filter(p=>{return p.isLiteral()}).append("text")
