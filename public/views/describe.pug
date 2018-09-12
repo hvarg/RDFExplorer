@@ -59,9 +59,9 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
             draggable="true") {{ prop.uri.getLabel() }}
         .info
           span.pull-right.fa(aria-hidden="true", ng-class="prop.active ? 'fa-chevron-up' : 'fa-chevron-down'")
-          .inner-addon.right-addon(ng-click="$event.stopPropagation();")
-            i.fa.fa-search(aria-hidden="true")
-            input.form-control(type="text", ng-model="prop.filter")
+          .inner-addon.right-addon
+            i.fa.fa-search.clickable(ng-click="$event.stopPropagation();", aria-hidden="true")
+            input.form-control(ng-click="$event.stopPropagation();", type="text", ng-model="prop.filter")
       hr
       .fakeRect-container
         .fakeRect(style="border-color: #1f77b4;",
