@@ -447,7 +447,7 @@ visual-query-builder {
 
 .custom-container-content.active {
   margin-top: 0px;
-  max-height: 180px;
+  max-height: 250px;
   overflow-y: scroll;
 }
 

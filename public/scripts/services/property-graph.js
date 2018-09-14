@@ -76,10 +76,9 @@ function propertyGraphService (req) {
     if (this.type == 'geq') {
         return 'FILTER (' + this.variable.get() + ' >' + this.data.number + ')\n'
     }
-    console.log('filter type "'+ type +'" not know.');
+    console.log('filter type "'+ type +'" not implemented.');
     return null;
   };
-
 
   /******* Variable TDA ******************************************************/
   function Variable (parent) {
@@ -91,12 +90,12 @@ function propertyGraphService (req) {
     //this.parent = parent;
   }
 
-  Variable.prototype.addFilter = function (type, data) {
-    this.filters.push( new Filter(this, type, data) );
-  };
+  Variable.prototype.toString = function () {
+    return '?' + (this.alias ? this.alias : this.id);
+  }
 
   Variable.prototype.get = function () {
-    return '?' + (this.alias ? this.alias : this.id);
+    return String(this);
   };
 
   Variable.prototype.setAlias = function (alias) {
@@ -113,7 +112,9 @@ function propertyGraphService (req) {
     return true;
   };
 
-  Variable.prototype.getAlias = function () { return this.alias; };
+  Variable.prototype.getName = function () {
+    return this.alias ? this.alias : String(this.id);
+  };
 
   var validOpts = ['show', 'count'];
   Variable.prototype.setOptions = function (opts) {
@@ -124,6 +125,20 @@ function propertyGraphService (req) {
     keys.forEach(k => {
       this.options[k] = opts[k];
     });
+  };
+
+  Variable.prototype.addFilter = function (type, data) {
+    this.filters.push( new Filter(this, type, data) );
+  };
+
+  Variable.prototype.removeFilter = function (filter) {
+    var index = this.filters.indexOf(filter);
+    if (index >= 0) {
+      this.filters.splice(index, 1);
+      return true;
+    } else {
+      return false;
+    }
   };
 
   /******* RDFResource TDA ***************************************************/
@@ -289,11 +304,24 @@ function propertyGraphService (req) {
       console.log('this resource is a constraint!');
       return null;
     }
-    var self = this;
     if (onStart) onStart();
+
+    var self = this;
+
     var q = this.createQuery();
+    console.log(q);
+
+    var myQuery = propertyGraph.toQuery([self])[0];
+    /*var b = myQuery.addLabels([repr]);
+    b[repr].filters.push({apply: function () {
+      return 'FILTER (lang('+repr+'Label) = "en")\n';
+    },});*/
+    console.log(myQuery.get());
+    var q = myQuery.get();
+
     if (q) {
       req.execQuery(q, data => {
+        console.log(data.results);
         self.variable.results = data.results.bindings;
         //console.log(self.variable.results);
         if (onEnd) onEnd();
@@ -301,12 +329,43 @@ function propertyGraphService (req) {
     }
   };
 
+  RDFResource.prototype.loadPreview = function (opts) {
+    if (opts && opts.onStart) opts.onStart();
+    var callback = (opts && opts.onEnd) ? opts.onEnd : null;
+
+    var self = this;
+    var queries = propertyGraph.toQuery([self]);
+    var myQuery = queries.filter(q => { return (q.resources.indexOf(self) >= 0); })
+
+    if (myQuery.length == 1) {
+      if (self.isVariable()) {
+        myQuery = myQuery[0];
+        if (opts && opts.limit) myQuery.data.limit = opts.limit;
+        if (opts && opts.offset) myQuery.data.offset = opts.offset;
+        myQuery.data.select = [self.variable]; //Only get this variable.
+        retrieveResults(myQuery, self.isLiteral() ? null :  callback);
+      }
+
+      if (self.isLiteral()) {
+        var litQuery = propertyGraph.toQuery([self])[0];
+        if (opts && opts.litlimit) litQuery.data.limit = opts.litlimit;
+        if (opts && opts.litoffset) litQuery.data.offset = opts.litoffset;
+        litQuery.data.select = [self.literal]; //Only get this variable.
+        retrieveResults(litQuery, callback);
+      }
+
+    } else {
+      console.log('cant resolve this resource');
+      return null;
+    }
+  }
+
   RDFResource.prototype.hasResults = function () {
     return (this.variable.results.length > 0);
   }
 
   RDFResource.prototype.getResult = function () {
-    return this.variable.results[0].uri.value;
+    return this.variable.results[0].value;
   }
 
   /******* Node TDA **********************************************************/
@@ -605,7 +664,7 @@ function propertyGraphService (req) {
   }
 
   function toQuery (resources) {
-    // If no resources => all resources.
+    // If no resources then all resources.
     if (!resources || resources.length == 0) {
       resources = [];
       propertyGraph.nodes.forEach(node => {
@@ -651,7 +710,7 @@ function propertyGraphService (req) {
           cur.literalRelations().forEach(r => {
             if (!toSolve.has(r)) queue.push(r);
           });
-        } else if (cur.isProperty() && cur.isLiteral()) {
+        } else if (cur.isLiteral()) {
           // If is a literal property add filters, this resource to literals and parent to queue.
           literals.add(cur);
           cur.literal.filters.forEach(f => { filters.add(f); });
@@ -668,61 +727,72 @@ function propertyGraphService (req) {
         var index = resources.indexOf(r);
         if (index >= 0) resources.splice(index, 1);
         // add
-        if (r.isVariable()) select.push( r.variable.get() );
-        if (r.isProperty() && r.isLiteral()) select.push( r.literal.get() );
+        if (r.isVariable()) select.push( r.variable );
+        if (r.isProperty() && r.isLiteral()) select.push( r.literal );
       });
 
-      // Check triples
+      // Check edges and add triples, values and prefixes
       var prefixes = new Set();
       var values = new Set();
-      var body = [];
+      var where = [];
       var tmp, pre;
       triples.forEach(e => {
         tmp = [];
         [e.source.parentNode, e.source, e.target].forEach(r => {
-          if (r.isVariable()) tmp.push(r.variable.get());
+          if (r.isVariable()) tmp.push(r.variable);
           else {
             if (r.uris.length == 1) {
               pre = r.getUri().toPrefix();
               if (pre[1]) prefixes.add(pre[1]);
               tmp.push(pre[0]);
             } else {
-              tmp.push(r.variable.get());
+              tmp.push(r.variable);
               values.add(r);
             }
           }
         });
-        body.push(tmp);
+        where.push(tmp);
       });
 
       // Check literals
       literals.forEach(lit => { 
         tmp = [];
         [lit.parentNode, lit].forEach(r => {
-          if (r.isVariable()) tmp.push(r.variable.get());
+          if (r.isVariable()) tmp.push(r.variable);
           else {
             if (r.uris.length == 1) {
               pre = r.getUri().toPrefix();
               if (pre[1]) prefixes.add(pre[1]);
               tmp.push(pre[0]);
             } else {
-              tmp.push(r.variable.get());
+              tmp.push(r.variable);
               values.add(r);
             }
           }
         });
         tmp.push( lit.literal.get() );
-        body.push(tmp);
+        where.push(tmp);
       });
 
       queries.push({
-        resources: Array.from(toSolve),
-        data: {select: select, where: body, filters: filters, values: values, prefixes: prefixes },
+        resources: Array.from(toSolve).sort(),
+        data: {select: select, where: where, filters: filters, values: values, prefixes: prefixes, optional: [] },
         get: function () {
+          if (this.data.select.length == 0 || (this.data.where.length == 0 && this.data.optional.length == 0))
+            return null;
           // Use this function to get the query.
-          var q = 'SELECT DISTINCT ' + this.data.select.join(' ') + ' WHERE {\n'
+          var q = 'SELECT DISTINCT ' + this.data.select.map(s => {return s.get()}).join(' ') + ' WHERE {\n'
           this.data.where.forEach(triple => {
             q += '  ' + triple.join(' ') + ' .\n';
+          });
+
+          this.data.optional.forEach(opt => {
+            q += '  OPTIONAL {\n';
+            opt.where.forEach(triple => {
+              q += '    ' + triple.join(' ') + ' .\n';
+            });
+            opt.filters.forEach(f => { q += '    ' + f.apply()});
+            q += '  }'
           });
 
           this.data.filters.forEach(f => {q += '  ' + f.apply(); });
@@ -746,9 +816,50 @@ function propertyGraphService (req) {
 
           return h + q;
         },
+        addLabels: function (select) {
+          if (select.length == 0) return null;
+          var pre = "http://www.w3.org/2000/01/rdf-schema#label".toPrefix();
+          if (pre[1]) this.data.prefixes.add(pre[1]);
+          var bindings = {}
+          select.forEach(s => {
+            var name = s.get()+'Label';
+            var item = {where: [[s, pre[0], name]], filters: []};
+            binbings[name] = s;
+            this.data.optional.push(item);
+          });
+          return bindings;
+        },
       });
     }
     return queries;
+  }
+
+  function retrieveResults (query, callback) {
+    var sparql = query.get();
+    var toLoad = [];
+    query.data.select.forEach(s => {
+      if (s.query != sparql) toLoad.push(s);
+    });
+
+    if (query.data.select.length != toLoad.length) {
+      query.data.select = toLoad;
+      sparql = query.get();
+    }
+    
+    if (sparql) {
+      req.execQuery(sparql, data => {
+        if (data.results.bindings.length > 0) {
+          query.data.select.forEach(s => {
+            var values = new Set();
+            var name = s.getName();
+            s.results = data.results.bindings.map(r => { return r[name]; });
+            s.results = s.results.filter(r => { return (!values.has(r.value) && values.add(r.value))});
+            s.query = sparql;
+          });
+        }
+        if (callback) callback();
+      });
+    }
   }
 
   return propertyGraph;

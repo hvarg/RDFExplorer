@@ -28,6 +28,7 @@ function EditCtrl ($scope, pGraph) {
   vm.addUri     = addUri;
   vm.rmUri      = rmUri;
   vm.newFilter  = newFilter;
+  vm.rmFilter   = rmFilter;
 
   function editResource (resource) {
     if (resource) {
@@ -38,14 +39,14 @@ function EditCtrl ($scope, pGraph) {
       vm.isNode     = resource.isNode();
       vm.isLiteral  = resource.isLiteral();
       vm.literal    = vm.isLiteral ? resource.literal : null;
-      if (vm.isVariable) vm.selected.getResults();
+      if (vm.isVariable || vm.isLiteral) vm.selected.loadPreview({limit: 10, litlimit: 10});
     }
     $scope.$emit('tool', 'edit');
   }
 
   function mkVariable () {
     vm.selected.mkVariable();
-    vm.selected.getResults();
+    vm.selected.loadPreview({limit: 10, litlimit: 10});
     vm.isVariable = true;
     vm.isConst = false;
     vm.refresh();
@@ -74,6 +75,10 @@ function EditCtrl ($scope, pGraph) {
     targetVar.addFilter(vm.newFilterType, copyObj(vm.newFilterData));
     vm.newFilterType = "";
     vm.newFilterData = {};
+  }
+
+  function rmFilter (targetVar, filter) {
+    targetVar.removeFilter(filter);
   }
 
   function copyObj (obj) {

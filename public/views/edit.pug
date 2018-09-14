@@ -61,6 +61,9 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
               autocomplete="off",
               ng-model="value.data[k]",
               placeholder="{{ k }}")
+          .input-group-append.clickable(ng-click="ctrl.rmFilter(ctrl.variable, value)")
+            span.input-group-text
+              i.fa.fa-trash
 
     // Posible solutions
     .custom-container-title.no-select.mt-2(
@@ -71,10 +74,10 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
 
     .custom-container-content(ng-class="{'active': ctrl.show.results}")
       .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results.
-      .row(ng-repeat="(key, value) in ctrl.variable.results", title="{{value.uri.value}}")
+      .row(ng-repeat="elem in ctrl.variable.results", title="{{elem.value}}")
         .col-md-12(ng-class="{'mt-1': $first}")
-          a.ell(style="width: calc(100% - 50px);", href="", ng-click="value.uri.value.describe()") {{ value.uri.value.getLabel(); }}
-          i.pull-right.fa.fa-plus.mr-3(ng-click="ctrl.addUri(value.uri.value);")
+          a.ell(style="width: calc(100% - 50px);", href="", ng-click="elem.value.describe()") {{ elem.value.getLabel(); }}
+          i.pull-right.fa.fa-plus.mr-3(ng-click="ctrl.addUri(elem.value);")
 
   div(ng-if="!ctrl.isVariable")
     // Constrains
@@ -157,8 +160,6 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
 
     .custom-container-content(ng-class="{'active': ctrl.show.lresults}")
       .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.literal.results.length==0") Currently this variable has no partial results.
-      .row(ng-repeat="(key, value) in ctrl.literal.results", title="{{value.uri.value}}")
+      .row(ng-repeat="item in ctrl.literal.results", title="{{item.value}}")
         .col-md-12(ng-class="{'mt-1': $first}")
-          .ell(style="width: calc(100% - 50px);") {{ value.uri.value.getLabel(); }}
-          i.pull-right.fa.fa-plus(ng-click="ctrl.addUri(value.uri.value);")
-          i.pull-right.fa.fa-eye(ng-click="value.uri.value.describe();")
+          .ell(style="width: calc(100% - 10px);") {{ item.value.getLabel(); }}
