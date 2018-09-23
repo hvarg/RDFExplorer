@@ -1,8 +1,8 @@
 angular.module('rdfvis.directives').directive('sparqlEdit', sparqlEdit);
 
-sparqlEdit.$inject = [];
+sparqlEdit.$inject = ['$timeout'];
 
-function sparqlEdit () {
+function sparqlEdit ($timeout) {
   var directive = {
     link: link,
     restrict: 'EA',
@@ -13,12 +13,14 @@ function sparqlEdit () {
   return directive;
 
   function link (scope, element, attrs) {
-    var ed = CodeMirror(element[0], {
-        mode:  "sparql",
-        lineNumbers: true,
-        gutter: true,
-        lineWrapping: true,
-    });
-    ed.getDoc().setValue(scope.query.get());
+    $timeout(function (){
+      var ed = CodeMirror(element[0], {
+          mode:  "sparql",
+          lineNumbers: true,
+          gutter: true,
+          lineWrapping: true,
+      });
+      ed.getDoc().setValue(scope.query.get());
+    }, 200);
   }
 }

@@ -119,8 +119,8 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
     var source = vm.selected.source;
     if (!source) return null;
     if (source.isVariable() && source.variable.results.length > 0) {
-      var i = source.variable.results.findIndex(el => { return el.uri.value == vm.selected.uri});
-      if (i >= 0) describe(source.variable.results[(i+1)%source.variable.results.length].uri.value);
+      var i = source.variable.results.findIndex(el => { return el.value == vm.selected.uri});
+      if (i >= 0) describe(source.variable.results[(i+1)%source.variable.results.length].value);
     } else {
       describe(source.nextUri());
     }
@@ -132,9 +132,9 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
     var source = vm.selected.source;
     if (!source) return null;
     if (source.isVariable() && source.variable.results.length > 0) {
-      var i = source.variable.results.findIndex(el => { return el.uri.value == vm.selectedUri});
-      if (i == 0) describe(source.variable.results[source.variable.results.length-1].uri.value);
-      if (i > 0)  describe(source.variable.results[i - 1].uri.value);
+      var i = source.variable.results.findIndex(el => { return el.value == vm.selected.uri});
+      if (i == 0) describe(source.variable.results[source.variable.results.length-1].value);
+      if (i > 0)  describe(source.variable.results[i - 1].value);
     } else {
       describe(source.prevUri());
     }

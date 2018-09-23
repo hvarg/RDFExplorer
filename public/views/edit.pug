@@ -3,11 +3,11 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
     //i(ng-if="!ctrl.isVariable") ({{ ctrl.selected.getUri().getLabel() }})
 
   ul.nav.nav-tabs.nav-justified
-    li.nav-item
+    li.nav-item.clickable
       .nav-link(ng-class="{'active': ctrl.isVariable}", ng-click="ctrl.mkVariable()")
         input.no-click(type="checkbox", ng-model="ctrl.isVariable")
         a.ml-1 Variable
-    li.nav-item
+    li.nav-item.clickable
       .nav-link(ng-class="{'active': !ctrl.isVariable, 'tab-hl': ctrl.added>0}", ng-click="ctrl.mkConst()")
         input.no-click(type="checkbox", ng-model="ctrl.isConst")
         a.ml-1 Constraint
@@ -33,6 +33,7 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         ng-class="{'active': ctrl.show.filters}",
         ng-click="ctrl.show.filters = !ctrl.show.filters"
         ) Filters
+      span.ml-1(ng-if="ctrl.variable.filters.length > 0") [{{ctrl.variable.filters.length}}]
       i.pull-right.fa(ng-class="ctrl.show.filters ? 'fa-angle-up' : 'fa-angle-down';")
 
     .custom-container-content(ng-class="{'active': ctrl.show.filters}")
@@ -71,13 +72,19 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         ng-click="ctrl.show.results = !ctrl.show.results"
         ) Possible results:
       i.pull-right.fa(ng-class="ctrl.show.results ? 'fa-angle-up' : 'fa-angle-down';")
+      .info
+        .inner-addon.right-addon
+          i.fa.fa-search.clickable(ng-click="ctrl.show.results = true; $event.stopPropagation();", aria-hidden="true")
+          //i.fa.fa-plus.clickable.mr-3(ng-if="ctrl.varSearch.length > 0", ng-click="ctrl.addSearchAsFilter()")
+          input.form-control(ng-click="ctrl.show.results = true; $event.stopPropagation();",
+                             type="text", ng-model="ctrl.varSearch", ng-change="ctrl.filterRes()")
 
     .custom-container-content(ng-class="{'active': ctrl.show.results}")
       .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results.
       .row(ng-repeat="elem in ctrl.variable.results", title="{{elem.value}}")
         .col-md-12(ng-class="{'mt-1': $first}")
-          a.ell(style="width: calc(100% - 50px);", href="", ng-click="elem.value.describe()") {{ elem.value.getLabel(); }}
-          i.pull-right.fa.fa-plus.mr-3(ng-click="ctrl.addUri(elem.value);")
+          a.ell(style="width: calc(100% - 30px);", href="", ng-click="elem.value.describe()") {{ elem.value.getLabel(); }}
+          i.pull-right.fa.fa-plus.mr-1.mt-1.clickable(ng-click="ctrl.addUri(elem.value);")
 
   div(ng-if="!ctrl.isVariable")
     // Constrains
@@ -122,6 +129,7 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         ng-class="{'active': ctrl.show.lfilters}",
         ng-click="ctrl.show.lfilters = !ctrl.show.lfilters"
         ) Filters
+      span.ml-1(ng-if="ctrl.literal.filters.length > 0") [{{ctrl.literal.filters.length}}]
       i.pull-right.fa(ng-class="ctrl.show.lfilters ? 'fa-angle-up' : 'fa-angle-down';")
 
     .custom-container-content(ng-class="{'active': ctrl.show.lfilters}")
@@ -150,6 +158,9 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
               autocomplete="off",
               ng-model="value.data[k]",
               placeholder="{{ k }}")
+          .input-group-append.clickable(ng-click="ctrl.rmFilter(ctrl.literal, value)")
+            span.input-group-text
+              i.fa.fa-trash
 
     // Posible solutions
     .custom-container-title.no-select.mt-2(
@@ -157,6 +168,11 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         ng-click="ctrl.show.lresults = !ctrl.show.lresults"
         ) Possible results:
       i.pull-right.fa(ng-class="ctrl.show.lresults ? 'fa-angle-up' : 'fa-angle-down';")
+      .info
+        .inner-addon.right-addon
+          i.fa.fa-search.clickable(ng-click="ctrl.show.lresults = true; $event.stopPropagation();", aria-hidden="true")
+          input.form-control(ng-click="ctrl.show.lresults = true; $event.stopPropagation();", type="text",
+                             ng-model="ctrl.litSearch", ng-change="ctrl.filterLit()")
 
     .custom-container-content(ng-class="{'active': ctrl.show.lresults}")
       .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.literal.results.length==0") Currently this variable has no partial results.

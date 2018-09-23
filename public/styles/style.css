@@ -419,6 +419,7 @@ visual-query-builder {
   /*overflow: hidden;*/
   cursor:pointer;
   transition-delay: 0.5s;
+  position: relative;
 }
 
 .custom-container-title.active {
@@ -449,6 +450,28 @@ visual-query-builder {
   margin-top: 0px;
   max-height: 250px;
   overflow-y: scroll;
+}
+
+.custom-container-title > .info {
+  position: absolute;
+  right: 24px;
+  display:inline-block;
+  width: 50%;
+}
+
+.custom-container-title > .info > .inner-addon {
+  width: calc(100% - 12px);
+  font-size: 14px;
+}
+
+.custom-container-title > .info > .inner-addon > i.fa {
+  margin-top: 5px;
+}
+
+.custom-container-title > .info > .right-addon input,
+.custom-container-title > .info > .right-addon input:focus {
+  background-color: rgb(233, 236, 239);
+  padding-right: 30px;
 }
 
 .alert-sm {

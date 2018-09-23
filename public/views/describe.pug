@@ -20,7 +20,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     .text-container(ng-repeat="value in ctrl.selected.results[prop.uri]",
                     ng-class="{'active': prop.active[$index]}")
       .literal(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
-               draggable="true") {{ prop.uri.getLabel() }}:&nbsp;
+               draggable="true", title="{{prop.uri}}") {{ prop.uri.getLabel() }}:&nbsp;
       .more-less
         span {{ prop.active[$index] ? '' : '... '}}
         a(href="", ng-click="prop.active[$index] = !prop.active[$index]") [{{prop.active[$index] ? 'less' : 'more'}}]
@@ -36,7 +36,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     .row.wrap.align-items-center(ng-repeat="prop in ctrl.selected.datatype track by $index")
       .col-md-4
         .literal(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
-                    draggable="true") {{ prop.uri.getLabel() }}
+                 draggable="true", title="{{prop.uri}}") {{ prop.uri.getLabel() }}
         .pull-right :
       .col-md-8
         div(ng-repeat="value in ctrl.selected.results[prop.uri] track by $index", ng-class="{'active': prop['ac'+$index]}")
@@ -56,18 +56,18 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
       .head(ng-click="prop.active = !prop.active")
         .text-truncate(style="display:inline-block; width:100%;",
             ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri)",
-            draggable="true") {{ prop.uri.getLabel() }}
+            draggable="true", title="{{prop.uri}}") {{ prop.uri.getLabel() }}
         .info
           span.pull-right.fa(aria-hidden="true", ng-class="prop.active ? 'fa-chevron-up' : 'fa-chevron-down'")
           .inner-addon.right-addon
-            i.fa.fa-search.clickable(ng-click="$event.stopPropagation();", aria-hidden="true")
-            input.form-control(ng-click="$event.stopPropagation();", type="text", ng-model="prop.filter")
+            i.fa.fa-search.clickable(ng-click="prop.active = true; $event.stopPropagation();", aria-hidden="true")
+            input.form-control(ng-click="prop.active = true; $event.stopPropagation();", type="text", ng-model="prop.filter")
       hr
       .fakeRect-container
         .fakeRect(style="border-color: #1f77b4;",
             ng-repeat="obj in ctrl.selected.results[prop.uri] | filter: prop.filter track by $index"
             ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().obj.uri, angular.element(this).scope().prop.uri)",
-            draggable="true") {{ obj.uri.getLabel() }}
+            draggable="true", title="{{obj.uri}}") {{ obj.uri.getLabel() }}
 
   // External links
   h5.mb-2.mt-3.clickable.no-select(ng-click="ctrl.show.external = !ctrl.show.external", ng-if="ctrl.selected.external.length > 0")
@@ -76,8 +76,8 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     span.pull-right [{{ ctrl.selected.external.length }}]
 
   div(ng-if="ctrl.show.external")
-    div(ng-repeat="prop in ctrl.selected.external tack by $index")
+    div(ng-repeat="prop in ctrl.selected.external track by $index")
       .literal(ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri, 'literal')",
-                  draggable="true") {{ prop.uri.getLabel() }}:
-      a.ell.ml-2(ng-repeat="value in ctrl.selected.results[prop.uri] tack by $index", style="width: calc(100% - 12px);",
+               draggable="true", title="{{prop.uri}}") {{ prop.uri.getLabel() }}:
+      a.ell.ml-2(ng-repeat="value in ctrl.selected.results[prop.uri] track by $index", style="width: calc(100% - 12px);",
                  href="{{value}}", target="_blank") {{ value }}

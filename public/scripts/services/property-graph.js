@@ -38,6 +38,7 @@ function propertyGraphService (req) {
     // Defined elsewhere:
     describe: null,
     edit: null,
+    getQueries: null,
     // From viz:
     element: null,
     visual: null,
@@ -340,17 +341,32 @@ function propertyGraphService (req) {
     if (myQuery.length == 1) {
       if (self.isVariable()) {
         myQuery = myQuery[0];
-        if (opts && opts.limit) myQuery.data.limit = opts.limit;
-        if (opts && opts.offset) myQuery.data.offset = opts.offset;
         myQuery.data.select = [self.variable]; //Only get this variable.
+        if (opts) {
+          if (opts.limit) myQuery.data.limit = opts.limit;
+          if (opts.offset) myQuery.data.offset = opts.offset;
+          if (opts.varFilter) {
+            var bindings  = myQuery.addLabels([self.variable]);
+            var labelName = Object.keys(bindings)[0];
+            var thisFilter = new Filter({get: () => {return labelName}}, 'regex', {'regex': opts.varFilter});
+            myQuery.data.filters.add(thisFilter);
+          }
+        }
         retrieveResults(myQuery, self.isLiteral() ? null :  callback);
       }
 
       if (self.isLiteral()) {
         var litQuery = propertyGraph.toQuery([self])[0];
-        if (opts && opts.litlimit) litQuery.data.limit = opts.litlimit;
-        if (opts && opts.litoffset) litQuery.data.offset = opts.litoffset;
         litQuery.data.select = [self.literal]; //Only get this variable.
+        if (opts) {
+          if (opts.litlimit) litQuery.data.limit = opts.litlimit;
+          if (opts.litoffset) litQuery.data.offset = opts.litoffset;
+          if (opts.litFilter) {
+            litQuery.data.filters.add(
+              new Filter(self.literal, 'regex', {'regex': opts.litFilter})
+            );
+          }
+        }
         retrieveResults(litQuery, callback);
       }
 
@@ -463,6 +479,12 @@ function propertyGraphService (req) {
       }
     }
     // remove this node.
+    if (propertyGraph.selected == this) propertyGraph.selected = null;
+    else {
+      this.properties.forEach(p => {
+        if (propertyGraph.selected == p) propertyGraph.selected = null;
+      });
+    }
     for (i = 0; i < propertyGraph.nodes.length; i++) {
       node = propertyGraph.nodes[i];
       if (node === this) 
@@ -544,6 +566,7 @@ function propertyGraphService (req) {
     for (; i < thisProp.parentNode.properties.length; i++)
       thisProp.parentNode.properties[i].index -= 1;
     thisProp.parentNode.redraw = true;
+    if (propertyGraph.selected == this) propertyGraph.selected = null;
   }
 
   /******* Edge TDA **********************************************************/
@@ -627,7 +650,7 @@ function propertyGraphService (req) {
       }
     }
     if (special == 'search') {
-      var alias = ev.dataTransfer.getData("alias");
+      var alias = ev.dataTransfer.getData("alias").replace(/ /g, '_');
       // From search, create the filters
       d.variable.setAlias(alias);
       refresh();
@@ -639,7 +662,7 @@ function propertyGraphService (req) {
       p.literal.addFilter('lang', {language: 'en'});
       p.literal.addFilter('text', {keyword: alias});
     }
-    if (d) d.select();
+    if (d && (!prop) && d != propertyGraph.select) d.onClick();
     refresh();
   }
 
@@ -816,16 +839,23 @@ function propertyGraphService (req) {
 
           return h + q;
         },
-        addLabels: function (select) {
+        addLabels: function (select, opt) {
+          opt = opt || false;
           if (select.length == 0) return null;
           var pre = "http://www.w3.org/2000/01/rdf-schema#label".toPrefix();
           if (pre[1]) this.data.prefixes.add(pre[1]);
           var bindings = {}
           select.forEach(s => {
             var name = s.get()+'Label';
-            var item = {where: [[s, pre[0], name]], filters: []};
-            binbings[name] = s;
-            this.data.optional.push(item);
+            var trip = [s, pre[0], name];
+            bindings[name] = s;
+            if (opt) {
+              this.data.optional.push({where: [trip], filters: []});
+            } else {
+              var index = this.data.where.findIndex(t => { return t.join(' ') == trip.join(' ')});
+              if (index < 0)
+                this.data.where.push(trip);
+            }
           });
           return bindings;
         },
