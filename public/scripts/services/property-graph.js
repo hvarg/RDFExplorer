@@ -100,6 +100,8 @@ function propertyGraphService (req) {
   };
 
   Variable.prototype.setAlias = function (alias) {
+    // Fix alias
+    alias = alias.replace(/ /g, '_');
     if (usedAlias.indexOf(alias) >= 0) return false;
     if ((i = usedAlias.indexOf(this.alias)) >= 0) { //Remove old alias
       usedAlias.splice(i, 1);
@@ -152,21 +154,19 @@ function propertyGraphService (req) {
 
   /**** from controllers ****/
   RDFResource.prototype.describe = function () {
-    this.select();
     if (propertyGraph.describe)
       propertyGraph.describe(this);
   };
 
   RDFResource.prototype.edit = function () {
-    this.select();
     if (propertyGraph.edit)
       propertyGraph.edit(this);
   };
 
   RDFResource.prototype.onClick = function () {
-    if (this.isVariable() || (this.isProperty && this.isLiteral())) this.edit();
-    else if (this.countUri() > 0) this.describe();
-    else console.log('This element is not a variable nor has values!')
+    this.select();
+    if (!this.isVariable() && this.hasUris()) this.describe();
+    else this.edit();
   };
 
   RDFResource.prototype.onDblClick = function () {
@@ -205,8 +205,8 @@ function propertyGraphService (req) {
     return this.getUri();
   };
 
-  RDFResource.prototype.countUri = function () { //TODO: Replace with hasUri
-    return this.uris.length;
+  RDFResource.prototype.hasUris = function () {
+    return this.uris.length > 0;
   };
 
   RDFResource.prototype.addUri = function (uri) {
@@ -232,7 +232,7 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.getRepr = function () {
     if (this.isVariable()) return this.variable.get();
-    if (this.countUri() > 0) return this.getUri().getLabel();
+    if (this.hasUris()) return this.getUri().getLabel();
     return null;
   };
 
@@ -478,6 +478,10 @@ function propertyGraphService (req) {
           propertyGraph.edges.splice(i, 1);
       }
     }
+    // remove all uris of this node;
+    this.uris.forEach(uri => {
+      if (uriToNode[uri]) delete uriToNode[uri];
+    });
     // remove this node.
     if (propertyGraph.selected == this) propertyGraph.selected = null;
     else {
@@ -582,17 +586,6 @@ function propertyGraphService (req) {
             this.source == resource);
   }
 
-  /***************************************************************************
-  function propertyGraph () {
-    this.nodes = [];
-    this.edges = [];
-    this.filters = {};
-    this.lastNodeId = 0;
-    this.lastVarId = 0;
-    this.usedAlias = [];
-    this.uriToNode = {};
-  }*/
-  /***************************************************************************/
   /***************************************************************************/
   function connect (element, graph) {
     propertyGraph.element = element;
@@ -620,7 +613,7 @@ function propertyGraphService (req) {
     var special = ev.dataTransfer.getData("special");
     if (!uri && !prop && !special) return null;
     // Create or get the node unless this a literal property
-    if (special != 'literal'){
+    if (special != 'literal') {
       var d = propertyGraph.getNodeByUri(uri);
       if (!d) {
         d = propertyGraph.addNode();
@@ -634,10 +627,14 @@ function propertyGraphService (req) {
 
     // Add the property
     if (prop) {
-      if (uri) d.mkConst();
-      var p = getSelected().getPropByUri(prop);
+      var sel = getSelected();
+      if (!sel || !sel.isNode()) {
+        console.log('Selected resource does not support property creation!');
+        return null;
+      }
+      var p = sel.getPropByUri(prop);
       if (!p) {
-        p = getSelected().newProp();
+        p = sel.newProp();
         p.addUri(prop);
         p.mkConst();
       }
@@ -649,8 +646,9 @@ function propertyGraphService (req) {
         propertyGraph.addEdge(p, d);
       }
     }
+
     if (special == 'search') {
-      var alias = ev.dataTransfer.getData("alias").replace(/ /g, '_');
+      var alias = ev.dataTransfer.getData("alias");
       // From search, create the filters
       d.variable.setAlias(alias);
       refresh();
@@ -662,6 +660,7 @@ function propertyGraphService (req) {
       p.literal.addFilter('lang', {language: 'en'});
       p.literal.addFilter('text', {keyword: alias});
     }
+
     if (d && (!prop) && d != propertyGraph.select) d.onClick();
     refresh();
   }
@@ -797,7 +796,7 @@ function propertyGraphService (req) {
         where.push(tmp);
       });
 
-      queries.push({
+      if (select.length > 0 && where.length > 0) queries.push({
         resources: Array.from(toSolve).sort(),
         data: {select: select, where: where, filters: filters, values: values, prefixes: prefixes, optional: [] },
         get: function () {
@@ -884,6 +883,11 @@ function propertyGraphService (req) {
             var name = s.getName();
             s.results = data.results.bindings.map(r => { return r[name]; });
             s.results = s.results.filter(r => { return (!values.has(r.value) && values.add(r.value))});
+            s.query = sparql;
+          });
+        } else {
+          query.data.select.forEach(s => {
+            s.results = [];
             s.query = sparql;
           });
         }

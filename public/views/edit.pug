@@ -1,6 +1,5 @@
 div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
-  h1.ta-center Editing {{ ctrl.variable.get() }}  
-    //i(ng-if="!ctrl.isVariable") ({{ ctrl.selected.getUri().getLabel() }})
+  h2.ta-center.ell(style="width: 100%;") Editing {{ ctrl.variable }} {{ ctrl.isVariable ? '' : '(const)'}}
 
   ul.nav.nav-tabs.nav-justified
     li.nav-item.clickable
@@ -25,7 +24,7 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
               type="text",
               autocomplete="off",
               ng-model="ctrl.variable.alias",
-              ng-change="ctrl.refresh()",
+              ng-change="ctrl.refresh(); ctrl.variable.setAlias(ctrl.variable.alias);",
               placeholder="{{ ctrl.variable.id }}")
 
     // Add filters
@@ -100,7 +99,7 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
                            aria-label="New value", aria-describedby='edit-button-add')
         .input-group-append
           button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addUri(ctrl.newUri); ctrl.newUri='';") add
-      .alert.alert-warning.alert-sm.mb-1(ng-if="ctrl.selected.countUri() == 0") To use this resource as constraint you need to add at least one value
+      .alert.alert-danger.alert-sm.mb-1(ng-if="!ctrl.selected.hasUris()") To use this resource as constraint you need to add at least one value
       .row(ng-repeat="(key, value) in ctrl.selected.uris")
         .col-md-12
           a.ell(style="width: calc(100% - 30px);", title="{{value}}", href="", ng-click="value.describe();") {{ value.getLabel(); }}

@@ -266,8 +266,8 @@ function visualQueryBuilder (pGraph) {
       
       if (mouseDownNode !== d){
         // we're in a different node: create new edge for mousedown edge and add to graph
-        pGraph.addEdge(mouseDownNode, d);
-        d.select();
+        var e = pGraph.addEdge(mouseDownNode, d);
+        e.source.onClick();
         thisGraph.updateGraph();
         /*else if (a) request.relations(a);
         else if (b) request.inverseRelations(b);*/
@@ -316,7 +316,7 @@ function visualQueryBuilder (pGraph) {
         var xycoords = d3.mouse(thisGraph.svgG.node()),
             d = pGraph.addNode();
         d.setPosition(xycoords[0],xycoords[1]);
-        d.select();
+        d.onClick();
 
         thisGraph.updateGraph();
       } else if (state.shiftNodeDrag){
@@ -417,7 +417,12 @@ function visualQueryBuilder (pGraph) {
           .style("stroke", function (d) { return d.getColor(); })
           .attr("height", function (d) { return d.getHeight() });
       thisGraph.circles.selectAll("text").filter("."+consts.mainTitleClass)
-          .text( function (d) { return getChunkText(d.getRepr(), d.getWidth(), consts.mainTitleClass); });
+          .style("fill", d => { return d.getRepr() == null ? 'red': 'black'; })
+          .text( function (d) {
+            var title = d.getRepr();
+            if (!title) title = 'No values set!';
+            return getChunkText(title, d.getWidth(), consts.mainTitleClass);
+          });
 
       // add new nodes
       var newGs= thisGraph.circles.enter().append("g");
@@ -435,12 +440,15 @@ function visualQueryBuilder (pGraph) {
           })
         .on("dblclick",  function(d){ d.onDblClick(); })
         .on('contextmenu', function(d){
-            menu({
-              'Describe': function () { d.describe(); },
-              'Edit':     function () { d.edit(); },
-              'Collect':  function () { d.getResults(null, function () {thisGraph.updateGraph();}); },
-              'Remove':   function () { d.delete(); thisGraph.updateGraph(); }
-            });
+            var menuItems = {
+              'Edit':     x => { d.edit(); },
+              'Remove':   x => { d.delete(); thisGraph.updateGraph(); },
+            };
+            if (!d.isVariable() && d.hasUris()) {
+              menuItems['Describe'] = function () { d.describe() };
+              menuItems['Copy URI'] = function () { copyToClip(d.getUri()); };
+            }
+            menu(menuItems);
         })
         .call(thisGraph.drag);
 
@@ -473,7 +481,12 @@ function visualQueryBuilder (pGraph) {
             .attr("y", p => { return + p.getOffsetY()});
         props.selectAll('.'+consts.innerTextClass)
             .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
-            .text(p => { return getChunkText(p.getRepr(), p.getWidth(), consts.innerTextClass); });
+            .style("fill", p => { return p.getRepr() == null ? 'red': 'black'; })
+            .text(p => { 
+              var title = p.getRepr();
+              if (!title) title = 'No values set!';
+              return getChunkText(title, p.getWidth(), consts.innerTextClass);
+            });
         props.selectAll('.aw-icon')
             .attr("y", p => { return p.getOffsetY()+ p.getHeight()/2; })
             .text(p => {return p.literal.filters.length > 0 ? "\uf0b0" : "\uf06e"});
@@ -491,12 +504,15 @@ function visualQueryBuilder (pGraph) {
             .on("click",    p => { state.clickedProperty = true; p.onClick();})
             .on("dblclick", p => { p.onDblClick(); })
             .on("contextmenu", p => {
-              console.log(p);
-              menu({
-                'Edit':     function () { p.edit(); },
-                'Collect':  function () { p.getResults(null, function () {thisGraph.updateGraph();}); },
-                'Remove':   function () { p.delete(); thisGraph.updateGraph();},
-              });
+              var menuItems = {
+                'Edit':     x => { p.edit(); },
+                'Remove':   x => { p.delete(); thisGraph.updateGraph(); },
+              };
+              if (!p.isVariable() && p.hasUris()) {
+                menuItems['Describe'] = function () { p.describe() };
+                menuItems['Copy URI'] = function () { copyToClip(p.getUri()); };
+              }
+              menu(menuItems);
             });
 
         newP.append("text")
@@ -561,7 +577,7 @@ function visualQueryBuilder (pGraph) {
           .attr("height", element[0].offsetHeight);
 
     var graph = new GraphCreator(svg, pGraph.nodes, pGraph.edges);
-    var menu = contextMenu().items('Describe', 'Edit', 'Collect', 'Remove');
+    var menu = contextMenu().items('Describe', 'Edit', 'Copy URI', 'Remove');
     graph.updateGraph();
     
     //TODO
@@ -595,6 +611,19 @@ function visualQueryBuilder (pGraph) {
       if (t.x > s.x) tx -= (t.getWidth()/2 +5);
       else tx += (t.getWidth()/2 +5);
       return "M" + sx + "," + sy + "L" + tx + "," + t.y;
+    }
+
+    function copyToClip (text) {
+      var el = document.createElement('textarea');
+      el.value = text;
+      // Set non-editable to avoid focus and move outside of view
+      el.setAttribute('readonly', '');
+      el.style = {position: 'absolute', left: '-9999px'};
+      document.body.appendChild(el);
+      // Select text inside element and copy
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
     }
 /*************/
 
