@@ -165,7 +165,7 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.onClick = function () {
     this.select();
-    if (!this.isVariable() && this.hasUris()) this.describe();
+    if (!this.isVariable() && !this.isLiteral() && this.hasUris()) this.describe();
     else this.edit();
   };
 
