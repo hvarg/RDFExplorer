@@ -15,6 +15,7 @@ div#tools
         type="button", aria-label="Right Align")
       span.fa.fa-list(aria-hidden="true")
     button.pull-right.btn.btn-outline-secondary(
+        ng-disabled="!main.graph.selected",
         ng-click="main.toolToggle('edit')",
         ng-class="{'active': (main.tool == 'edit') }",
         type="button", aria-label="Right Align")

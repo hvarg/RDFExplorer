@@ -10,6 +10,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
 
   vm.search = search;
   vm.tutorial = tutorial;
+  vm.graph = pGraph;
 
   /* vars */
   vm.searchInput = null;
@@ -25,6 +26,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   vm.searchToggle = searchToggle;
   vm.searchActivate = searchActivate;
   vm.searchDeactivate = searchDeactivate;
+  vm.searchChange = searchChange;
 
   /* scope */
   $scope.drag = drag;
@@ -40,6 +42,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     vm.tool = (vm.tool == panel) ? 'none' : panel;
     if (vm.tool == 'describe' && pGraph.getSelected()) pGraph.getSelected().describe();
     if (vm.tool == 'edit' && pGraph.getSelected()) pGraph.getSelected().edit();
+    if (vm.tool == 'sparql') pGraph.getQueries();
   }
 
   function searchToggle() { vm.searchActive = !vm.searchActive; }
@@ -87,6 +90,13 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
     vm.searchActive = true;
   }
 
+  function searchChange () {
+    var now = vm.searchInput + '';
+    $timeout(function () {
+      if (now && now == vm.searchInput) search();
+    }, 400);
+  }
+
   function drag (ev, uri, prop, special) {
     if (!special) special = '';
     ev.dataTransfer.setData("uri", uri);
@@ -106,13 +116,12 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
         { intro: 'Hello, this tutorial will guide you in the exploration of a RDF dataset and the creation of SPARQL queries.'},
         { element: '#step1', intro: 'You can start searching <b>resources</b> here', position: 'bottom-right-aligned'},
         { element: '#search-container', intro: 'As example, let us search <i>Euler</i>...', position: 'top-right-aligned'},
-        { element: '#search-results-panel', intro: 'Search results will be displayed here, blue elements are resources that match our search', position: 'right-aligned'},
-        { element: '#search-query', intro: 'If the search has results, the first element always its going to be the search itself, this element has green borders because its a <b>variable</b>', position: 'top-right-aligned'},
-        { element: '#search-results-panel', intro: 'We can drag these results...', position: 'right-aligned'},
-        { element: '#d3vqb', intro: '... and drop it here, this space is the query creator.', position: 'right-aligned'},
-        { element: '#d3vqb', intro: 'Using <i> shift+click </i> we can create new resources, and pressing <i> shift </i> and dragging from one resource to another will create an edge', position: 'right-aligned'},
-        { element: '#d3vqb', intro: 'You can also create new resource using <i> shift+click </i> and new edges pressing <i> shift </i> and dragging from one resource to another'},
-        { element: '#right-buttons', intro: 'More tools are displayed here', position: 'left-aligned'},
+        { element: '#search-results-panel', intro: 'Search results are displayed here, blue bordered elements are resources that match our search', position: 'right-aligned'},
+        { element: '#search-query', intro: 'The first element represents the search query itself, green borders denotes that a resource is <b>variable</b>', position: 'right-aligned'},
+        { element: '#search-results-panel', intro: 'Bordered elements can be dragged...', position: 'right-aligned'},
+        { element: '#d3vqb', intro: '... and dropped here, this space is the <i>query creator</i>.', position: 'right-aligned'},
+        { element: '#d3vqb', intro: 'Using <i> shift+click </i> you can create new resources. Pressing <i>shift</i> and dragging from one resource to another will create an edge', position: 'right-aligned'},
+        { element: '#right-buttons', intro: 'More tools are displayed here, from right to left: help, configuration, describe panel, edit panel and query panel.', position: 'left-aligned'},
       ]
     });
     intro.start().onbeforechange(function () {

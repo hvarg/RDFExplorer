@@ -6,10 +6,11 @@ div#search-container
           type="text",
           ng-click="main.searchActivate()",
           ng-model="main.searchInput",
+          ng-change="main.searchChange()",
           ng-class="{'active': main.searchActive, 'loading': main.searchWait, 'error': main.searchError }")
       span#search-icon.fa.fa-search(aria-hidden="true")
   div#search-results-panel(ng-hide="!main.searchActive")
-    div.alert.alert-warning(role="alert", ng-show="main.noResults")
+    div.alert.alert-warning(role="alert", ng-show="main.noResults && main.searchResults.length == 0")
       strong No results found!
 
     #search-query
