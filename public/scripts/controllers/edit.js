@@ -59,9 +59,9 @@ function EditCtrl ($scope, pGraph, $timeout) {
 
   function mkVariable () {
     vm.selected.mkVariable();
-    loadPreview();
     vm.isVariable = true;
     vm.isConst = false;
+    loadPreview();
     vm.refresh();
   }
 

@@ -69,7 +69,7 @@ function propertyGraphService (req) {
       //return 'FILTER regex(' + v.get() + ', "' + data.keyword + '", "i")\n'
     }
     if (this.type == 'regex') {
-        return 'FILTER regex(' + this.variable.get() + ', "' + this.data.regex + '")\n'
+        return 'FILTER regex(' + this.variable.get() + ', "' + this.data.regex + '", "i")\n'
     }
     if (this.type == 'leq') {
         return 'FILTER (' + this.variable.get() + ' <' + this.data.number + ')\n'
@@ -232,7 +232,10 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.getRepr = function () {
     if (this.isVariable()) return this.variable.get();
-    if (this.hasUris()) return this.getUri().getLabel();
+    if (this.hasUris()) {
+      if (this.uris.length == 1) return this.getUri().getLabel();
+      else return '('+(this.cur+1)+'/'+this.uris.length+') '+ this.getUri().getLabel();
+    }
     return null;
   };
 
