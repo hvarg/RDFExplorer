@@ -1,0 +1,55 @@
+div(ng-show="main.tool == 'help'")
+  h3.ta-center Getting Started
+  hr(style="margin: 3px 0px;")
+
+  p.just
+    |  This visualization will help you in the exploration of a RDF dataset and the creation of SPARQL queries.
+    |  You can run an 
+    a(href="", ng-click="main.tutorial()") interactive tutorial clicking here
+    |  or read the documentation in this page.
+
+  //h5.mt-2 Index:
+  //a.ml-4 Components
+
+  h5.mt-2 Components
+  p.just
+    |  The three main components of this interface are: 
+    b  the query creator 
+    | (the full page, below all the other componens), 
+    b  the search engine
+    |  (top-left corner) and 
+    b  the tools panel
+    |  (top-right corner).
+
+  h6 The query creator:
+  p.just
+    |  The query creator is the main component of this interface, in it RDF resources and SPARQL variables are
+    |  represented as border-colored boxes according to the type of element.
+    |  Two main elements can be differentiated in this visualization, the resources and the properties.
+    |  A resource represents a SPARQL variable or a specific set of RDF resources (IRIs), it can be transformed 
+    |  from one to another at any time with the 
+    i  edit tool. 
+    |  Pressing &lt;shift+click&gt; in any part of the query creator will create a resource as a SPARQL variable. 
+    img.c-img-full(src="/images/00.gif")
+    b  Properties
+    |  serve as a link between two resources and are represented as an internal box to the source resource
+    |  and an arrow pointing to the target resource.
+    |  We can create properties by pressing &lt;shift&gt; and dragging from one resource to the other.
+    img.c-img-full(src="/images/01.gif")
+    |  There is a special type of property denoted literal property that unlike normal properties does not point to
+    |  another resource, these properties can be made to require information (eye) or to filter the possible results
+    |  of the source resource.
+  p.just
+    |  This component has three basic forms of interaction: drag & drop from other components, direct modification
+    |  using the &lt;shift&gt; key and additional operations using the right click.
+
+  h6 The search engine:
+  p.just
+    |  The search engine will help you finding an specific RDF resource searching in the dataset by 
+    i(title="rdfs:label") label.
+    img.c-img-full(src="/images/02.gif")
+
+  h6 The tools panel
+  p.just
+    |  The tools panel show...
+    img.c-img-full(src="/images/03.gif")

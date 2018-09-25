@@ -120,8 +120,10 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
         { element: '#search-query', intro: 'The first element represents the search query itself, green borders denotes that a resource is <b>variable</b>', position: 'right-aligned'},
         { element: '#search-results-panel', intro: 'Bordered elements can be dragged...', position: 'right-aligned'},
         { element: '#d3vqb', intro: '... and dropped here, this space is the <i>query creator</i>.', position: 'right-aligned'},
-        { element: '#d3vqb', intro: 'Using <i> shift+click </i> you can create new resources. Pressing <i>shift</i> and dragging from one resource to another will create an edge', position: 'right-aligned'},
-        { element: '#right-buttons', intro: 'More tools are displayed here, from right to left: help, configuration, describe panel, edit panel and query panel.', position: 'left-aligned'},
+        { element: '#d3vqb', intro: 'Using <i> shift+click </i> you can create new resources. Pressing <i>shift</i> and dragging from one resource to another will create a property and an edge', position: 'right-aligned'},
+        { element: '#right-buttons', intro: 'More tools are displayed here, from right to left: help, configuration, describe, edit and query panel.', position: 'left-aligned'},
+        { element: '#right-buttons', intro: 'Those tools will help you to edit variables (add filters, options, etc), and to create your query by dragging and droping properties or relations from the partial results.', position: 'left-aligned'},
+        { intro: 'Thats all!'},
       ]
     });
     intro.start().onbeforechange(function () {
