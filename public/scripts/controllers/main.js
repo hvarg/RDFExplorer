@@ -1,8 +1,8 @@
 angular.module('rdfvis.controllers').controller('MainCtrl', MainCtrl);
 
-MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', '$timeout'];
+MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', '$timeout', '$http'];
 
-function MainCtrl ($scope, pGraph, query, request, $timeout) {
+function MainCtrl ($scope, pGraph, query, request, $timeout, $http) {
   var vm = this;
   /* General stuff */
   vm.tool = 'none';
@@ -50,7 +50,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   function searchDeactivate() { vm.searchActive = false; }
 
   function onSearch (data) {
-    var r = {}
+    /*var r = {}
     data.results.bindings.forEach(res => {
       if (!r[res.uri.value]) r[res.uri.value] = [];
       r[res.uri.value].push( res );
@@ -64,7 +64,13 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
         }
       });
       vm.searchResults.push(tmp);
-    }
+    }*/
+    //console.log(data);
+    vm.searchResults = [];
+    data.forEach(r => {
+      vm.searchResults.push({uri: r.concepturi, label: r.label, desc: r.description});
+      if (r.label) request.setLabel(r.concepturi, r.label);
+    });
 
     //vm.searchResults = data.results.bindings;
     vm.searchError = false;
@@ -80,12 +86,20 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
   }
 
   function search () {
+    //TODO: fix when null;
     if (vm.searchInput != vm.lastSearch) {
       var input = vm.searchInput;
       vm.lastSearch = input;
       vm.searchWait = true;
       vm.noResults  = false; 
-      request.execQuery(query.search(input), onSearch, onSearchErr);
+      //$http.get('https://en.wikipedia.org/w/api.php?action=wbsearchentities&format=json&language=en&search='+input).then(
+      $http.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&limit=20&uselang=en&type=item&continue=0&search='+input).then(
+        function onSuccess (response) {
+          onSearch(response.data.search);
+        },
+        function onError (response) { onSearchErr(); console.log('Error: ' + response.data); }
+      );
+      //request.execQuery(query.search(input), onSearch, onSearchErr);
     }
     vm.searchActive = true;
   }
@@ -117,7 +131,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout) {
         { element: '#step1', intro: 'You can start searching <b>resources</b> here', position: 'bottom-right-aligned'},
         { element: '#search-container', intro: 'As example, let us search <i>Euler</i>...', position: 'top-right-aligned'},
         { element: '#search-results-panel', intro: 'Search results are displayed here, blue bordered elements are resources that match our search', position: 'right-aligned'},
-        { element: '#search-query', intro: 'The first element represents the search query itself, green borders denotes that a resource is <b>variable</b>', position: 'right-aligned'},
+        //{ element: '#search-query', intro: 'The first element represents the search query itself, green borders denotes that a resource is <b>variable</b>', position: 'right-aligned'},
         { element: '#search-results-panel', intro: 'Bordered elements can be dragged...', position: 'right-aligned'},
         { element: '#d3vqb', intro: '... and dropped here, this space is the <i>query creator</i>.', position: 'right-aligned'},
         { element: '#d3vqb', intro: 'Using <i> shift+click </i> you can create new resources. Pressing <i>shift</i> and dragging from one resource to another will create a property and an edge', position: 'right-aligned'},

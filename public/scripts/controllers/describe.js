@@ -31,6 +31,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
   };
 
   function load (uri, sourceObject) {
+    if (uri.includes('prop/direct')) uri = uri.replace('prop/direct', 'entity');
     var c = cache.filter(s => {return s.uri == uri})
     if (c.length>0) {
       vm.selected = c[0];
@@ -41,7 +42,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
     var selected = { uri: uri, source: source, objects: [], datatype: [], text: [], external: [], image: [], results: {} };
     vm.selected = selected;
 
-    request.execQuery(query.getProperties(selected.uri), function (data) {
+    request.execQuery(query.getProperties(uri), function (data) {
       var properties = data.results.bindings.filter(p => {return (!cfg.exclude.includes(p.uri.value))});
       properties.forEach(r => {
         var obj = {uri: r.uri.value};
@@ -77,9 +78,8 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
             }
           });
         }
-
-      sort();
       });
+      sort();
     });
 
     cache.push(selected);

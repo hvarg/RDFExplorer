@@ -68,9 +68,12 @@ function queryService (settings) {
     return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
            'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' +
            'PREFIX owl: <http://www.w3.org/2002/07/owl#>\n' +
+           'PREFIX bd: <http://www.bigdata.com/rdf#>' +
+           'PREFIX wikibase: <http://wikiba.se/ontology#>' +
            'SELECT DISTINCT ?uri ?label ?kind WHERE {\n' +
            '  <' + uri + '> ?uri [] .\n' +
-           '  OPTIONAL { ?uri rdfs:label ?label . FILTER (lang(?label) = "en")}\n' +
+           '  ?p wikibase:directClaim ?uri .\n' +
+           '  OPTIONAL { ?p rdfs:label ?label . FILTER (lang(?label) = "en")}\n' +
            '  BIND(\n' +
            '    IF(EXISTS { ?uri rdf:type owl:ObjectProperty},\n' +
            '      1,\n' +

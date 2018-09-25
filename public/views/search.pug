@@ -13,7 +13,7 @@ div#search-container
     div.alert.alert-warning(role="alert", ng-show="main.noResults && main.searchResults.length == 0")
       strong No results found!
 
-    #search-query
+    //#search-query
       .fakeRect(ng-if="main.searchResults.length>0",
                 style="border-color: #2ca02c;",
                 draggable="true", 
@@ -24,8 +24,8 @@ div#search-container
     .fakeRect(
         draggable="true",
         style="border-color: #1f77b4;",
-        ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri.value, '')",
+        ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri, '')",
         ng-repeat="(key, value) in main.searchResults track by $index ") 
-      div(title="{{value.uri.value}}") {{ value.label.value }}
+      div(title="{{value.uri}}") {{ value.label }}
       .classes
-        span(ng-repeat="(k, v) in value.types", title="{{v.uri.value}}") {{ $last ? v.label.value : v.label.value + ', '}}
+        span {{ value.desc }}

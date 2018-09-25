@@ -303,36 +303,6 @@ function propertyGraphService (req) {
     return q;
   };
 
-  RDFResource.prototype.getResults = function (onStart, onEnd) {
-    if (!this.isVariable()) {
-      console.log('this resource is a constraint!');
-      return null;
-    }
-    if (onStart) onStart();
-
-    var self = this;
-
-    var q = this.createQuery();
-    console.log(q);
-
-    var myQuery = propertyGraph.toQuery([self])[0];
-    /*var b = myQuery.addLabels([repr]);
-    b[repr].filters.push({apply: function () {
-      return 'FILTER (lang('+repr+'Label) = "en")\n';
-    },});*/
-    console.log(myQuery.get());
-    var q = myQuery.get();
-
-    if (q) {
-      req.execQuery(q, data => {
-        console.log(data.results);
-        self.variable.results = data.results.bindings;
-        //console.log(self.variable.results);
-        if (onEnd) onEnd();
-      });
-    }
-  };
-
   RDFResource.prototype.loadPreview = function (opts) {
     if (opts && opts.onStart) opts.onStart();
     var callback = (opts && opts.onEnd) ? opts.onEnd : null;

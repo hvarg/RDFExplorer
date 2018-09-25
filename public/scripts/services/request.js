@@ -1,11 +1,14 @@
 angular.module('rdfvis.services').factory('requestService', requestService);
-requestService.$inject = ['settingsService', '$http'];
+requestService.$inject = ['settingsService', '$http', '$timeout'];
 
-function requestService (settings, $http) {
+function requestService (settings, $http, $timeout) {
   var label = {
     'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'type', //FIXME
     'http://www.w3.org/2000/01/rdf-schema#label': 'label'
   };
+
+  var delay = 50;
+  var running = 0;
 
   function toForm (obj) {
     var str = [];
@@ -15,7 +18,28 @@ function requestService (settings, $http) {
   }
 
   function execQuery (query, callback, cErr) {
-    return $http({
+    var url = settings.endpoint.url + '?format=json&' + toForm({query: query});
+    var pr = $timeout(function () {
+        return $http.get(url).then(
+          function onSuccess (response) {
+            running -= 1;
+            //console.log(response);
+            var tmp;
+            for (var i = 0; i < response.data.results.bindings.length; i++) {
+              tmp = response.data.results.bindings[i];
+              if (tmp.label && tmp.uri) label[tmp.uri.value] = tmp.label.value;
+            }
+            return callback ? callback(response.data) : response.data;
+          },
+          function onError   (response) {
+            running -= 1;
+            console.log('Error ' + response.status + ':' + response.data);
+            return cErr ? cErr(response) : response;
+          }
+        );
+      }, delay*running);
+    running += 1;
+    /*return $http({
         method: 'post',
         url: settings.endpoint.url,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -34,15 +58,15 @@ function requestService (settings, $http) {
         console.log('Error ' + response.status + ':' + response.data);
         return cErr ? cErr(response) : response;
       }
-    );
+    );*/
   }
 
   function getLabel (uri) {
     return label[uri];
   }
 
-  function setLabel (uri, label) {
-    label[uri] = label;
+  function setLabel (uri, l) {
+    label[uri] = l;
   }
 
   String.prototype.getLabel = function () {

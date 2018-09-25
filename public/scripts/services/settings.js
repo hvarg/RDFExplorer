@@ -4,9 +4,9 @@ settingsService.$inject = [];
 function settingsService () {
   var settings = {
     endpoint: {
-      url: "https://dbpedia.org/sparql",
-      type: "virtuoso",
-      label: "DBpedia",
+      url: "https://query.wikidata.org/sparql",
+      type: "other",
+      label: "wikidata",
     },
     searchClass: {
       uri:   { type: "uri", value: "http://dbpedia.org/ontology/Person" },
@@ -53,12 +53,22 @@ function settingsService () {
 
   // selected = {uri: '', object: [], datatype: [], text: [], extra: [], image: [], values: {}},
   settings.describe = {
-    exclude: ["http://purl.org/voc/vrank#hasRank"],
-    objects: ["http://www.w3.org/1999/02/22-rdf-syntax-ns#type"],
+    exclude: [
+      "http://www.wikidata.org/prop/direct/P443", //pronuntiation
+      "http://www.wikidata.org/prop/direct/P109", //signature
+    ],
+    objects: ["http://www.wikidata.org/prop/direct/P31"],
     datatype: [],
     text: ["http://dbpedia.org/ontology/abstract"],
-    image: ["http://dbpedia.org/ontology/thumbnail"],
-    external: ["http://dbpedia.org/ontology/wikiPageExternalLink", "http://xmlns.com/foaf/0.1/homepage"],
+    image: ["http://www.wikidata.org/prop/direct/P18"],
+    external: [
+      "http://www.wikidata.org/prop/direct/P2035",
+      "http://www.wikidata.org/prop/direct/P2888",
+      "http://www.wikidata.org/prop/direct/P973",
+      "http://www.wikidata.org/prop/direct/P856",
+      "http://www.wikidata.org/prop/direct/P3264",
+      "http://www.wikidata.org/prop/direct/P1896",
+    ],
   }
 
   return settings;
