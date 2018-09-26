@@ -2,14 +2,11 @@ angular.module('rdfvis.services').factory('requestService', requestService);
 requestService.$inject = ['settingsService', '$http', '$timeout'];
 
 function requestService (settings, $http, $timeout) {
-  var label = {
-    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'type', //FIXME
-    'http://www.w3.org/2000/01/rdf-schema#label': 'label'
-  };
+  var label = {};   //TODO this to sparql-helpers
+  var delay = 50;   //delay between concurrent request
+  var running = 0;  //number of concurrent request
 
-  var delay = 50;
-  var running = 0;
-
+  /* Create get URL form */
   function toForm (obj) {
     var str = [];
     for(var p in obj)
@@ -17,28 +14,55 @@ function requestService (settings, $http, $timeout) {
     return str.join("&");
   }
 
+  function onSuccess (response, callback) {
+    running -= 1;
+    // check relation ?var -> ?varLabel
+    var cur, index, variables = {};
+    var sorted = response.data.head.vars.sort( (a,b) => { return b.length - a.length; });
+    while (sorted.length > 0) {
+      cur = sorted.pop();
+      index = sorted.indexOf(cur+'Label');
+      if (index >= 0) {
+        variables[cur] = cur+'Label';
+        sorted.splice(index, 1);
+      } else {
+        variables[cur] = false;
+      }
+    }
+
+    // add labels
+    var labelName;
+    response.data.results.bindings.forEach(r => {
+      for (var varName in variables) {
+        labelName = variables[varName];
+        if (labelName) {
+          if (r[varName].type == 'uri' && r[labelName].type == 'literal')
+            setLabel(r[varName].value, r[labelName].value);
+          else
+            console.log('type mismatch:', r[varName], r[labelName]);
+        }
+      }
+    });
+
+    return callback ? callback(response.data) : response.data;
+  }
+  
+  function onError (response, callback) {
+    running -= 1;
+    console.log('Error ' + response.status + ': ' + response.data);
+    return callback ? callback(response) : response;
+  }
+
   function execQuery (query, callback, cErr) {
     var url = settings.endpoint.url + '?format=json&' + toForm({query: query});
-    var pr = $timeout(function () {
+    var pro = $timeout(
+      function () {
         return $http.get(url).then(
-          function onSuccess (response) {
-            running -= 1;
-            //console.log(response);
-            var tmp;
-            for (var i = 0; i < response.data.results.bindings.length; i++) {
-              tmp = response.data.results.bindings[i];
-              if (tmp.label && tmp.uri) label[tmp.uri.value] = tmp.label.value;
-            }
-            return callback ? callback(response.data) : response.data;
-          },
-          function onError   (response) {
-            running -= 1;
-            console.log('Error ' + response.status + ':' + response.data);
-            return cErr ? cErr(response) : response;
-          }
-        );
+          r => { return onSuccess(r, callback)},
+          r => { return onError(r, cErr);});
       }, delay*running);
     running += 1;
+    return pro;
     /*return $http({
         method: 'post',
         url: settings.endpoint.url,

@@ -42,11 +42,11 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
     var selected = { uri: uri, source: source, objects: [], datatype: [], text: [], external: [], image: [], results: {} };
     vm.selected = selected;
 
-    request.execQuery(query.getProperties(uri), function (data) {
-      var properties = data.results.bindings.filter(p => {return (!cfg.exclude.includes(p.uri.value))});
+    request.execQuery(query.getProperties(uri), data => {
+      var properties = data.results.bindings.filter(r => {return (!cfg.exclude.includes(r.property.value))});
       properties.forEach(r => {
-        var obj = {uri: r.uri.value};
-        if (r.label) obj.label = r.label.value;
+        var obj = {uri: r.property.value};
+        if (r.propertyLabel) obj.label = r.propertyLabel.value;
 
         if (cfg.image.includes(obj.uri)) {
           selected.image.push(obj);
@@ -103,7 +103,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
     request.execQuery(query.getPropObject(vm.selected.uri, prop), data => {
       vm.selected.results[prop] = data.results.bindings.map(s => {
         var obj = {uri: s.uri.value};
-        if (s.label) obj.label = s.label.value;
+        if (s.uriLabel) obj.label = s.uriLabel.value;
         return obj;
       });
     });
