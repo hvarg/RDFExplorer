@@ -36,10 +36,10 @@ function requestService (settings, $http, $timeout) {
       for (var varName in variables) {
         labelName = variables[varName];
         if (labelName) {
-          if (r[varName].type == 'uri' && r[labelName].type == 'literal')
+          if (r[varName].type == 'uri' && r[labelName] && r[labelName].type == 'literal')
             setLabel(r[varName].value, r[labelName].value);
-          else
-            console.log('type mismatch:', r[varName], r[labelName]);
+          //else
+          //  console.log('type mismatch:', r[varName], r[labelName]);
         }
       }
     });

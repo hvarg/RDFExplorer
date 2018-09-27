@@ -60,7 +60,14 @@ function settingsService () {
     objects: ["http://www.wikidata.org/prop/direct/P31"],
     datatype: [],
     text: ["http://dbpedia.org/ontology/abstract"],
-    image: ["http://www.wikidata.org/prop/direct/P18"],
+    image: [
+      "http://www.wikidata.org/prop/direct/P18", //thumbnail
+      "http://www.wikidata.org/prop/direct/P41", //flag
+      "http://www.wikidata.org/prop/direct/P94", //coat of arms
+      "http://www.wikidata.org/prop/direct/P158", //seal
+      "http://www.wikidata.org/prop/direct/P242", //map
+      "http://www.wikidata.org/prop/direct/P948", //banner
+    ],
     external: [
       "http://www.wikidata.org/prop/direct/P2035",
       "http://www.wikidata.org/prop/direct/P2888",
