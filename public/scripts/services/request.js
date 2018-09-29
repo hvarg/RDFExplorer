@@ -113,6 +113,19 @@ function requestService (settings, $http, $timeout) {
     return ['<' + this + '>', null];
   }
 
+  String.prototype.copyToClipboard = function () {
+    var el = document.createElement('textarea');
+    el.value = this;
+    // Set non-editable to avoid focus and move outside of view
+    el.setAttribute('readonly', '');
+    el.style = {position: 'absolute', left: '-9999px'};
+    document.body.appendChild(el);
+    // Select text inside element and copy
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+  }
+
   return {
     execQuery: execQuery,
     getLabel: getLabel,

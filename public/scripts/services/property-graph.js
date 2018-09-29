@@ -77,6 +77,12 @@ function propertyGraphService (req) {
     if (this.type == 'geq') {
         return 'FILTER (' + this.variable.get() + ' >' + this.data.number + ')\n'
     }
+    if (this.type == 'isuri') {
+      return 'FILTER isIRI(' + this.variable.get() + ')\n';
+    }
+    if (this.type == 'isliteral') {
+      return 'FILTER isLiteral(' + this.variable.get() + ')\n';
+    }
     console.log('filter type "'+ type +'" not implemented.');
     return null;
   };
@@ -174,6 +180,10 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.select = function () {
     propertyGraph.selected = this;
+  };
+
+  RDFResource.prototype.isSelected = function () {
+    return (propertyGraph.selected === this);
   };
 
   RDFResource.prototype.mkVariable = function () {
@@ -344,7 +354,6 @@ function propertyGraphService (req) {
       }
 
     } else {
-      console.log('cant resolve this resource');
       return null;
     }
   }
@@ -364,8 +373,6 @@ function propertyGraphService (req) {
     // Representation stuff
     propertyGraph.nodes.push(this);
     this.id = lastNodeId++;
-    this.lastPropDraw = 0;
-    this.redraw = false;
   }
 
   Node.prototype = Object.create(RDFResource.prototype);
@@ -542,7 +549,6 @@ function propertyGraphService (req) {
     thisProp.parentNode.properties.splice(i, 1);
     for (; i < thisProp.parentNode.properties.length; i++)
       thisProp.parentNode.properties[i].index -= 1;
-    thisProp.parentNode.redraw = true;
     if (propertyGraph.selected == this) propertyGraph.selected = null;
   }
 

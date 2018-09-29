@@ -7,33 +7,12 @@ svg{
   user-select: none;
 }
 
-.conceptG text{
+text {
   pointer-events: none;
 }
 
 marker{
   fill: #333;
-}
-
-g.conceptG circle{
-  fill: #F6FBFF;
-  stroke: #333;
-  stroke-width: 2px;
-}
-
-g.conceptG:hover circle{
-  fill: rgb(200, 238, 241);
-}
-
-g.selected circle{
-  fill: rgb(250, 232, 255);
-}
-g.selected:hover circle{
-  fill: rgb(250, 232, 255);
-}
-
-.selected {
-  /*stroke-dasharray: 4;*/
 }
 
 .connect-node {
@@ -47,20 +26,8 @@ path.link {
   cursor: default;
 }
 
-path.link:hover{
-  stroke: rgb(94, 196, 204);
-}
-
-g.connect-node circle{
-  fill: #BEFFFF;
-}
-
 path.link.hidden{
   stroke-width: 0;
-}
-
-path.link.selected {
-  stroke: rgb(229, 172, 247);
 }
 
 .highlight {
@@ -68,6 +35,8 @@ path.link.selected {
   position: fixed;
   box-shadow: 0 0 10px rgba(81, 203, 238, 1);
   z-index: 0;
+  width:100%;
+  height:100%;
 }
 
 .mainRect {
@@ -111,13 +80,6 @@ path.link.selected {
   font-size: 14;
   font-family: FontAwesome;
 }
-/*.csubtitle {
-  text-anchor: end;
-  alignment-baseline: after-edge;
-  font-size: 14;
-  font-style: italic;
-  color: rgba(0, 0, 0, 0.75);
-}*/
 
 .context-menu {
 }
