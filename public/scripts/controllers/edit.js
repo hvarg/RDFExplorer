@@ -47,7 +47,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
       vm.isConst    = !vm.isVariable;
       vm.isNode     = resource.isNode();
       vm.isLiteral  = resource.isLiteral();
-      vm.literal    = vm.isLiteral ? resource.literal : null;
+      vm.literal    = vm.isLiteral ? resource.getLiteral() : null;
       loadPreview();
     }
     $scope.$emit('tool', 'edit');
@@ -131,7 +131,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
     }
     p.mkConst();
     p.mkLiteral();
-    p.literal.addFilter('regex', {regex: text});
+    p.getLiteral.addFilter('regex', {regex: text});
     loadPreview();
   }
 

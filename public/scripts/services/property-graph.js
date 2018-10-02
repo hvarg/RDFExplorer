@@ -3,10 +3,10 @@ propertyGraphService.$inject = ['requestService'];
 
 function propertyGraphService (req) {
   var nodeWidth = 220,
+      childWidth = 200,
       nodeBaseHeight = 30,
-      diffParentChild = 20,
       childHeight = 20,
-      childPadding = 10;
+      padding = 10;
 
   var propertyGraph = { //TODO this to the end;
     // DATA:
@@ -126,7 +126,7 @@ function propertyGraphService (req) {
   };
 
   var validOpts = ['show', 'count'];
-  Variable.prototype.setOptions = function (opts) {
+  Variable.prototype.setOptions = function (opts) { //TODO: unused
     var keys = Object.keys(opts);
     keys = keys.filter(k => {
       return (validOpts.indexOf(k) >= 0);
@@ -295,10 +295,10 @@ function propertyGraphService (req) {
           else tmp[0] = u(relation.parentNode.getUri());
           if (relation.isVariable()) tmp[1] = relation.variable.get();
           else tmp[1] = u(relation.getUri());
-          tmp[2] = relation.literal.get();
+          tmp[2] = relation.getLiteral().get();
           q += '    ' + tmp.join(' ') + ' .\n';
           relation.variable.filters.forEach(filter => { q += '    ' + filter.apply(); });
-          relation.literal.filters.forEach(filter => { q += '    ' + filter.apply(); });
+          relation.getLiteral().filters.forEach(filter => { q += '    ' + filter.apply(); });
         });
       }
     }
@@ -322,6 +322,9 @@ function propertyGraphService (req) {
     var myQuery = queries.filter(q => { return (q.resources.indexOf(self) >= 0); })
 
     if (myQuery.length == 1) {
+      //console.log(myQuery);
+      //console.log(new Query(this));
+
       if (self.isVariable()) {
         myQuery = myQuery[0];
         myQuery.data.select = [self.variable]; //Only get this variable.
@@ -340,13 +343,13 @@ function propertyGraphService (req) {
 
       if (self.isLiteral()) {
         var litQuery = propertyGraph.toQuery([self])[0];
-        litQuery.data.select = [self.literal]; //Only get this variable.
+        litQuery.data.select = [self.getLiteral()]; //Only get this variable.
         if (opts) {
           if (opts.litlimit) litQuery.data.limit = opts.litlimit;
           if (opts.litoffset) litQuery.data.offset = opts.litoffset;
           if (opts.litFilter) {
             litQuery.data.filters.add(
-              new Filter(self.literal, 'regex', {'regex': opts.litFilter})
+              new Filter(self.getLiteral(), 'regex', {'regex': opts.litFilter})
             );
           }
         }
@@ -354,6 +357,7 @@ function propertyGraphService (req) {
       }
 
     } else {
+      //console.log('cant resolve this resource', myQuery);
       return null;
     }
   }
@@ -387,7 +391,9 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.getHeight = function () {
-    return nodeBaseHeight + this.properties.length*(childHeight+childPadding);
+    var h = nodeBaseHeight + this.properties.length * (childHeight + padding);
+    this.properties.filter(p=>{return p.literal}).forEach(p=>{ h+= (childHeight + padding); })
+    return h;
   };
 
   Node.prototype.setPosition = function (x, y) {
@@ -402,7 +408,6 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.getColor = function () {
-    // This function returns an unique 'string' that defines the color of this node.
     if (this.isVariable()) return propertyGraph.colors.rVar;
     else return propertyGraph.colors.rConst;
   };
@@ -445,8 +450,9 @@ function propertyGraphService (req) {
         tmp = propertyGraph.edges.filter(e => { return (e.source === edge.source); });
         if (tmp.length == 1) {
           tmp[0].source.delete();
+        } else {
+          propertyGraph.edges.splice(i, 1);
         }
-        propertyGraph.edges.splice(i, 1);
       }
     }
     // remove all edges with source = some property of this node.
@@ -479,36 +485,30 @@ function propertyGraphService (req) {
   /******* Property TDA ******************************************************/
   function Property (parentNode) {
     RDFResource.call(this);
-    this.id = lastPropId++;
+    this.id         = lastPropId++;
     this.parentNode = parentNode;
-    this.isLit = false;
-    this.literal = null;
-    this.index = parentNode.properties.length;
+    this.index      = parentNode.properties.length;
+    this.literal    = null;
     parentNode.properties.push(this);
   }
 
   Property.prototype = Object.create(RDFResource.prototype);
   Property.prototype.constructor = Property;
 
-  Object.defineProperty(Property.prototype, 'y',  { get: function() { return this.parentNode.y;  } }); 
-  Object.defineProperty(Property.prototype, 'x',  { get: function() { return this.parentNode.x; } });
+  Object.defineProperty(Property.prototype, 'y', { get: function() { return this.parentNode.y; } }); 
+  Object.defineProperty(Property.prototype, 'x', { get: function() { return this.parentNode.x; } });
 
-  Property.prototype.getWidth = function () {
-    return this.parentNode.getWidth() - diffParentChild;
-  };
+  Property.prototype.getWidth   = function () { return childWidth; };
+  Property.prototype.getHeight  = function () { return childHeight; };
+  Property.prototype.getX       = function () { return -(this.getWidth()/2); };
+  Property.prototype.getY       = function () { return this.getOffsetY(); };
 
-  Property.prototype.getHeight = function () {
-    return childHeight;
-  };
-
-  Property.prototype.getOffsetY = function () {
-    return this.parentNode.getBaseHeight()/2 + this.index * (this.getHeight() + childPadding);
-  };
-
-  Property.prototype.getRepr = function () {
-    var repr = RDFResource.prototype.getRepr.call(this);
-    if (repr && this.isLiteral()) return repr + ' → ' + this.literal.get();
-    else return repr
+  Property.prototype.getOffsetY = function () { //FIXME: this is executed a lot of times;
+    var h = this.parentNode.getBaseHeight()/2 + this.index * (this.getHeight() + padding);
+    for (var i = 0; i < this.index; i++) {
+      if (this.parentNode.properties[i].literal) h += (childHeight + padding);
+    }
+    return h;
   };
 
   Property.prototype.getColor = function () {
@@ -526,14 +526,21 @@ function propertyGraphService (req) {
   };
 
   Property.prototype.isLiteral = function () {
-    return this.isLit;
+    return !!(this.literal);
   };
 
   Property.prototype.mkLiteral = function () {
-    this.isLit = true;
-    if (!this.literal) this.literal = new Variable();
-    //TODO
+    for (var i = 0; i < propertyGraph.edges.length; i++) {
+      if (propertyGraph.edges[i].source === this)
+        return null;
+    }
+    return new Literal(this);
   }
+
+  Property.prototype.getLiteral = function () {
+    return this.literal.variable;
+  }
+
 
   Property.prototype.delete = function () {
     var thisProp = this;
@@ -549,8 +556,41 @@ function propertyGraphService (req) {
     thisProp.parentNode.properties.splice(i, 1);
     for (; i < thisProp.parentNode.properties.length; i++)
       thisProp.parentNode.properties[i].index -= 1;
-    if (propertyGraph.selected == this) propertyGraph.selected = null;
+    if (propertyGraph.selected == this) thisProp.parentNode.onClick();
   }
+
+  /******* Literal TDA *******************************************************/
+  function Literal (parentProperty) {
+    RDFResource.call(this);
+    this.parent = parentProperty;
+    parentProperty.literal = this;
+  }
+
+  Literal.prototype = Object.create(RDFResource.prototype);
+  Literal.prototype.constructor = Literal;
+  Literal.prototype.getColor = function () {
+    return propertyGraph.colors.pLit;
+  }
+
+  Literal.prototype.getOffsetY = function () { //FIXME: this is executed a lot of times;
+    return this.parent.getOffsetY() + this.getHeight() + padding;
+  };
+
+  Literal.prototype.getWidth = function () {
+    return childWidth;
+  };
+
+  Literal.prototype.getHeight = function () {
+    return childHeight;
+  };
+
+  Literal.prototype.getPath = function () {
+    var x = 10 - this.parent.getWidth()/2,
+        y = this.parent.getOffsetY() + this.parent.getHeight(),
+        x2 = x + 17,
+        y2 = y + 20;
+    return 'M'+x+','+y+'V'+y2+'H'+x2;
+  };
 
   /******* Edge TDA **********************************************************/
   function Edge (source, target) {
@@ -635,9 +675,9 @@ function propertyGraphService (req) {
       p.addUri('http://www.w3.org/2000/01/rdf-schema#label');
       p.mkConst();
       p.mkLiteral();
-      p.literal.setAlias(alias+'Label');
-      p.literal.addFilter('lang', {language: 'en'});
-      p.literal.addFilter('text', {keyword: alias});
+      p.getLiteral().setAlias(alias+'Label');
+      p.getLiteral().addFilter('lang', {language: 'en'});
+      p.getLiteral().addFilter('text', {keyword: alias});
     }
 
     if (d && (!prop) && d != propertyGraph.select) d.onClick();
@@ -645,7 +685,6 @@ function propertyGraphService (req) {
   }
 
   /***************************************************************************/
-  /**************************/
   /****** Public stuff ******/
   function addNode () {
     return new Node();
@@ -662,6 +701,108 @@ function propertyGraphService (req) {
 
   function getNodeByUri (uri) {
     return uriToNode[uri] || null;
+  }
+
+  /***** Query creator stuff *****/
+  function Query (resource) {
+    if (resource.isVariable()) 
+      this.select = [resource.variable];
+    else if (resource.isProperty() && resource.isLiteral)
+      this.select = [resource.getLiteral()];
+    else
+      throw new Error ('Selected resource can be resolved', resource);
+
+    this.dep = computeDependencies(resource);
+    //TODO: maybe this should be in update
+    this.prefixes = new Set();
+    this.values   = new Set();
+    this.filters  = new Set();
+    this.triples  = [];
+    this.optional = [];
+    this.update();
+  }
+
+  Query.prototype.update = function () {
+    var self = this,
+        edges = propertyGraph.edges.filter(e => {
+          return (self.dep.has(e.source.parentNode) ||
+                  self.dep.has(e.source) ||
+                  self.dep.has(e.target));
+        });
+    self.triples = [];
+
+    var tmp, uri, prefix;
+    edges.forEach(e => {
+      tmp = [];
+      [e.source.parentNode, e.source, e.target].forEach(r => {
+        if (r.isVariable()) {
+          tmp.push(r.variable);
+        } else {
+          if (r.uris.length == 0) {
+            self.error = true;
+            return null;
+          } else if (r.uris.length == 1) {
+            [uri, prefix] = r.getUri().toPrefix();
+            tmp.push(uri);
+            if (prefix) self.prefixes.add(prefix);
+          } else {
+            tmp.push(r.variable);
+            self.values.add(r);
+          }
+        }
+      });
+      self.triples.push(tmp);
+      // Add filters when two vars
+      if (e.source.isVariable() && e.target.isVariable()) { //FIXME: this is not working
+        if (e.source.isLiteral())
+          self.filters.add( new Filter(e.target, 'isliteral', null) );
+        else 
+          self.filters.add( new Filter(e.target, 'isuri', null) );
+      }
+    });
+
+    // Add from dependencies
+    Array.from(self.dep).forEach(r => {
+      if (r.isVariable()) {
+        r.variable.filters.forEach(f => { self.filters.add(f); });
+      }
+      if (r.isLiteral()) {
+        //FIXME: maybe a literal property can have values set (see notebook)
+        //TODO: here need to add triples of literal stuff.
+      }
+    })
+
+  };
+
+  Query.prototype.get = function () {
+    q = 'SELECT '
+  };
+
+  function computeDependencies (resource) {
+    var dep = new Set(),
+        queue = [resource];
+
+    while (queue.length > 0) {
+      var cur = queue.pop();
+      dep.add(cur);
+      
+      // Check edges and add resources
+      propertyGraph.edges
+        .filter(e => {return e.contains(cur); })
+        .forEach(e => {
+          [e.source.parentNode, e.source, e.target].forEach(r => {
+            if (r.isVariable() && !dep.has(r)) queue.push(r);
+          });
+        });
+
+      // If is a node add literals, if is a literal property add parent
+      if (cur.isNode()) {
+        cur.literalRelations().forEach(r => { if (!dep.has(r)) queue.push(r); });
+      } else if (cur.isLiteral()) {
+        if (cur.parentNode.isVariable() && !dep.has(cur.parentNode)) queue.push(cur.parentNode);
+      }
+    }
+    return dep;
   }
 
   function toQuery (resources) {
@@ -714,7 +855,7 @@ function propertyGraphService (req) {
         } else if (cur.isLiteral()) {
           // If is a literal property add filters, this resource to literals and parent to queue.
           literals.add(cur);
-          cur.literal.filters.forEach(f => { filters.add(f); });
+          cur.getLiteral().filters.forEach(f => { filters.add(f); });
           if (cur.parentNode.isVariable()) {
             if (!toSolve.has(cur.parentNode)) queue.push(cur.parentNode);
           }
@@ -729,7 +870,7 @@ function propertyGraphService (req) {
         if (index >= 0) resources.splice(index, 1);
         // add
         if (r.isVariable()) select.push( r.variable );
-        if (r.isProperty() && r.isLiteral()) select.push( r.literal );
+        if (r.isProperty() && r.isLiteral()) select.push( r.getLiteral() );
       });
 
       // Check edges and add triples, values and prefixes
@@ -771,7 +912,7 @@ function propertyGraphService (req) {
             }
           }
         });
-        tmp.push( lit.literal.get() );
+        tmp.push( lit.getLiteral().get() );
         where.push(tmp);
       });
 

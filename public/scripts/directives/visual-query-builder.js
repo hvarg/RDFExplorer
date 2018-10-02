@@ -156,16 +156,21 @@ function visualQueryBuilder (pGraph) {
 
     /****** PROTOTYPE FUNCTIONS *******/
     GraphCreator.prototype.classes = {
-      graph: "graph",
-      allNodes: "nodes",
-      allEdges: "edges",
-      selected: "selected",
-      connect: "connect",
-      node: "node",
-      mainRect: "mainRect",
-      mainTitle: "mainTitle",
-      propRect: "innerRect",
-      propText: "innerText"
+      graph:      "graph",
+      allNodes:   "nodes",
+      allEdges:   "edges",
+      selected:   "selected",
+      connect:    "connect",
+      node:       "node",
+      mainRect:   "node-rect",
+      mainTitle:  "node-text",
+      properties: "properties",
+      property:   "property",
+      propRect:   "property-rect",
+      propText:   "property-text",
+      litRect:    "literal-rect",
+      litText:    "literal-text",
+      litLink:    "literal-path",
     };
 
     GraphCreator.prototype.keys =  {
@@ -516,44 +521,62 @@ function visualQueryBuilder (pGraph) {
           .text(function (d) {
             return thisGraph.textEllipsis(d.getRepr(), d.getWidth(), classes.mainTitle);
           });
-      newGs.append("g").classed('props', true);
+      newGs.append("g").classed(classes.properties, true);
 
       // remove old nodes
       thisGraph.circles.exit().remove();
 
       // Properties
       thisGraph.circles.each(function (d, i) {
-        var sel = d3.select(this).selectAll(".props");
+        var sel = d3.select(this).selectAll('.' + classes.properties);
         var props = sel.selectAll('g').data(d.properties, function (p) {return p.id;});
         //UPDATE
-        props.selectAll("rect")
+        props.selectAll('.' + classes.propRect)
             .style("filter", p => { return p.isSelected() ? 'url(#highlight)' : '';})
             .style("stroke", p => { return p.getColor(); })
-            .attr("y", p => { return + p.getOffsetY()});
-        props.selectAll('.'+classes.propText)
+            .attr("y",       p => { return + p.getOffsetY(); });
+
+        props.selectAll('.' + classes.propText)
             .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
             .style("fill", p => { return p.getRepr() == null ? 'red': 'black'; })
-            .text(p => { 
+            .text( p => { 
               var title = p.getRepr();
               if (!title) title = 'No values set!';
-              return thisGraph.textEllipsis(title, p.getWidth(), classes.propText);
-            });
-        props.selectAll('.aw-icon')
+              return thisGraph.textEllipsis(title, p.getWidth(), classes.propText); });
+
+        props.selectAll('.' + classes.litRect)
+            .style("filter", p => { return p.literal.isSelected() ? 'url(#highlight)' : '';})
+            .style("stroke", p => { return p.literal.getColor(); })
+            .attr("y",       p => { return + p.literal.getOffsetY(); });
+
+        props.selectAll('.' + classes.litText)
+            .attr("x", p => { return 15; } )
+            .attr("y", p => { return (p.literal.getOffsetY() + p.getHeight()/2); })
+            .style("fill", p => { return p.literal.getRepr() == null ? 'red': 'black'; })
+            .text( p => { 
+              var title = p.literal.getRepr();
+              if (!title) title = 'No values set!';
+              return thisGraph.textEllipsis(title, p.literal.getWidth(), classes.litText); });
+
+        props.selectAll('.' + classes.litLink)
+            .attr("d", p => { return p.literal.getPath(); });
+
+        /*props.selectAll('.aw-icon')
             .attr("y", p => { return p.getOffsetY()+ p.getHeight()/2; })
-            .text(p => {return p.literal.filters.length > 0 ? "\uf0b0" : "\uf06e"});
+            .text(p => {return p.getLiteral().filters.length > 0 ? "\uf0b0" : "\uf06e"});*/
 
         //ENTER
-        var newP = props.enter().append('g');
+        var newP = props.enter().append('g').classed(classes.property, true);
 
         newP.append("rect")
             .classed(classes.propRect, true)
-            .attr("width",  p => {return p.getWidth()})
-            .attr("height", p => {return p.getHeight()})
-            .attr("x", p => { return - p.getWidth()/2})
-            .attr("y", p => { return + p.getOffsetY()})
-            .style("filter", p => { return p.isSelected() ? 'url(#highlight)' : '';})
+            .attr("width",  p => { return p.getWidth(); })
+            .attr("height", p => { return p.getHeight(); })
+            .attr("x",      p => { return p.getX(); })
+            .attr("y",      p => { return p.getY(); })
+            .style("filter", p => { return p.isSelected() ? 'url(#highlight)' : ''; })
             .style("stroke", p => { return p.getColor(); })
-            .on("click", p => { state.clickedProperty = true; p.onClick();})
+            .on("click",    p => { state.clickedProperty = true; p.onClick(); })
             .on("dblclick", p => { p.onDblClick(); })
             .on("contextmenu", p => {
               var menuItems = {
@@ -569,28 +592,46 @@ function visualQueryBuilder (pGraph) {
 
         newP.append("text")
             .classed(classes.propText, true)
-            .attr("x", p => { return (p.isLiteral() ? - p.getHeight()/2 : 0); })
             .attr("y", p => { return (p.getOffsetY() + p.getHeight()/2); })
-            .text( p => { 
-              return thisGraph.textEllipsis(
-                p.getRepr(),
-                p.isLiteral() ? p.getWidth() - p.getHeight() : p.getWidth(),
-                classes.propText)});
+            .text( p => { return thisGraph.textEllipsis(p.getRepr(), p.getWidth(), classes.propText); });
 
-        newP.filter(p=>{return p.isLiteral()}).append("rect")
-            .classed('small-box', true)
-            .attr("width",  p => { return p.getHeight(); })
+        //Literal properties
+        var newL = newP.filter(p=>{return p.isLiteral()});
+        newL.append("rect")
+            .classed(classes.litRect, true)
+            .attr("width",  p => { return p.getWidth() - 30; })
             .attr("height", p => { return p.getHeight(); })
-            .attr("x", p => { return p.getWidth()/2 - p.getHeight(); })
-            .attr("y", p => { return p.getOffsetY(); })
-            .style("stroke", p => { return p.getColor(); })
-            .on("click", p => { state.clickedProperty = true; p.onClick();});
+            .attr("x", p => { return 30 - p.getWidth()/2; })
+            .attr("y", p => { return p.literal.getOffsetY(); })
+            .style("filter", p => { return p.literal.isSelected() ? 'url(#highlight)' : ''; })
+            .style("stroke", p => { return p.literal.getColor(); })
+            // FIXME p.literal.onClick();
+            .on("click", p => { state.clickedProperty = true; p.onClick();})
+            .on("dblclick", p => { p.onDblClick(); })
+            .on("contextmenu", p => {
+              var menuItems = {
+                'Edit':     x => { p.literal.edit(); },
+                'Remove':   x => { p.delete(); thisGraph.updateGraph(); },
+              };
+              menu(menuItems);
+            });
 
-        newP.filter(p=>{return p.isLiteral()}).append("text")
+        newL.append("text")
+            .classed(classes.litText, true)
+            .attr("x", p => { return 15; } )
+            .attr("y", p => { return (p.literal.getOffsetY() + p.getHeight()/2); })
+            .text( p => { return thisGraph.textEllipsis(p.literal.getRepr(), p.literal.getWidth(), classes.litText); });
+
+        newL.append("path")
+            .classed(classes.litLink, true)
+            .style('marker-end', 'url(#end-arrow)')
+            .attr("d", p => { return p.literal.getPath(); });
+
+        /*newL.append("text")
             .classed('aw-icon', true)
             .attr("x", p => { return (p.getWidth() - p.getHeight())/2; })
             .attr("y", p => { return p.getOffsetY()+ p.getHeight()/2; })
-            .text(p => {return p.literal.filters.length > 0 ? "\uf0b0" : "\uf06e"});
+            .text(p => {return p.getLiteral().filters.length > 0 ? "\uf0b0" : "\uf06e"});*/
 
         props.exit().remove();
 

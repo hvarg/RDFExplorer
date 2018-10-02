@@ -30,6 +30,13 @@ path.link.hidden{
   stroke-width: 0;
 }
 
+path.literal-path {
+  fill: none;
+  stroke: #333;
+  stroke-width: 3px;
+  cursor: default;
+}
+
 .highlight {
   pointer-events: none;
   position: fixed;
@@ -39,39 +46,43 @@ path.link.hidden{
   height:100%;
 }
 
-.mainRect {
+.node-rect {
   font-family: serif;
   fill: #f8f8f8;
   stroke-width: 2px;
   stroke: red;
 }
 
-.mainRect:hover {
+.node-rect:hover {
   fill: #f1f1f1;
 }
 
-.mainTitle {
+.node-text {
   font-weight: bold;
   text-anchor: middle;
   alignment-baseline: central;
   font-size: 16;
 }
 
-.innerRect, .small-box {
+.property-rect, .literal-rect {
   font-family: serif;
   fill: #f3f3f3;
   stroke-width: 1px;
   stroke: blue;
 }
 
-.innerRect:hover, .small-box:hover {
+.property-rect:hover, .literal-rect:hover {
   fill: #f0f0f0;
 }
 
-.innerText {
+.property-text {
   text-anchor: middle;
   alignment-baseline: central;
-  font-size: 14;
+}
+
+.literal-text {
+  alignment-baseline: central;
+  text-anchor: middle;
 }
 
 .aw-icon {
