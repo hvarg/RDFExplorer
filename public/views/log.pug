@@ -1,0 +1,8 @@
+div(ng-show="main.tool == 'log'")
+  h3.ta-center Log
+    i.ml-3.fa.fa-download(ng-click="main.log.download()")
+  hr(style="margin: 3px 0px;")
+
+  .row(ng-repeat="l in main.log.logs")
+    .col-md-2 {{ l.date.getHours() + ':' + l.date.getMinutes() + ':' + l.date.getSeconds()}}
+    .col-md-10 {{ l.info }}

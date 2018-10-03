@@ -17,7 +17,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
 
 // ROUTES =====================================================================
-app.get('*', function(req, res) {res.render(views+'index.pug'   );});
+app.get('/modal/help', function (req, res) { res.render(views+'modal/help.pug'); });
+app.get('/*', function(req, res) {res.render(views+'index.pug'   );});
 
 
 // LISTEN =====================================================================

@@ -13,6 +13,19 @@ visual-query-builder {
   height: 100%;
 }
 
+#mid-help {
+  cursor: pointer;
+  position: fixed;
+  top: 45%;
+  left: 42%;
+  z-index: 999;
+  text-align: center;
+}
+
+#mid-help:hover {
+  color: steelblue;
+}
+
 .no-select {
   -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -393,6 +406,22 @@ visual-query-builder {
 [uib-typeahead-popup].dropdown-menu {
   width: 100%;
   overflow-x: scroll;
+}
+
+/* Fix modal */
+.fade.in {
+    opacity: 1;
+}
+
+.modal.in .modal-dialog {
+  -webkit-transform: translate(0, 0);
+       -o-transform: translate(0, 0);
+          transform: translate(0, 0);
+}
+
+.modal-backdrop.in {
+    filter: alpha(opacity=50);
+    opacity: .5;
 }
 
 /* status icons for inputs */

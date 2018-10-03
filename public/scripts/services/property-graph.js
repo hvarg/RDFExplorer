@@ -1,7 +1,7 @@
 angular.module('rdfvis.services').factory('propertyGraphService', propertyGraphService);
-propertyGraphService.$inject = ['requestService'];
+propertyGraphService.$inject = ['requestService', 'logService'];
 
-function propertyGraphService (req) {
+function propertyGraphService (req, log) {
   var nodeWidth = 220,
       childWidth = 200,
       nodeBaseHeight = 30,
@@ -137,6 +137,7 @@ function propertyGraphService (req) {
   };
 
   Variable.prototype.addFilter = function (type, data) {
+    log.add('New filter (' + type + ') for variable id ' + this.id);
     this.filters.push( new Filter(this, type, data) );
   };
 
@@ -187,10 +188,12 @@ function propertyGraphService (req) {
   };
 
   RDFResource.prototype.mkVariable = function () {
+    log.add('Node id ' + this.id + ' is now a variable');
     this.isVar = true;
   };
 
   RDFResource.prototype.mkConst = function () {
+    log.add('Node id ' + this.id + ' is now a constant');
     this.isVar = false;
   };
 
@@ -221,6 +224,7 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.addUri = function (uri) {
     if (this.uris.indexOf(uri) < 0) {
+      log.add('Adding uri to node id ' + this.id + ' ('+ uri + ')');
       this.uris.push(uri);
       if (this.uris.length == 1) this.cur = 0;
       return true;
@@ -377,6 +381,7 @@ function propertyGraphService (req) {
     // Representation stuff
     propertyGraph.nodes.push(this);
     this.id = lastNodeId++;
+    log.add('New node id ' + this.id);
   }
 
   Node.prototype = Object.create(RDFResource.prototype);
@@ -413,7 +418,8 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.newProp = function () {
-    return new Property(this);
+    var n = new Property(this);
+    return n;
   };
 
   Node.prototype.getPropByUri = function (uri) {
@@ -441,6 +447,7 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.delete = function () {
+    log.add('Deleting node id ' + this.id);
     var i, j, edge, prop, tmp;
     // remove all edges with this node as target.
     for (i = propertyGraph.edges.length - 1; i >= 0; i--) {
@@ -490,6 +497,7 @@ function propertyGraphService (req) {
     this.index      = parentNode.properties.length;
     this.literal    = null;
     parentNode.properties.push(this);
+    log.add('New property id ' + this.id + ' for node id ' + parentNode.id);
   }
 
   Property.prototype = Object.create(RDFResource.prototype);
@@ -534,6 +542,7 @@ function propertyGraphService (req) {
       if (propertyGraph.edges[i].source === this)
         return null;
     }
+    log.add('Property id ' + this.id + 'is now literal');
     return new Literal(this);
   }
 
@@ -541,8 +550,8 @@ function propertyGraphService (req) {
     return this.literal.variable;
   }
 
-
   Property.prototype.delete = function () {
+    log.add('Deleting property id ' + this.id);
     var thisProp = this;
     var i, edge;
     // remove all edges 
@@ -597,6 +606,7 @@ function propertyGraphService (req) {
     this.source = source;
     this.target = target;
     propertyGraph.edges.push(this);
+    log.add('New edge from property id ' + source.id + ' to node id ' + target.id);
   }
 
   Edge.prototype.contains = function (resource) {
@@ -692,11 +702,8 @@ function propertyGraphService (req) {
 
   function addEdge (source, target) {
     /* FIXME: duplicate edges */
-    if (source instanceof Property) 
-      return new Edge(source, target);
-    if (source instanceof Node) {
-      return new Edge(source.newProp(), target);
-    }
+    if (source instanceof Property) return new Edge(source, target);
+    if (source instanceof Node)     return new Edge(source.newProp(), target);
   }
 
   function getNodeByUri (uri) {

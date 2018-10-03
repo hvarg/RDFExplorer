@@ -1,0 +1,31 @@
+div(style="padding: 10px 20px;")
+  h3.ta-center Getting Started
+  hr(style="margin: 3px 0px;")
+
+  p.just
+    |  Esta interfaz fue creada para facilitar el proceso de exploración y creación de consultas en bases de datos de
+    |  grafos.
+    |  En este tipo de base de datos la información es modelada como recursos los cuales son enlazados entre si por
+    |  medio de propiedades.
+  p.just
+    |  Supongamos que queremos indicar que 'Pedro' es un 'Hombre' que estudia en la 'UTFSM' y 'María' es una 'Mujer'
+    |  que ya se tituló de la misma universidad.
+    |  En una base de datos de grafos esta información será representada que la siguiente forma:
+    img.c-img-full(style="padding: 10px 50px", src="/images/example1.png")
+
+  p.just
+    |  Como podemos notar, todo recurso es definido por sus relaciones (incluso información como el nombre se guarda de
+    |  esta forma!), por lo que la creación de consultas en este tipo de base de datos requerirá que las formulemos de
+    |  la misma manera, por ejemplo, si queremos obtener todos los hombres que estudian en 'UTFSM' generaremos un grafo
+    |  como el siguiente:
+  .row
+    .col-md-2
+    .col-md-8
+      img.c-img-full(src="/images/example2.png")
+  p.just
+    |  En este caso, los resultados de la consulta quedarán almacenados en la variable '?estudiante', en esta interfaz
+    |  toda variable tiene una etiqueta que comienza con un signo de interrogación y bordes verdes.
+  p.just
+    |  Este equema no solo permite consultar por recursos que cumplen ciertas propiedades; cualquier elemento del grafo
+    |  puede ser una variable:
+    //img.c-img-full(src="/images/03.gif")

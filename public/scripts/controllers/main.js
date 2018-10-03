@@ -1,8 +1,9 @@
 angular.module('rdfvis.controllers').controller('MainCtrl', MainCtrl);
 
-MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', '$timeout', '$http'];
+MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', '$timeout', '$http',
+'logService', '$uibModal'];
 
-function MainCtrl ($scope, pGraph, query, request, $timeout, $http) {
+function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibModal) {
   var vm = this;
   /* General stuff */
   vm.tool = 'none';
@@ -10,7 +11,9 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http) {
 
   vm.search = search;
   vm.tutorial = tutorial;
+  vm.modalHelp = modalHelp;
   vm.graph = pGraph;
+  vm.log = log;
 
   /* vars */
   vm.searchInput = null;
@@ -50,6 +53,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http) {
   function searchDeactivate() { vm.searchActive = false; }
 
   function onSearch (data) {
+    log.add('Search "'+ vm.lastSearch + '", ' + data.length + ' results');
     /*var r = {}
     data.results.bindings.forEach(res => {
       if (!r[res.uri.value]) r[res.uri.value] = [];
@@ -124,6 +128,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http) {
   }
 
   function tutorial () {
+    log.add('Tutorial started')
     var intro = introJs();
     intro.setOptions({
       steps: [
@@ -151,5 +156,14 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http) {
           break;
       }
     });
+  }
+
+  function modalHelp () {
+    $uibModal.open({
+      animation: true,
+      windowClass: 'show',
+      templateUrl: '/modal/help',
+      size: 'lg',
+    }).result.then(function(){}, function(res){});
   }
 }

@@ -1,8 +1,9 @@
 angular.module('rdfvis.controllers').controller('DescribeCtrl', DescribeCtrl);
 
-DescribeCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', 'settingsService'];
+DescribeCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', 'settingsService',
+'logService'];
 
-function DescribeCtrl ($scope, pGraph, query, request, settings) {
+function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
   var vm = this;
   var cfg = settings.describe;
   var cache = [];
@@ -31,6 +32,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
   };
 
   function load (uri, sourceObject) {
+    log.add('Describe ' + uri);
     if (uri.includes('prop/direct')) uri = uri.replace('prop/direct', 'entity');
     var c = cache.filter(s => {return s.uri == uri})
     if (c.length>0) {
