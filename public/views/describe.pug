@@ -9,7 +9,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
 
   // Show when no URI selected
   h3.ta-center.mb-0(ng-if="!ctrl.selected") No URIs to describe
-  h3.ta-center.mb-0.wrap {{ ctrl.selected.uri.getLabel() }}
+  h3.ta-center.mb-0.wrap {{ ctrl.selected.getUri().getLabel() }}
   hr(style="margin: 3px 0px;")
 
   // TODO: Carousel or something to see more images.

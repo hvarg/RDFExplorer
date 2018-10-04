@@ -33,7 +33,9 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
 
   function load (uri, sourceObject) {
     log.add('Describe ' + uri);
+    var realUri = uri;
     if (uri.includes('prop/direct')) uri = uri.replace('prop/direct', 'entity');
+
     var c = cache.filter(s => {return s.uri == uri})
     if (c.length>0) {
       vm.selected = c[0];
@@ -42,6 +44,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
 
     var source = sourceObject || null;
     var selected = { uri: uri, source: source, objects: [], datatype: [], text: [], external: [], image: [], results: {} };
+    selected.getUri = function () { return realUri };
     vm.selected = selected;
 
     request.execQuery(query.getProperties(uri), data => {
