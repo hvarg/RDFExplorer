@@ -1,6 +1,7 @@
 div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
   h3.ta-center.ell(style="width: 100%;") Editing {{ ctrl.variable }} {{ ctrl.isVariable ? '' : '(const)'}}
-
+  
+  //-------------------- TABS --------------------//
   ul.nav.nav-tabs.nav-justified
     li.nav-item.clickable
       .nav-link(ng-class="{'active': ctrl.isVariable}", ng-click="ctrl.mkVariable()")
@@ -11,9 +12,28 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
         input.no-click(type="checkbox", ng-model="ctrl.isConst")
         a.ml-1 Constraint
         b(ng-if="ctrl.added>0").ml-2 [+{{ctrl.added}}]
-  
+
+  //-------------------- CONSTRAINT --------------------//
+  div(ng-if="!ctrl.isVariable")
+    .custom-container-title.no-select.mt-2.active Constraints
+    .custom-container-content.active
+      .input-group.input-group-sm.mt-1.mb-1
+        input.form-control(aria-describedby='edit-button-add', aria-label="New value",
+                           type="{{ ctrl.newValueType }}}",
+                           placeholder="{{ ctrl.newValuePlaceholder }}",
+                           ng-model="ctrl.newValue")
+        .input-group-append
+          button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addValue();") add
+      .alert.alert-danger.alert-sm.mb-1(ng-if="!ctrl.selected.hasUris()") To use this resource as constraint you need to add at least one value
+      .row(ng-repeat="(key, value) in ctrl.selected.uris")
+        .col-md-12
+          span.ell(style="width: calc(100% - 30px);")
+            a(ng-if="!ctrl.isLiteral", title="{{value}}", href="", ng-click="value.describe();") {{ value.getLabel(); }}
+            span(ng-if="ctrl.isLiteral") {{ value }}
+          i.clickable.pull-right.fa.fa-trash.mt-1(ng-click="ctrl.selected.removeUri(value);")
+
+  //-------------------- CONSTRAINT --------------------//
   div.mt-3(ng-if="ctrl.isVariable")
-    // Edit variable
     form
       .form-row
         .input-group.col-md-12
@@ -27,8 +47,29 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
               ng-change="ctrl.refresh(); ctrl.variable.setAlias(ctrl.variable.alias);",
               placeholder="{{ ctrl.variable.id }}")
 
-    // Add filters
-    .custom-container-title.no-select.mt-2(
+    //-------------------- POSSIBLE SOLUTIONS --------------------//
+    .form-row.mt-2(style="margin:0;")
+      .input-group.input-group#edit-filter-group
+        .input-group-prepend
+          label.input-group-text(for="edit-filter-results", style="border-bottom-left-radius: 0;") Possible solutions
+        input.form-control#edit-filter-results(type="text", autocomplete="off", ng-model="ctrl.resultFilterValue", ng-change="ctrl.filterResults()")
+        .input-group-append.clickable(ng-click="")
+          i.fa.fa-search#edit-filter-results-icon
+          span.input-group-text(style="border-bottom-right-radius: 0;")
+            i.fa.fa-filter.not-allowed
+
+    .custom-container-content.active
+      .alert.alert-warning.alert-sm.mt-2.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results!
+      .row(ng-repeat="elem in ctrl.variable.results", title="{{elem.value}}")
+        .col-md-12(ng-class="{'mt-1': $first}")
+          span.ell(style="width: calc(100% - 30px);")
+            a(ng-if="!ctrl.isLiteral", href="", ng-click="elem.value.describe()") {{ elem.value.getLabel(); }}
+            span(ng-if="ctrl.isLiteral") {{ elem.value }}
+          i.pull-right.fa.fa-plus.mr-1.mt-1.clickable(ng-click="ctrl.addValue(elem.value);")
+
+
+    //-------------------- FILTERS --------------------//
+    .custom-container-title.no-select.mt-2.clickable(
         ng-class="{'active': ctrl.show.filters}",
         ng-click="ctrl.show.filters = !ctrl.show.filters"
         ) Filters
@@ -65,116 +106,3 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
             span.input-group-text
               i.fa.fa-trash
 
-    // Posible solutions
-    .custom-container-title.no-select.mt-2(
-        ng-class="{'active': ctrl.show.results}",
-        ng-click="ctrl.show.results = !ctrl.show.results"
-        ) Possible results:
-      i.pull-right.fa(ng-class="ctrl.show.results ? 'fa-angle-up' : 'fa-angle-down';")
-      .info
-        .inner-addon.right-addon
-          i.fa.fa-search.clickable(ng-click="ctrl.show.results = true; $event.stopPropagation();", aria-hidden="true")
-          //i.fa.fa-plus.clickable.mr-3(ng-if="ctrl.varSearch.length > 0", ng-click="ctrl.addSearchAsFilter()")
-          input.form-control(ng-click="ctrl.show.results = true; $event.stopPropagation();",
-                             type="text", ng-model="ctrl.varSearch", ng-change="ctrl.filterRes()")
-
-    .custom-container-content(ng-class="{'active': ctrl.show.results}")
-      .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results.
-      .row(ng-repeat="elem in ctrl.variable.results", title="{{elem.value}}")
-        .col-md-12(ng-class="{'mt-1': $first}")
-          a.ell(style="width: calc(100% - 30px);", href="", ng-click="elem.value.describe()") {{ elem.value.getLabel(); }}
-          i.pull-right.fa.fa-plus.mr-1.mt-1.clickable(ng-click="ctrl.addUri(elem.value);")
-
-  div(ng-if="!ctrl.isVariable")
-    // Constrains
-    .custom-container-title.no-select.mt-2(
-        ng-class="{'active': ctrl.show.const}",
-        ng-click="ctrl.show.const = !ctrl.show.const"
-        ) Constraints
-      i.pull-right.fa(ng-class="ctrl.show.const ? 'fa-angle-up' : 'fa-angle-down';")
-
-    .custom-container-content(ng-class="{'active': ctrl.show.const}")
-      .input-group.input-group-sm.mt-1.mb-1
-        input.form-control(type='url', placeholder="Add a new URI", ng-model="ctrl.newUri",
-                           aria-label="New value", aria-describedby='edit-button-add')
-        .input-group-append
-          button#edit-button-add.btn.btn-outline-secondary(type='button', ng-click="ctrl.addUri(ctrl.newUri); ctrl.newUri='';") add
-      .alert.alert-danger.alert-sm.mb-1(ng-if="!ctrl.selected.hasUris()") To use this resource as constraint you need to add at least one value
-      .row(ng-repeat="(key, value) in ctrl.selected.uris")
-        .col-md-12
-          a.ell(style="width: calc(100% - 30px);", title="{{value}}", href="", ng-click="value.describe();") {{ value.getLabel(); }}
-          i.clickable.pull-right.fa.fa-trash.mt-1(ng-click="ctrl.selected.removeUri(value);")
-
-  .mt-4(ng-if="ctrl.isLiteral")
-    h4 
-      i.fa.fa-link.mr-2
-      |Datatype property variable
-    // Edit literal variable
-    form
-      .form-row
-        .input-group.col-md-12
-          .input-group-prepend
-            label.input-group-text(for="edit-lit-name") Variable name
-          span.edit-var-name-prefix ?
-          input#edit-lit-name.form-control(
-              type="text",
-              autocomplete="off",
-              ng-model="ctrl.literal.alias",
-              ng-change="ctrl.refresh()",
-              placeholder="{{ ctrl.literal.id }}")
-
-    // Add filters
-    .custom-container-title.no-select.mt-2(
-        ng-class="{'active': ctrl.show.lfilters}",
-        ng-click="ctrl.show.lfilters = !ctrl.show.lfilters"
-        ) Filters
-      span.ml-1(ng-if="ctrl.literal.filters.length > 0") [{{ctrl.literal.filters.length}}]
-      i.pull-right.fa(ng-class="ctrl.show.lfilters ? 'fa-angle-up' : 'fa-angle-down';")
-
-    .custom-container-content(ng-class="{'active': ctrl.show.lfilters}")
-      .form-row.mt-1(style="margin:0;")
-        .input-group.input-group-sm
-          select.custom-select(ng-model="ctrl.newFilterType")
-            option(value="") -- Select a new filter --
-            option(ng-repeat="(key, value) in ctrl.filters", value="{{key}}") {{value.name}}
-          input.form-control(
-              ng-repeat="(k, v) in ctrl.filters[ctrl.newFilterType].data",
-              type="{{ v.type }}",
-              autocomplete="off",
-              ng-init="ctrl.newFilterData[k] = ''",
-              ng-model="ctrl.newFilterData[k]",
-              placeholder="{{ k }}")
-          .input-group-append
-            button.btn.btn-outline-secondary(type="button", ng-click="ctrl.newFilter(ctrl.literal)") Add
-
-      .form-row.mt-1(ng-repeat="(key, value) in ctrl.literal.filters", style="margin:0;")
-        .input-group.input-group-sm
-          .input-group-prepend
-            label.input-group-text() {{ ctrl.filters[value.type].name }}
-          input.form-control(
-              ng-repeat="(k, v) in ctrl.filters[value.type].data",
-              type="{{ v.type }}",
-              autocomplete="off",
-              ng-model="value.data[k]",
-              placeholder="{{ k }}")
-          .input-group-append.clickable(ng-click="ctrl.rmFilter(ctrl.literal, value)")
-            span.input-group-text
-              i.fa.fa-trash
-
-    // Posible solutions
-    .custom-container-title.no-select.mt-2(
-        ng-class="{'active': ctrl.show.lresults}",
-        ng-click="ctrl.show.lresults = !ctrl.show.lresults"
-        ) Possible results:
-      i.pull-right.fa(ng-class="ctrl.show.lresults ? 'fa-angle-up' : 'fa-angle-down';")
-      .info
-        .inner-addon.right-addon
-          i.fa.fa-search.clickable(ng-click="ctrl.show.lresults = true; $event.stopPropagation();", aria-hidden="true")
-          input.form-control(ng-click="ctrl.show.lresults = true; $event.stopPropagation();", type="text",
-                             ng-model="ctrl.litSearch", ng-change="ctrl.filterLit()")
-
-    .custom-container-content(ng-class="{'active': ctrl.show.lresults}")
-      .alert.alert-warning.alert-sm.mt-1.mb-1(ng-if="ctrl.literal.results.length==0") Currently this variable has no partial results.
-      .row(ng-repeat="item in ctrl.literal.results", title="{{item.value}}")
-        .col-md-12(ng-class="{'mt-1': $first}")
-          .ell(style="width: calc(100% - 10px);") {{ item.value.getLabel(); }}

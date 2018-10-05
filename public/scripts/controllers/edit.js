@@ -6,55 +6,61 @@ function EditCtrl ($scope, pGraph, $timeout) {
   var vm = this;
   vm.selected = null;
   vm.variable = null;
-  vm.literal  = null;
 
   vm.isVariable = true;
   vm.isConst    = false;
-  vm.isNode     = true;
   vm.isLiteral  = false;
+
+  vm.newValueType = '';
+  vm.newValuePlaceholder = '';
+  vm.newValue = '';
+
+  vm.resultFilterValue = '';
 
   vm.added  = 0;
   vm.newFilterType = "";
   vm.newFilterData = {};
-  vm.varSearch = "";
-  vm.litSearch = "";
 
-  vm.show  = {filters: false, results: true, const: true, lfilters: false, lresults: true}
+  vm.varSearch = "";
+  vm.show  = {filters: false, results: true, const: true}
+
+  vm.mkVariable = mkVariable;
+  vm.mkConst    = mkConst;
+  vm.addValue   = addValue;
+  vm.rmValue    = rmValue;
+  vm.newFilter  = newFilter;
+  vm.rmFilter   = rmFilter;
+  vm.filterResults  = filterResults;
+  vm.addSearchAsFilter = addSearchAsFilter;
 
   pGraph.edit = editResource;
   vm.refresh  = pGraph.refresh;
   vm.filters  = pGraph.filters;
 
-  vm.mkVariable = mkVariable;
-  vm.mkConst    = mkConst;
-  vm.addUri     = addUri;
-  vm.rmUri      = rmUri;
-  vm.newFilter  = newFilter;
-  vm.rmFilter   = rmFilter;
-  vm.filterRes  = filterResults;
-  vm.filterLit  = filterLiteralResults;
-  vm.addSearchAsFilter = addSearchAsFilter;
-
   function editResource (resource) {
     if (vm.selected != resource) {
       vm.varSearch = "";
-      vm.litSearch = "";
     }
     if (resource) {
       vm.selected   = resource;
       vm.variable   = resource.variable;
       vm.isVariable = resource.isVariable();
       vm.isConst    = !vm.isVariable;
-      vm.isNode     = resource.isNode();
-      vm.isLiteral  = resource.isLiteral();
-      vm.literal    = vm.isLiteral ? resource.getLiteral() : null;
+      vm.isLiteral  = !!(vm.selected.parent); //FIXME: check if this is a literal
+      if (vm.isLiteral) {
+        vm.newValueType = 'text';
+        vm.newValuePlaceholder = 'add a new literal';
+      } else {
+        vm.newValueType = 'url';
+        vm.newValuePlaceholder = 'add a new URI';
+      }
       loadPreview();
     }
     $scope.$emit('tool', 'edit');
   }
 
   function loadPreview () {
-    if (vm.isVariable || vm.isLiteral) vm.selected.loadPreview({limit: 10, litlimit: 10});
+    if (vm.isVariable) vm.selected.loadPreview({limit: 10});
   }
 
   function mkVariable () {
@@ -73,14 +79,19 @@ function EditCtrl ($scope, pGraph, $timeout) {
     vm.refresh();
   }
 
-  function addUri (newUri) {
-    if (newUri) {
-      if (vm.selected.addUri(newUri)) vm.added += 1
+  function addValue (newV) {
+    if (!newV) {
+      newV = vm.newValue;
+      vm.newValue = '';
+    }
+    if (vm.newValue && vm.selected.addUri(vm.newValue)) {
+      vm.added += 1
+      vm.refresh();
     }
   }
 
-  function rmUri (uri) {
-    return vm.selected.removeUri(uri)
+  function rmValue (value) {
+    return vm.selected.removeUri(value)
   }
 
   function newFilter (targetVar) {
@@ -97,25 +108,13 @@ function EditCtrl ($scope, pGraph, $timeout) {
     loadPreview();
   }
 
-  var lastVarSearch = '';
+  var lastValueSearch = '';
   function filterResults () {
-    var now = vm.varSearch+'';
+    var now = vm.resultFilterValue + '';
     $timeout(function () {
-      if (vm.isVariable && now == vm.varSearch && now != lastVarSearch) {
-        lastVarSearch = now;
+      if (vm.isVariable && now == vm.resultFilterValue && now != lastValueSearch) {
+        lastValueSearch = now;
         if (now) vm.selected.loadPreview({limit: 10, varFilter: now});
-        else loadPreview();
-      }
-    }, 400);
-  }
-
-  var lastLitSearch = '';
-  function filterLiteralResults () {
-    var now = vm.litSearch+'';
-    $timeout(function () {
-      if (vm.isLiteral && now == vm.litSearch && now != lastLitSearch) {
-        lastLitSearch = now;
-        if (now) vm.selected.loadPreview({litlimit: 10, litFilter: now});
         else loadPreview();
       }
     }, 400);

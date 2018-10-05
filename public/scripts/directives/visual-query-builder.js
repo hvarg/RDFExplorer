@@ -606,8 +606,8 @@ function visualQueryBuilder (pGraph) {
             .style("filter", p => { return p.literal.isSelected() ? 'url(#highlight)' : ''; })
             .style("stroke", p => { return p.literal.getColor(); })
             // FIXME p.literal.onClick();
-            .on("click", p => { state.clickedProperty = true; p.onClick();})
-            .on("dblclick", p => { p.onDblClick(); })
+            .on("click", p => { state.clickedProperty = true; p.literal.onClick();})
+            .on("dblclick", p => { p.literal.onDblClick(); })
             .on("contextmenu", p => {
               var menuItems = {
                 'Edit':     x => { p.literal.edit(); },

@@ -43,6 +43,10 @@ visual-query-builder {
   cursor:pointer;
 }
 
+.not-allowed {
+  cursor: not-allowed;
+}
+
 .just {
   text-align: justify;
 }
@@ -456,8 +460,6 @@ visual-query-builder {
   padding: 4px 12px 4px 12px;
   background-color: rgb(233, 236, 239);
   display: inline-block;
-  /*overflow: hidden;*/
-  cursor:pointer;
   transition-delay: 0.5s;
   position: relative;
 }
@@ -492,33 +494,24 @@ visual-query-builder {
   overflow-y: scroll;
 }
 
-.custom-container-title > .info {
-  position: absolute;
-  right: 24px;
-  display:inline-block;
-  width: 50%;
-}
-
-.custom-container-title > .info > .inner-addon {
-  width: calc(100% - 12px);
-  font-size: 14px;
-}
-
-.custom-container-title > .info > .inner-addon > i.fa {
-  margin-top: 5px;
-}
-
-.custom-container-title > .info > .right-addon input,
-.custom-container-title > .info > .right-addon input:focus {
+#edit-filter-results {
   background-color: rgb(233, 236, 239);
   padding-right: 30px;
+}
+
+#edit-filter-results-icon {
+  position: absolute;
+  padding-top: 11px;
+  margin-left: -24px;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .alert-sm {
   padding: 0.25rem 1.25rem;
 }
 
-#edit-var-name, #edit-lit-name {
+#edit-var-name {
   margin-left: -20px;
   padding-left: 20px;
 }
