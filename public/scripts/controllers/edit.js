@@ -82,7 +82,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
       newV = vm.newValue;
       vm.newValue = '';
     }
-    if (vm.newValue && vm.selected.addUri(vm.newValue)) {
+    if (newV && vm.selected.addUri(newV)) {
       vm.added += 1
       vm.refresh();
     }

@@ -26,6 +26,15 @@ visual-query-builder {
   color: steelblue;
 }
 
+#mid-help.ng-leave {
+  transition: 0.3s linear all;
+  opacity: 1;
+}
+
+#mid-help.ng-leave.ng-leave-active {
+  opacity: 0;
+}
+
 .no-select {
   -webkit-touch-callout: none;
     -webkit-user-select: none;

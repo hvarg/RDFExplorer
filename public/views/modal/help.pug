@@ -1,31 +1,150 @@
 div(style="padding: 10px 20px;")
-  h3.ta-center Getting Started
+  h3 Introducción
   hr(style="margin: 3px 0px;")
 
   p.just
     |  Esta interfaz fue creada para facilitar el proceso de exploración y creación de consultas en bases de datos de
     |  grafos.
     |  En este tipo de base de datos la información es modelada como recursos los cuales son enlazados entre si por
-    |  medio de propiedades.
+    |  medio de propiedades (creando así un grafo dirigido).
   p.just
-    |  Supongamos que queremos indicar que 'Pedro' es un 'Hombre' que estudia en la 'UTFSM' y 'María' es una 'Mujer'
-    |  que ya se tituló de la misma universidad.
+    |  Supongamos que queremos indicar que 
+    b  Pedro
+    |  es un
+    b  Hombre
+    |  que 
+    b  estudia
+    |  en la 
+    b  UTFSM
+    |  y 
+    b  María
+    |  es una 
+    b  Mujer
+    |  que ya se
+    b  tituló
+    |  de la misma universidad.
     |  En una base de datos de grafos esta información será representada que la siguiente forma:
-    img.c-img-full(style="padding: 10px 50px", src="/images/example1.png")
+  .row
+    .col-md-1
+    .col-md-9
+      img.c-img-full(src="/images/example1.png")
 
   p.just
-    |  Como podemos notar, todo recurso es definido por sus relaciones (incluso información como el nombre se guarda de
-    |  esta forma!), por lo que la creación de consultas en este tipo de base de datos requerirá que las formulemos de
-    |  la misma manera, por ejemplo, si queremos obtener todos los hombres que estudian en 'UTFSM' generaremos un grafo
-    |  como el siguiente:
+    |  Como podemos notar, todo recurso (borde azul) es definido por sus relaciones (incluso información como el nombre
+    |  se guarda de esta forma!), por lo que la creación de consultas en este tipo de base de datos requerirá que las
+    |  formulemos de la misma manera, por ejemplo, si queremos obtener todos los 
+    b  hombres
+    |  que estudian en 
+    b  UTFSM
+    |  generaremos un grafo de consulta como el siguiente:
   .row
     .col-md-2
     .col-md-8
       img.c-img-full(src="/images/example2.png")
   p.just
-    |  En este caso, los resultados de la consulta quedarán almacenados en la variable '?estudiante', en esta interfaz
-    |  toda variable tiene una etiqueta que comienza con un signo de interrogación y bordes verdes.
+    |  En esta consulta la información requerida está representada por la variable (borde verde)
+    b  ?estudiante.
+    |  Podemos notar que la consulta 
+    i  calza
+    |  en la información de ejemplo, por lo que 
+    b  ?estudiante
+    |  tomará el valor de 
+    b  pedro
+    |  y de todo otro recurso que tambien
+    i  calze.
   p.just
-    |  Este equema no solo permite consultar por recursos que cumplen ciertas propiedades; cualquier elemento del grafo
-    |  puede ser una variable:
+    |  Debemos tener en consideración que tanto cualquier recurso como cualquier propiedad puede ser variable por lo que 
+    |  este tipo de base de datos nos da una gran flexibilidad a la hora de crear nuestras consultas.
     //img.c-img-full(src="/images/03.gif")
+
+  h3 Utilizando la interfaz
+  hr(style="margin: 3px 0px;")
+  p.just
+    |  Supongamos que queremos obtener todos los lagos de Chile disponibles en 
+    span(style="font-family: monospace;") www.wikidata.org
+    |  (ingles), la interfaz permite llegar a la misma consula de multiples formas, explicaremos en particular dos
+    |  patrones: comenzar con una variable o comenzar con algo conocido.
+
+  h4 Comenzando con una variable
+  p.just
+    |  Lo primero es crear una nueva variable (<i>shift + click</i>) en la cual obtenedremos lo que buscamos a la que
+    |  llamaremos 
+    b  ?lakes
+  .row
+    .col-md-1
+    .col-md-9
+      img.c-img-full(src="/images/t1.gif")
+  p.just
+    |  Luego usamos la herramienta de búsqueda (
+    i.fa.fa-search
+    |) para obtener la información que ya conocemos, en este caso que es un lago (lake) y que está en Chile:
+  .row
+    .col-md-1
+    .col-md-9
+      img.c-img-full(src="/images/t2.gif")
+  p.just
+    |  Ahora generamos propiedades (apretando <i> shift </i> y arrastrando) desde nuestra variable 
+    b  ?lakes
+    |  a los recursos 
+    b  Chile
+    |  y 
+    b  Lake
+  .row
+    .col-md-1
+    .col-md-9
+      img.c-img-full(src="/images/t3.gif")
+  p.just
+    |  Las propiedades recien creadas son por defecto variables, debemos elegir entre los valores posibles la relación
+    |  que queremos, para ello usamos la herramienta de edición (
+    i.fa.fa-pencil
+    |  click izquierdo):
+  .row
+    .col-md-12
+      img.c-img-full(src="/images/t4.gif")
+  p.just
+    |  Para la relación con 
+    b  Chile
+    |  elegimos la propiedad 
+    b  Country
+    |  mientras que para
+    b  Lake
+    |  seleccionamos 
+    b  instance of
+    |  de esta manera señalamos que 
+    b  ?lakes
+    |  tiene como país Chile y es de tipo Lago. Con esto la variable 
+    b  ?lakes
+    |  obtendrá los valores requeridos.
+  .row
+    .col-md-12
+      img.c-img-full(src="/images/t5.gif")
+
+  h4.mt-2 Comenzando con algo conocido
+  p.just
+    |  Primero debemos buscar algo que conozcamos que satisfaga la consulta o parte de ella, en este caso sabemos que en
+    |  Chile hay un lago que se llama 
+    i  'Todos los santos',
+    |  así que lo buscamos:
+  .row
+    .col-md-2
+    .col-md-8
+      img.c-img-full(src="/images/t6.gif")
+  p.just
+    |  Ahora hacemos uso de la herramienta de descripción (
+    i.fa.fa-list
+    |  click izquierdo sobre el recurso), buscamos las propiedades y
+    |  los valores que necesitamos y los arrastramos y soltamos en el creador de consultas:
+  .row
+    .col-md-1
+    .col-md-10
+      img.c-img-full(src="/images/t7.gif")
+  p.just
+    |  Por último nos basta con transformar 
+    b  Todos los Santos Lake
+    |  en una variable llamada 
+    b  ?lakes
+    |   que tendrá los resultados de la consulta.
+  .row
+    .col-md-1
+    .col-md-10
+      img.c-img-full(src="/images/t8.gif")
