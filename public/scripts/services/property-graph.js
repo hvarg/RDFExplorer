@@ -268,7 +268,10 @@ function propertyGraphService (req, log, settings) {
     var q = new Query(this);
     if (opts && opts.limit) q.limit = opts.limit;
     if (opts && opts.offset) q.offset = opts.offset;
-    return q;
+    if (q.triples.length == 0)
+      return null;
+    else
+      return q;
   }
 
   RDFResource.prototype.hasResults = function () {
@@ -396,13 +399,15 @@ function propertyGraphService (req, log, settings) {
 
   Node.prototype.loadPreview = function (opts) {
     var q = this.createQuery(opts);
-    if (opts && opts.varFilter) {
-      var l = q.addLabel(this);
-      l.variable.addFilter('regex', {regex: opts.varFilter});
-    } else {
-      q.addOptLabel(this);
+    if (q) {
+      if (opts && opts.varFilter) {
+        var l = q.addLabel(this);
+        l.variable.addFilter('regex', {regex: opts.varFilter});
+      } else {
+        q.addOptLabel(this);
+      }
+      q.retrieve();
     }
-    q.retrieve();
   }
 
   /******* Property TDA ******************************************************/
@@ -660,11 +665,7 @@ function propertyGraphService (req, log, settings) {
 
   /***** Query creator stuff *****/
   function Query (resource) {
-    if (resource.isVariable()) 
-      this.select = [resource];
-    else
-      throw new Error ('Selected resource is not variable', resource);
-
+    this.select = [resource];
     this.update(resource);
     this.optionals = [];
   }
@@ -848,7 +849,6 @@ function propertyGraphService (req, log, settings) {
     var self = this,
         q = self.get(),
         n = self.select.filter(r => {return (r.variable.id != -1 && r.variable.query != q); }).length;
-    console.log(q);
     if (q && n > 0) {
       req.execQuery(q, data => {
         if (data.results.bindings.length > 0) {
