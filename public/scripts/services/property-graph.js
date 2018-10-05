@@ -712,7 +712,7 @@ function propertyGraphService (req, log, settings) {
             .forEach(e => { triples.addEdge(e); });
         }
       } else if (cur instanceof Literal) {
-        triples.add(literal.parent.parentNode, literal.parent, literal);
+        triples.add(cur.parent.parentNode, cur.parent, cur);
       }
     }
     this.dep = dep;
