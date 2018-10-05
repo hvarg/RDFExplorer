@@ -70,13 +70,13 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
 
     //-------------------- FILTERS --------------------//
     .custom-container-title.no-select.mt-2.clickable(
-        ng-class="{'active': ctrl.show.filters}",
-        ng-click="ctrl.show.filters = !ctrl.show.filters"
+        ng-class="{'active': ctrl.showFilters}",
+        ng-click="ctrl.showFilters = !ctrl.showFilters"
         ) Filters
       span.ml-1(ng-if="ctrl.variable.filters.length > 0") [{{ctrl.variable.filters.length}}]
-      i.pull-right.fa(ng-class="ctrl.show.filters ? 'fa-angle-up' : 'fa-angle-down';")
+      i.pull-right.fa(ng-class="ctrl.showFilters ? 'fa-angle-up' : 'fa-angle-down';")
 
-    .custom-container-content(ng-class="{'active': ctrl.show.filters}")
+    .custom-container-content(ng-class="{'active': ctrl.showFilters}")
       .form-row.mt-1(style="margin:0;")
         .input-group.input-group-sm
           select.custom-select(ng-model="ctrl.newFilterType")

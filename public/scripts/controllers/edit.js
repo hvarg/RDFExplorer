@@ -20,9 +20,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
   vm.added  = 0;
   vm.newFilterType = "";
   vm.newFilterData = {};
-
-  vm.varSearch = "";
-  vm.show  = {filters: false, results: true, const: true}
+  vm.showFilters = true;
 
   vm.mkVariable = mkVariable;
   vm.mkConst    = mkConst;
