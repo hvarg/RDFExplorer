@@ -96,8 +96,21 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
       vm.lastSearch = input;
       vm.searchWait = true;
       vm.noResults  = false; 
-      //$http.get('https://en.wikipedia.org/w/api.php?action=wbsearchentities&format=json&language=en&search='+input).then(
-      $http.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&limit=20&uselang=en&type=item&continue=0&search='+input).then(
+      //$http.get('https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&limit=20&uselang=en&type=item&continue=0&search='+input).then(
+      $http({
+        method: 'GET',
+        url: 'https://www.wikidata.org/w/api.php',
+        params: {
+          action: 'wbsearchentities',
+          format: 'json',
+          language: 'en',
+          uselang: 'en',
+          type: 'item',
+          continue: '0',
+          limit: '20',
+          search: input,
+        }
+      }).then(
         function onSuccess (response) {
           onSearch(response.data.search);
         },
