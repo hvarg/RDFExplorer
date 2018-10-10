@@ -494,8 +494,12 @@ function propertyGraphService (req, log, settings) {
     var q = this.createQuery(opts),
         dc = new RDFResource(true),
         p = new RDFResource(true);
-    dc.mkConst();
-    dc.addUri('http://wikiba.se/ontology#directClaim');
+    /*dc.mkConst();
+    dc.addUri('http://wikiba.se/ontology#directClaim');*/
+    dc.variable.alias = 'wikibaseP';
+    dc.variable.filters.push({apply: function () {
+      return 'FILTER(regex(str(?wikibaseP), "http://wikiba.se/ontology#" ) )\n';
+    }});
     p.variable.alias = this.variable.getName();
     var t1 = [p, dc, this],
         t2 = q.createTripleLabel(p);
@@ -850,6 +854,7 @@ function propertyGraphService (req, log, settings) {
         q = self.get(),
         n = self.select.filter(r => {return (r.variable.id != -1 && r.variable.query != q); }).length;
     if (q && n > 0) {
+      console.log(q);
       req.execQuery(q, data => {
         if (data.results.bindings.length > 0) {
           self.select.forEach(r => {
