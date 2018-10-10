@@ -109,6 +109,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           continue: '0',
           limit: '20',
           search: input,
+          origin: '*',
         }
       }).then(
         function onSuccess (response) {
