@@ -181,7 +181,7 @@ function propertyGraphService (req, log, settings) {
 
   RDFResource.prototype.onClick = function () {
     this.select();
-    if (!this.isVariable() && !this.isLiteral() && this.hasUris()) this.describe();
+    if (!this.isVariable() && this.hasUris() && this instanceof Node) this.describe();
     else this.edit();
   };
 
@@ -735,9 +735,13 @@ function propertyGraphService (req, log, settings) {
         if (r.isVariable()) return r.variable;
         else {
           if (r.uris.length == 1) {
-            var pre = r.getUri().toPrefix();
-            if (pre[1]) prefixes.add(pre[1]);
-            return pre[0];
+            if (r.parent) {
+              return '"' + r.getUri() + '"';
+            } else {
+              var pre = r.getUri().toPrefix();
+              if (pre[1]) prefixes.add(pre[1]);
+              return pre[0];
+            }
           } else {
             values.add(r);
             return r.variable;
@@ -786,11 +790,15 @@ function propertyGraphService (req, log, settings) {
     });
 
     Array.from(values).forEach(v => {
-      self.q += '  VALUES ' + v.variable + ' {' + v.uris.map(u => {
-        var pre = u.toPrefix();
-        if (pre[1]) prefixes.add(pre[1]);
-        return pre[0];
-      }).join(' ') + '}\n';
+      self.q += '  VALUES ' + v.variable + ' {';
+      var mapped = v.parent ?
+        v.uris.map(u => { return '"' + u + '"'}) :
+        v.uris.map(u => {
+          var pre = u.toPrefix();
+          if (pre[1]) prefixes.add(pre[1]);
+          return pre[0];
+        });
+      self.q += mapped.join(' ') + '}\n';
     });
 
     self.q += '}'
@@ -854,7 +862,6 @@ function propertyGraphService (req, log, settings) {
         q = self.get(),
         n = self.select.filter(r => {return (r.variable.id != -1 && r.variable.query != q); }).length;
     if (q && n > 0) {
-      console.log(q);
       req.execQuery(q, data => {
         if (data.results.bindings.length > 0) {
           self.select.forEach(r => {
