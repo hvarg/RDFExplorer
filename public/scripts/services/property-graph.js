@@ -34,6 +34,7 @@ function propertyGraphService (req, log, settings) {
     toQuery: toQuery,
     connect: connect,
     refresh: refresh,
+    reset: reset,
     getSelected: getSelected,
     // Defined elsewhere:
     describe: null,
@@ -582,6 +583,20 @@ function propertyGraphService (req, log, settings) {
 
   function refresh () {
     propertyGraph.visual.updateGraph();
+  }
+
+  function reset () {
+    propertyGraph.selected = null;
+    propertyGraph.nodes = [];
+    propertyGraph.edges = [];
+    lastNodeId = 0;
+    lastPropId = 0;
+    lastVarId = 0;
+    uriToNode = {};
+    usedAlias = [];
+    propertyGraph.visual.nodes = propertyGraph.nodes;
+    propertyGraph.visual.edges = propertyGraph.edges;
+    refresh();
   }
 
   function getSelected () {
