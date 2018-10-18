@@ -23,6 +23,7 @@ div#search-container
 
     .fakeRect(
         draggable="true",
+        id="{{ 'result' + $index }}",
         style="border-color: #1f77b4;",
         ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().value.uri, '')",
         ng-repeat="(key, value) in main.searchResults track by $index ") 

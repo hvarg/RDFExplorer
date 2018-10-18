@@ -1,9 +1,9 @@
 angular.module('rdfvis.controllers').controller('MainCtrl', MainCtrl);
 
 MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', '$timeout', '$http',
-'logService', '$uibModal'];
+'logService', '$uibModal', '$animate'];
 
-function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibModal) {
+function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibModal, $animate) {
   var vm = this;
   /* General stuff */
   vm.tool = 'none';
@@ -22,6 +22,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
   vm.searchWait = false;
   vm.noResults  = false;
   vm.lastSearch = '';
+  vm.tdata = {}; //interactive tutorial data.
 
   /* functions */
   vm.updateSVG = pGraph.refresh;
@@ -142,23 +143,39 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
   }
 
   function tutorial () {
+    vm.tool = 'none';
     log.add('Tutorial started')
+    vm.searchActive = false;
+
     var intro = introJs();
     intro.setOptions({
       steps: [
-        { intro: 'Hello, this tutorial will guide you in the exploration of a RDF dataset and the creation of SPARQL queries.'},
-        { element: '#step1', intro: 'You can start searching <b>resources</b> here', position: 'bottom-right-aligned'},
-        { element: '#search-container', intro: 'As example, let us search <i>Euler</i>...', position: 'top-right-aligned'},
-        { element: '#search-results-panel', intro: 'Search results are displayed here, blue bordered elements are resources that match our search', position: 'right-aligned'},
-        //{ element: '#search-query', intro: 'The first element represents the search query itself, green borders denotes that a resource is <b>variable</b>', position: 'right-aligned'},
-        { element: '#search-results-panel', intro: 'Bordered elements can be dragged...', position: 'right-aligned'},
-        { element: '#d3vqb', intro: '... and dropped here, this space is the <i>query creator</i>.', position: 'right-aligned'},
-        { element: '#d3vqb', intro: 'Using <i> shift+click </i> you can create new resources. Pressing <i>shift</i> and dragging from one resource to another will create a property and an edge', position: 'right-aligned'},
-        { element: '#right-buttons', intro: 'More tools are displayed here, from right to left: help, configuration, describe, edit and query panel.', position: 'left-aligned'},
-        { element: '#right-buttons', intro: 'Those tools will help you to edit variables (add filters, options, etc), and to create your query by dragging and droping properties or relations from the partial results.', position: 'left-aligned'},
+        { intro: 'This tutorial will guide you in the use of this interface.'},
+        { element: '#step1',
+          intro: 'You can start searching <b>resources</b> here',
+          position: 'bottom-right-aligned'},
+        { element: '#search-container', 
+          intro: 'As example, let us search <i>Euler</i>...',
+          position: 'top-right-aligned'},
+        { element: '#search-results-panel',
+          intro: 'The search results are displayed here, each of these elements can be dragged...',
+          position: 'bottom-right-aligned'},
+        { element: '#vqb-main',
+          intro: '... and dropped here, this space is the <i>query creator</i>.',
+          position: 'right-aligned'},
+        { element: '#vqb-main',
+          intro: 'Using <i> shift+click </i> you can create new resources. Pressing <i>shift</i> and dragging from one resource to another will create a property and an edge',
+          position: 'right-aligned'},
+        { element: '#right-buttons',
+          intro: 'More tools are displayed here, from right to left: help, configuration, describe, edit and query panel.',
+          position: 'left-aligned'},
+        { element: '#right-buttons',
+          intro: 'Those tools will help you to edit variables (add filters, options, etc), and to create your query by dragging and droping properties or relations from the partial results.',
+          position: 'left-aligned'},
         { intro: 'Thats all!'},
       ]
     });
+
     intro.start().onbeforechange(function () {
       switch (intro._currentStep) {
         case 2:
@@ -167,6 +184,28 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           $timeout(s=>{vm.searchInput += 'l'}, 900);
           $timeout(s=>{vm.searchInput += 'e'}, 1200);
           $timeout(s=>{vm.searchInput += 'r'; search();}, 1500);
+          break;
+        case 4:
+          vm.searchActive = true;
+          var base = angular.element( document.querySelector( '#result0' ) );
+          var pos = base.offset();
+          vm.tdata.elem = base.clone().attr('id', 'example-move');
+          vm.tdata.elem.css('left', pos.left);
+          vm.tdata.elem.css('top', pos.top);
+          vm.tdata.elem.prependTo('#vqb-main');
+          vm.tdata.elem.css('-webkit-animation', 'simulate-drag 2s 1');
+          $timeout(function () {
+            vm.tdata.elem.remove();
+            var uri = vm.searchResults[0].uri;
+            vm.tdata.resource = pGraph.getNodeByUri(uri);
+            if (!vm.tdata.resource) {
+              vm.tdata.resource = pGraph.addNode();
+              vm.tdata.resource.addUri(uri);
+              vm.tdata.resource.mkConst();
+            }
+            vm.tdata.resource.setPosition(pos.left+300+110, pos.top+15);
+            pGraph.refresh();
+          }, 2000);
           break;
       }
     });

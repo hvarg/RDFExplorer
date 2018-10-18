@@ -5,7 +5,7 @@ block content
   include tools
 
   h3#mid-help(ng-if="main.graph.nodes.length == 0", ng-click="main.modalHelp()") Need help? Click here
-  visual-query-builder(ng-click="main.searchDeactivate()")
+  visual-query-builder#vqb-main(ng-click="main.searchDeactivate()")
   div(style="position: fixed; bottom: 0; color: #b3b3b3; z-index: -10;").mb-3.ml-3.no-click.no-select
     i &lt;shift + drag&gt;
     span :  new edge
