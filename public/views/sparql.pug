@@ -2,7 +2,7 @@ div(ng-show="main.tool == 'sparql'", ng-controller="SparqlCtrl as ctrl")
   h3(style="text-align: center;", ng-click="ctrl.updateQuery()") Sparql queries
   hr(style="margin: 3px 0px;")
 
-  h3(ng-if="ctrl.queries.length==0") Current configuration generates no queries!
+  h4(ng-if="ctrl.queries.length==0") Current configuration generates no queries!
 
   div(ng-repeat="(key, query) in ctrl.queries", ng-init="query.show = true;")
     div.mt-2.clickable.no-select(ng-click="query.show = !query.show", style="font-size: 1.3rem;")

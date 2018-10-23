@@ -8,7 +8,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
   var cfg = settings.describe;
   var cache = [];
   vm.selected = null;
-  vm.show = {datatype: true, objects: true, external: false};
+  vm.show = {datatype: false, objects: true, external: false};
 
   pGraph.describe = describeObj;
   vm.getNext = describeNext;

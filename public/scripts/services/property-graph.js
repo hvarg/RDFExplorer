@@ -527,7 +527,9 @@ function propertyGraphService (req, log, settings) {
   Literal.prototype = Object.create(RDFResource.prototype);
   Literal.prototype.constructor = Literal;
   Literal.prototype.getColor = function () {
-    return propertyGraph.colors.pLit;
+    if (this.isVariable()) return propertyGraph.colors.rVar;
+    else return propertyGraph.colors.rConst;
+    //return propertyGraph.colors.pLit;
   }
 
   Literal.prototype.getOffsetY = function () { //FIXME: this is executed a lot of times;

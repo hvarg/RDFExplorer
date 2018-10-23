@@ -46,7 +46,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
               | [{{prop['ac'+$index] ? 'less': 'more'}}]
 
   // Object properties (dragable rectangles)
-  h5.mb-2.mt-3.clickable.no-select(ng-click="ctrl.show.objects = !ctrl.show.objects", ng-if="ctrl.selected.objects.length > 0")
+  h5#objptitle.mb-2.mt-3.clickable.no-select(ng-click="ctrl.show.objects = !ctrl.show.objects", ng-if="ctrl.selected.objects.length > 0")
     i.fa.mr-2(ng-class="ctrl.show.objects ? 'fa-eye' : 'fa-eye-slash'")
     | Object properties
     span.pull-right [{{ ctrl.selected.objects.length }}]
@@ -55,6 +55,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
     .propRect(ng-repeat="prop in ctrl.selected.objects track by $index", ng-class="{'active': prop.active}", style="border-color: #ff7f0e;")
       .head(ng-click="prop.active = !prop.active")
         .text-truncate(style="display:inline-block; width:100%;",
+            id="{{ 'propId' + $index }}",
             ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri)",
             draggable="true", title="{{prop.uri}}") {{ prop.uri.getLabel() }}
         .info

@@ -155,7 +155,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           intro: 'You can start searching <b>resources</b> here',
           position: 'bottom-right-aligned'},
         { element: '#search-container', 
-          intro: 'As example, let us search <i>Euler</i>...',
+          intro: 'As example, let us search <i>Einstein</i>...',
           position: 'top-right-aligned'},
         { element: '#search-results-panel',
           intro: 'The search results are displayed here, each of these elements can be dragged...',
@@ -164,27 +164,53 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           intro: '... and dropped here, this space is the <i>query creator</i>.',
           position: 'right-aligned'},
         { element: '#vqb-main',
-          intro: 'Using <i> shift+click </i> you can create new resources. Pressing <i>shift</i> and dragging from one resource to another will create a property and an edge',
+          intro: 'Clicking in a resource here will open the explorer tool (<i class="fa fa-list"/>)',
           position: 'right-aligned'},
-        { element: '#right-buttons',
-          intro: 'More tools are displayed here, from right to left: help, configuration, describe, edit and query panel.',
+        { element: '#right-panel',
+          intro: 'Here you can explore the properties of this resource, bordered elements can be ' +
+                 'dragged and droped into the <i>query creator</i>.',
+          position: 'right-aligned'},
+        { element: '#right-panel',
+          intro: 'As an example let us drag some of these properties...',
+          position: 'right-aligned'},
+        { element: '#vqb-main',
+          intro: '... into the <i>query creator</i>. When you drop a property you create a variable that will ' +
+                 'collect the desired information. Variables always begin with a <b>?</b>.',
+          position: 'right-aligned'},
+        { element: '#vqb-main',
+          intro: 'Clicking a variable will open the edit tool (<i class="fa fa-pencil"/>).',
+          position: 'right-aligned'},
+        { element: '#right-panel',
+          intro: 'Here you can change if this element is a variable or a constrain (resource). ' + 
+                 'Variables will display posible solutions so you can check what are you collecting.',
           position: 'left-aligned'},
         { element: '#right-buttons',
-          intro: 'Those tools will help you to edit variables (add filters, options, etc), and to create your query by dragging and droping properties or relations from the partial results.',
+          intro: 'More tools are displayed here. You can switch tools at any time. ' +
+                 'Lets us check the <i>query</i> tool (<i class="fa fa-code"/>)',
           position: 'left-aligned'},
-        { intro: 'Thats all!'},
+        { element: '#right-panel',
+          intro: 'Here you can see the SPARQL equivalent of the query you\'ve drawn in the <i>query creator</i>. ' +
+                 'Executing this query will give you all required results.',
+          position: 'left-aligned'},
+        { intro: 'For more options use the secondary click on the elements of the <i>query creator</i>'},
+        { intro: 'Thats all! If you need more help click the tool help (<i class="fa fa-info"/>).'},
       ]
     });
 
     intro.start().onbeforechange(function () {
+      console.log('b', intro._currentStep);
       switch (intro._currentStep) {
         case 2:
-          $timeout(s=>{vm.searchInput  = 'E'}, 300);
-          $timeout(s=>{vm.searchInput += 'u'}, 600);
-          $timeout(s=>{vm.searchInput += 'l'}, 900);
-          $timeout(s=>{vm.searchInput += 'e'}, 1200);
-          $timeout(s=>{vm.searchInput += 'r'; search();}, 1500);
+          $timeout(s=>{vm.searchInput  = 'E'}, 200);
+          $timeout(s=>{vm.searchInput += 'i'}, 300);
+          $timeout(s=>{vm.searchInput += 'n'}, 400);
+          $timeout(s=>{vm.searchInput += 's'}, 600);
+          $timeout(s=>{vm.searchInput += 't'}, 800);
+          $timeout(s=>{vm.searchInput += 'e'}, 900);
+          $timeout(s=>{vm.searchInput += 'i'}, 1000);
+          $timeout(s=>{vm.searchInput += 'n'; search();}, 1100);
           break;
+
         case 4:
           vm.searchActive = true;
           var base = angular.element( document.querySelector( '#result0' ) );
@@ -193,7 +219,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           vm.tdata.elem.css('left', pos.left);
           vm.tdata.elem.css('top', pos.top);
           vm.tdata.elem.prependTo('#vqb-main');
-          vm.tdata.elem.css('-webkit-animation', 'simulate-drag 2s 1');
+          vm.tdata.elem.css('-webkit-animation', 'simulate-drag 1.5s 1');
           $timeout(function () {
             vm.tdata.elem.remove();
             var uri = vm.searchResults[0].uri;
@@ -205,8 +231,61 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
             }
             vm.tdata.resource.setPosition(pos.left+300+110, pos.top+15);
             pGraph.refresh();
-          }, 2000);
+          }, 1500);
           break;
+
+        case 5:
+          vm.searchActive = false;
+          if (vm.tdata.resource) {
+            vm.tdata.resource.onClick();
+            pGraph.refresh();
+          }
+          break;
+
+        case 7:
+          document.getElementById('objptitle').scrollIntoView({behavior: 'smooth'});
+          break;
+
+        case 8:
+          document.getElementById('objptitle').scrollIntoView({behavior: 'smooth'});
+          var base = angular.element( document.querySelector( '#propId0' ) );
+          var pos = base.offset();
+          vm.tdata.elem2 = base.clone().attr('id', 'example-move')
+          vm.tdata.elem2.addClass('propRect');
+          vm.tdata.elem2.css('width', 200);
+          vm.tdata.elem2.css('border-color', 'rgb(255, 127, 14)')
+          vm.tdata.elem2.css('left', pos.left);
+          vm.tdata.elem2.css('top', pos.top);
+          vm.tdata.elem2.prependTo('#vqb-main');
+          vm.tdata.elem2.css('-webkit-animation', 'simulate-drag2 1.5s 1');
+          $timeout(function () {
+            var prop = vm.tdata.elem2[0].getAttribute("title");
+            vm.tdata.elem2.remove();
+            vm.tdata.resource2 = pGraph.addNode();
+            vm.tdata.resource2.setPosition(700, 150);
+            var p = vm.tdata.resource.getPropByUri(prop);
+            if (!p) {
+              p = vm.tdata.resource.newProp();
+              p.addUri(prop);
+              p.mkConst();
+            }
+            pGraph.addEdge(p, vm.tdata.resource2);
+            pGraph.refresh();
+          }, 1500);
+          break;
+
+        case 9:
+          if (vm.tdata.resource2) {
+            vm.tdata.resource2.onClick();
+            pGraph.refresh();
+          }
+          break;
+
+        case 12:
+          toolToggle('sparql')
+          $scope.$apply();
+          break;
+
       }
     });
   }

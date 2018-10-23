@@ -6,6 +6,16 @@ body, html {
   /*min-width: 750px;*/
 }
 
+#example-move {
+  position: relative;
+  z-index: 900;
+}
+@-webkit-keyframes  simulate-drag { to {left: 300px;} }
+@keyframes          simulate-drag { to {left: 300px;} }
+@-webkit-keyframes  simulate-drag2 { to {left: 650px; top: 150px} }
+@keyframes          simulate-drag2 { to {left: 650px; top: 150px} }
+
+
 visual-query-builder {
   position:absolute;
   left:0;
@@ -14,15 +24,20 @@ visual-query-builder {
 }
 
 #mid-help {
-  cursor: pointer;
   position: fixed;
+  font-size: 1.5rem;
   top: 45%;
-  left: 42%;
+  left: 40%;
   z-index: 999;
   text-align: center;
 }
 
-#mid-help:hover {
+#mid-help > span {
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+#mid-help > span:hover {
   color: steelblue;
 }
 
@@ -143,6 +158,8 @@ visual-query-builder {
   height: calc(100% - (40px));
   transition: all linear 0.5s;
   background-color: rgba(255, 255, 255, 0.75);
+  pointer-events: auto;
+  overflow-x: show;
 }
 
 #search-results-panel.ng-hide {
