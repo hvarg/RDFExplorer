@@ -3,7 +3,7 @@ requestService.$inject = ['settingsService', '$http', '$timeout'];
 
 function requestService (settings, $http, $timeout) {
   var label = {};   //TODO this to sparql-helpers
-  var delay = 50;   //delay between concurrent request
+  var delay = 100;   //delay between concurrent request
   var running = 0;  //number of concurrent request
 
   /* Create get URL form */
@@ -54,35 +54,22 @@ function requestService (settings, $http, $timeout) {
   }
 
   function execQuery (query, callback, cErr) {
-    var url = settings.endpoint.url + '?format=json&' + toForm({query: query});
     var pro = $timeout(
       function () {
-        return $http.get(url).then(
+        return $http({
+          method: 'POST',
+          url: settings.endpoint.url,
+          params: {
+            format: 'json',
+            query: query,
+            origin: '*',
+          }
+        }).then(
           r => { return onSuccess(r, callback)},
           r => { return onError(r, cErr);});
       }, delay*running);
     running += 1;
     return pro;
-    /*return $http({
-        method: 'post',
-        url: settings.endpoint.url,
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        transformRequest: toForm, 
-        data: { query: query, format: "application/sparql-results+json" }
-    }).then(
-      function onSuccess (response) {
-        var tmp;
-        for (var i = 0; i < response.data.results.bindings.length; i++) {
-          tmp = response.data.results.bindings[i];
-          if (tmp.label && tmp.uri) label[tmp.uri.value] = tmp.label.value;
-        }
-        return callback ? callback(response.data) : response.data;
-      },
-      function onError   (response) {
-        console.log('Error ' + response.status + ':' + response.data);
-        return cErr ? cErr(response) : response;
-      }
-    );*/
   }
 
   function getLabel (uri) {
@@ -94,6 +81,7 @@ function requestService (settings, $http, $timeout) {
   }
 
   String.prototype.getLabel = function () {
+    //FIXME result cant have '/'
     if (label[this]) return label[this];
     for (var i in settings.prefixes) {
       if (this.includes(settings.prefixes[i].uri)) {
