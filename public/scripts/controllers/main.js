@@ -198,7 +198,6 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
     });
 
     intro.start().onbeforechange(function () {
-      console.log('b', intro._currentStep);
       switch (intro._currentStep) {
         case 2:
           $timeout(s=>{vm.searchInput  = 'E'}, 200);
