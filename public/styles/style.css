@@ -333,6 +333,7 @@ visual-query-builder {
 
 .propRect > .head > .info {
   position: absolute;
+  top: 2px;
   right: 0px;
   display:inline-block;
   width: 50%;
