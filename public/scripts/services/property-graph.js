@@ -526,7 +526,6 @@ function propertyGraphService (req, log, settings) {
 
     q.select.push(t2[2]);
     p.variable.alias = this.variable.getName() + 'tmp';
-    console.log(q);
     q.retrieve();
   }
 

@@ -56,9 +56,10 @@ function requestService (settings, $http, $timeout) {
   function execQuery (query, callback, cErr) {
     var pro = $timeout(
       function () {
+        //console.log(query);
         return $http({
           method: 'POST',
-          url: settings.endpoint.url,
+          url: settings.endpoint.url + '?origin=*',
           params: {
             format: 'json',
             query: query,
