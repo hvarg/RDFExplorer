@@ -13,7 +13,7 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   hr(style="margin: 3px 0px;")
 
   // TODO: Carousel or something to see more images.
-  img.c-img(ng-if="ctrl.selected.image.length>0", src="{{ctrl.selected.results[ctrl.selected.image[0].uri][0]}}")
+  img.c-img(ng-if="ctrl.selected.image.length>0", ng-src="{{ctrl.selected.results[ctrl.selected.image[0].uri][0]}}")
 
   // Text properties (long text)
   div(ng-repeat="prop in ctrl.selected.text track by $index", ng-init="prop.active = {}")

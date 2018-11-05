@@ -4,18 +4,18 @@ angular.module('survey', [
   'ui.bootstrap',
 ]);
 
-// angular-loading-bar spinner off
+/* angular-loading-bar spinner off
 angular.module('survey').config([
   'cfpLoadingBarProvider', cfpLoadingBarProvider => {
     cfpLoadingBarProvider.includeSpinner = false;
   }
-]);
+]);*/
 
 angular.module('survey').controller('MainCtrl', MainCtrl);
 
-MainCtrl.$inject = [];
+MainCtrl.$inject = ['$http'];
 
-function MainCtrl () {
+function MainCtrl ($http) {
   var vm = this;
 
   vm.data = {
@@ -79,6 +79,7 @@ function MainCtrl () {
 
   vm.next = next;
   vm.download = download;
+  vm.upload = upload;
 
   function next () {
     switch (vm.step) {
@@ -91,22 +92,24 @@ function MainCtrl () {
         vm.step += 1;
         break;
       case 1:
+        document.getElementById('top').scrollIntoView({behavior: 'smooth'});
         vm.step += 1;
         vm.clock = Date.now();
         break;
       case 2:
-        if (vm.taskStep < 9) {
-          vm.data.tasks[vm.taskStep].on = vm.url[vm.urlStep];
-          vm.data.tasks[vm.taskStep].time = (Date.now() - vm.clock) / 1000;
-          vm.clock = Date.now();
-          vm.taskStep += 1;
-          vm.urlStep = (vm.urlStep + 1) % 2;
-        } else {
+        document.getElementById('top').scrollIntoView({behavior: 'smooth'});
+        vm.data.tasks[vm.taskStep].on = vm.url[vm.urlStep];
+        vm.data.tasks[vm.taskStep].time = (Date.now() - vm.clock) / 1000;
+        vm.clock = Date.now();
+        vm.taskStep += 1;
+        vm.urlStep = (vm.urlStep + 1) % 2;
+        if (vm.taskStep == 10) {
           vm.step += 1;
           vm.urlStep = 0;
         }
         break;
       case 3:
+        document.getElementById('top').scrollIntoView({behavior: 'smooth'});
         if (vm.urlStep == 0) {
           vm.data.tlx[vm.urlStep].on = vm.url[vm.urlStep];
           vm.urlStep = 1;
@@ -117,6 +120,7 @@ function MainCtrl () {
         }
         break;
       case 4:
+        document.getElementById('top').scrollIntoView({behavior: 'smooth'});
         if (vm.urlStep == 0) {
           vm.data.likert[vm.urlStep].on = vm.url[vm.urlStep];
           vm.urlStep = 1;
@@ -124,6 +128,7 @@ function MainCtrl () {
           vm.data.likert[vm.urlStep].on = vm.url[vm.urlStep];
           vm.urlStep = 0;
           vm.step += 1;
+          upload();
         }
         break;
     }
@@ -138,5 +143,14 @@ function MainCtrl () {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   }
-
+  
+  function upload () {
+    return $http({
+      method: 'POST',
+      url: '/upload-survey',
+      data: vm.data
+    }).then(
+      r => { console.log(r); },
+      r => { console.log(r); });
+  }
 }
