@@ -150,9 +150,9 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
     var intro = introJs();
     intro.setOptions({
       steps: [
-        { intro: 'This tutorial will guide you in the use of this interface.'},
+        { intro: 'Hello! This tutorial will guide you in the usage of this interface.'},
         { element: '#step1',
-          intro: 'You can start searching <b>resources</b> here',
+          intro: 'You can start searching <b style="color: #1f77b4;">resources</b> here',
           position: 'bottom-right-aligned'},
         { element: '#search-container', 
           intro: 'As example, let us search <i>Einstein</i>...',
@@ -164,36 +164,46 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           intro: '... and dropped here, this space is the <i>query creator</i>.',
           position: 'right-aligned'},
         { element: '#vqb-main',
-          intro: 'Clicking in a resource here will open the explorer tool (<i class="fa fa-list"/>)',
+          intro: 'Clicking in a <b style="color: #1f77b4;">resource</b> here will open the ' +
+                 'explorer tool (<i class="fa fa-list"></i>)',
           position: 'right-aligned'},
         { element: '#right-panel',
-          intro: 'Here you can explore the properties of this resource, bordered elements can be ' +
-                 'dragged and droped into the <i>query creator</i>.',
+          intro: 'Here you can explore the properties of this <b style="color: #1f77b4;">resource</b>, '+
+                 'bordered elements can be dragged and droped into the <i>query creator</i>.',
           position: 'right-aligned'},
         { element: '#right-panel',
           intro: 'As an example let us drag some of these properties...',
           position: 'right-aligned'},
         { element: '#vqb-main',
-          intro: '... into the <i>query creator</i>. When you drop a property you create a variable that will ' +
-                 'collect the desired information. Variables always begin with a <b>?</b>.',
+          intro: '... into the <i>query creator</i>. When you drop a <b style="color: #ff7f0e;">property</b> ' +
+                 'a <b style="color: #2ca02c;">variable</b> will be created that will collect the desired ' +
+                 'information. <b style="color: #2ca02c;">Variables</b> always begin with a <b>?</b>.',
           position: 'right-aligned'},
         { element: '#vqb-main',
-          intro: 'Clicking a variable will open the edit tool (<i class="fa fa-pencil"/>).',
+          intro: 'Clicking a <b style="color: #2ca02c;">variable</b> will open the edit tool (<i class="fa fa-pencil"></i>).',
           position: 'right-aligned'},
         { element: '#right-panel',
-          intro: 'Here you can change if this element is a variable or a constrain (resource). ' + 
-                 'Variables will display posible solutions so you can check what are you collecting.',
+          intro: 'Here you can change if this element is a <b style="color: #2ca02c;">variable</b> or a ' +
+                 'constraint (<b style="color: #1f77b4;">resource</b>). ' + 
+                 '<b style="color: #2ca02c;">Variables</b> will display posible solutions so you can check what are you collecting.',
+          position: 'left-aligned'},
+        { element: '#right-panel',
+          intro: 'Next to each possible result there is a <i class="fa fa-plus"></i> symbol, clicking it ' + 
+                 'will add that value as a constraint but will not set the <b style="color: #1f77b4;">resource</b> as one. ' +
+                 'To set this <b style="color: #1f77b4;">resource</b> as constraint (or as ' +
+                 '<b style="color: #2ca02c;">variable</b>) you should click on the tabs above.',
           position: 'left-aligned'},
         { element: '#right-buttons',
           intro: 'More tools are displayed here. You can switch tools at any time. ' +
-                 'Lets us check the <i>query</i> tool (<i class="fa fa-code"/>)',
+                 'Lets us check the <i>query</i> tool (<i class="fa fa-code"></i>)',
           position: 'left-aligned'},
         { element: '#right-panel',
           intro: 'Here you can see the SPARQL equivalent of the query you\'ve drawn in the <i>query creator</i>. ' +
                  'Executing this query will give you all required results.',
           position: 'left-aligned'},
-        { intro: 'For more options use the secondary click on the elements of the <i>query creator</i>'},
-        { intro: 'Thats all! If you need more help click the tool help (<i class="fa fa-info"/>).'},
+        { intro: 'Thats all! For more options right-click on the elements of the <i>query creator</i>.' +
+                 'If you need more help click the help tool (<i class="fa fa-info"></i>) on the top-right border.'
+        },
       ]
     });
 
@@ -280,7 +290,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           }
           break;
 
-        case 12:
+        case 13:
           toolToggle('sparql')
           $scope.$apply();
           break;

@@ -65,7 +65,7 @@ div(style="padding: 10px 20px;")
     |  (ingles), la interfaz permite llegar a la misma consula de multiples formas, explicaremos en particular dos
     |  patrones: comenzar con una variable o comenzar con algo conocido.
 
-  h4 Comenzando con una variable
+  h4 Forma 1: Comenzando con una variable
   p.just
     |  Lo primero es crear una nueva variable (<i>shift + click</i>) en la cual obtenedremos lo que buscamos a la que
     |  llamaremos 
@@ -97,7 +97,7 @@ div(style="padding: 10px 20px;")
     |  Las propiedades recien creadas son por defecto variables, debemos elegir entre los valores posibles la relación
     |  que queremos, para ello usamos la herramienta de edición (
     i.fa.fa-pencil
-    |  click izquierdo):
+    |  click izquierdo en las propiedades recien creadas):
   .row
     .col-md-12
       img.c-img-full(src="/images/t4.gif")
@@ -112,14 +112,14 @@ div(style="padding: 10px 20px;")
     b  instance of
     |  de esta manera señalamos que 
     b  ?lakes
-    |  tiene como país Chile y es de tipo Lago. Con esto la variable 
+    |  tiene como país Chile y es una instancia de Lago. Con esto la variable 
     b  ?lakes
     |  obtendrá los valores requeridos.
   .row
     .col-md-12
       img.c-img-full(src="/images/t5.gif")
 
-  h4.mt-2 Comenzando con algo conocido
+  h4.mt-2 Forma 2: Comenzando con algo conocido
   p.just
     |  Primero debemos buscar algo que conozcamos que satisfaga la consulta o parte de ella, en este caso sabemos que en
     |  Chile hay un lago que se llama 
@@ -133,7 +133,7 @@ div(style="padding: 10px 20px;")
     |  Ahora hacemos uso de la herramienta de descripción (
     i.fa.fa-list
     |  click izquierdo sobre el recurso), buscamos las propiedades y
-    |  los valores que necesitamos y los arrastramos y soltamos en el creador de consultas:
+    |  los valores que necesitamos para arrastrarlos y soltarlos en el creador de consultas:
   .row
     .col-md-1
     .col-md-10
