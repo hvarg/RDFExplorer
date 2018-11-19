@@ -47,7 +47,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
     selected.getUri = function () { return realUri };
     vm.selected = selected;
 
-    request.execQuery(query.getProperties(uri), data => {
+    request.execQuery(query.getProperties(uri), {callback: data => {
       var properties = data.results.bindings.filter(r => {return (!cfg.exclude.includes(r.property.value))});
       properties.forEach(r => {
         var obj = {uri: r.property.value};
@@ -69,7 +69,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
           selected.datatype.push(obj);
           loadDatatype( obj.uri );
         } else if (r.kind.value == "0") {
-          request.execQuery(query.countValuesType(selected.uri, obj.uri), d => {
+          request.execQuery(query.countValuesType(selected.uri, obj.uri), { callback: d => {
             if (d.results.bindings.length > 0) {
               var uri_count = Number(d.results.bindings[0].uris.value);
               var lit_count = Number(d.results.bindings[0].lits.value);
@@ -81,11 +81,11 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
                 loadDatatype( obj.uri );
               }
             }
-          });
+          }});
         }
       });
       sort();
-    });
+    }});
 
     cache.push(selected);
     if (cache.length > 10) cache.splice(0, 1);
@@ -93,25 +93,25 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
   }
 
   function loadPropUri (prop) {
-    request.execQuery(query.getPropUri(vm.selected.uri, prop), data => {
+    request.execQuery(query.getPropUri(vm.selected.uri, prop), { callback: data => {
       vm.selected.results[prop] = data.results.bindings.map(s => {return s.uri.value});
-    });
+    }});
   }
 
   function loadDatatype (prop) {
-    request.execQuery(query.getPropDatatype(vm.selected.uri, prop), data => {
+    request.execQuery(query.getPropDatatype(vm.selected.uri, prop), { callback: data => {
       vm.selected.results[prop] = data.results.bindings.map(s => {return s.lit.value});
-    });
+    }});
   }
 
   function loadObject (prop) {
-    request.execQuery(query.getPropObject(vm.selected.uri, prop), data => {
+    request.execQuery(query.getPropObject(vm.selected.uri, prop), { callback: data => {
       vm.selected.results[prop] = data.results.bindings.map(s => {
         var obj = {uri: s.uri.value};
         if (s.uriLabel) obj.label = s.uriLabel.value;
         return obj;
       });
-    });
+    }});
   }
 
   function sort () {

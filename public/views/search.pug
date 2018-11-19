@@ -13,7 +13,7 @@ div#search-container
     div.alert.alert-warning(role="alert", ng-show="main.noResults && main.searchResults.length == 0")
       strong No results found!
 
-    //#search-query
+    //#search-query when the endpoint support text-search
       .fakeRect(ng-if="main.searchResults.length>0",
                 style="border-color: #2ca02c;",
                 draggable="true", 

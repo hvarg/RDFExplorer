@@ -51,12 +51,12 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
     .form-row.mt-2(style="margin:0;")
       .input-group.input-group#edit-filter-group
         .input-group-prepend
-          label.input-group-text(for="edit-filter-results", style="border-bottom-left-radius: 0;") Possible solutions
-        input.form-control#edit-filter-results(type="text", autocomplete="off", ng-model="ctrl.resultFilterValue", ng-change="ctrl.filterResults()")
-        .input-group-append.clickable(ng-click="")
+          label.input-group-text(for="edit-filter-results", style="border-bottom-left-radius: 0;") Possible results
+        input.form-control#edit-filter-results(type="text", autocomplete="off", ng-model="ctrl.resultFilterValue", ng-change="ctrl.loadPreview()")
+        .input-group-append
           i.fa.fa-search#edit-filter-results-icon
-          span.input-group-text(style="border-bottom-right-radius: 0;")
-            i.fa.fa-filter.not-allowed
+          span.input-group-text(style="width: 42px; border-bottom-right-radius: 0;", ng-class="{'loading': ctrl.resultFilterLoading}")
+            i.fa(ng-if="!ctrl.resultFilterLoading", ng-class="ctrl.variable.results.length==0 ?  'fa-exclamation-triangle' : 'fa-check'")
 
     .custom-container-content.active
       .alert.alert-warning.alert-sm.mt-2.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results!
@@ -66,6 +66,12 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
             a(ng-if="!ctrl.isLiteral", href="", ng-click="elem.value.describe()") {{ elem.value.getLabel(); }}
             span(ng-if="ctrl.isLiteral") {{ elem.value }}
           i.pull-right.fa.fa-plus.mr-1.mt-1.clickable(ng-click="ctrl.addValue(elem.value);")
+      //.row() add pagination here
+        .col-md-2.clickable
+          i.fa.fa-chevron-left
+        .col-md-8
+        .col-md-2.clickable
+          i.fa.fa-chevron-right
 
 
     //-------------------- FILTERS --------------------//

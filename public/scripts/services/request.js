@@ -49,28 +49,33 @@ function requestService (settings, $http, $timeout) {
   
   function onError (response, callback) {
     running -= 1;
-    console.log('Error ' + response.status + ': ' + response.data);
+    if (response.xhrStatus != "abort")
+      console.log('Error:', response);
     return callback ? callback(response) : response;
   }
 
-  function execQuery (query, callback, cErr) {
-    var pro = $timeout(
-      function () {
-        //console.log(query);
-        return $http({
-          method: 'POST',
-          url: settings.endpoint.url + '?origin=*',
-          params: {
-            format: 'json',
-            query: query,
-            origin: '*',
-          }
-        }).then(
-          r => { return onSuccess(r, callback)},
-          r => { return onError(r, cErr);});
-      }, delay*running);
+  function execQuery (query, config) {
+    var cfg = config || {};
     running += 1;
-    return pro;
+
+    var httpCfg = {
+      method: 'POST',
+      url: settings.endpoint.url + '?origin=*',
+      params: {
+        format: 'json',
+        query: query,
+        origin: '*',
+      }
+    };
+    
+    if (cfg.canceller) httpCfg.timeout = cfg.canceller;
+
+    return $timeout(() => {
+      return $http(httpCfg).then(
+        r => { return onSuccess(r, cfg.callback) },
+        r => { return onError(r, cfg.cErr) }
+      );
+    }, (running-1)*delay);
   }
 
   function getLabel (uri) {

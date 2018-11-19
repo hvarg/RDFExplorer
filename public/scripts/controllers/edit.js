@@ -1,8 +1,8 @@
 angular.module('rdfvis.controllers').controller('EditCtrl', EditCtrl);
 
-EditCtrl.$inject = ['$scope', 'propertyGraphService', '$timeout'];
+EditCtrl.$inject = ['$scope', 'propertyGraphService', '$timeout', '$q'];
 
-function EditCtrl ($scope, pGraph, $timeout) {
+function EditCtrl ($scope, pGraph, $timeout, $q) {
   var vm = this;
   vm.selected = null;
   vm.variable = null;
@@ -16,6 +16,8 @@ function EditCtrl ($scope, pGraph, $timeout) {
   vm.newValue = '';
 
   vm.resultFilterValue = '';
+  vm.resultFilterLoading = false;
+  vm.canceller = null;
 
   vm.added  = 0;
   vm.newFilterType = "";
@@ -28,7 +30,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
   vm.rmValue    = rmValue;
   vm.newFilter  = newFilter;
   vm.rmFilter   = rmFilter;
-  vm.filterResults  = filterResults;
+  vm.loadPreview  = loadPreview;
   vm.addSearchAsFilter = addSearchAsFilter;
 
   pGraph.edit = editResource;
@@ -37,7 +39,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
 
   function editResource (resource) {
     if (vm.selected != resource) {
-      vm.varSearch = "";
+      vm.resultFilterValue = '';
     }
     if (resource) {
       vm.selected   = resource;
@@ -55,10 +57,6 @@ function EditCtrl ($scope, pGraph, $timeout) {
       loadPreview();
     }
     $scope.$emit('tool', 'edit');
-  }
-
-  function loadPreview () {
-    if (vm.isVariable) vm.selected.loadPreview({limit: 10});
   }
 
   function mkVariable () {
@@ -92,7 +90,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
     return vm.selected.removeUri(value)
   }
 
-  function newFilter (targetVar) {
+  function newFilter (targetVar) { //TODO: targetVar not needed now
     if (vm.newFilterType == "") return false;
     targetVar.addFilter(vm.newFilterType, copyObj(vm.newFilterData));
     loadPreview();
@@ -107,19 +105,43 @@ function EditCtrl ($scope, pGraph, $timeout) {
   }
 
   var lastValueSearch = '';
-  function filterResults () {
+  function loadPreview () {
+    if (!vm.isVariable) return;
+
+    if (vm.canceller) {
+      vm.canceller.resolve('new preview');
+      vm.resultFilterLoading = false;
+    }
+    
+    vm.canceller = $q.defer();
+    vm.resultFilterLoading = true;
+    var config = { //add pagination here
+      limit: 10,
+      callback: () => { 
+        vm.resultFilterLoading = false;
+        vm.canceller = null; },
+      canceller: vm.canceller.promise,
+    };
+
     var now = vm.resultFilterValue + '';
-    $timeout(function () {
-      if (vm.isVariable && now == vm.resultFilterValue && now != lastValueSearch) {
-        lastValueSearch = now;
-        if (now) vm.selected.loadPreview({limit: 10, varFilter: now});
-        else loadPreview();
-      }
-    }, 400);
+    console.log(now);
+    if (now) {
+      $timeout(function () {
+        if (now == vm.resultFilterValue && now != lastValueSearch) {
+          lastValueSearch = now;
+          vm.resultFilterLoading = true;
+          config.varFilter = now;
+          vm.selected.loadPreview(config);
+        }
+      }, 400);
+    } else {
+      lastValueSearch = '';
+      vm.selected.loadPreview(config);
+    }
   }
 
-  function addSearchAsFilter () {
-    var text = vm.varSearch + '';
+  function addSearchAsFilter () { // should work but not used
+    var text = vm.resultFilterValue + '';
     console.log(text);
     var p = vm.selected.getPropByUri("http://www.w3.org/2000/01/rdf-schema#label");
     if (!p) {

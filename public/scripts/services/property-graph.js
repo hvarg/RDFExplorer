@@ -31,7 +31,6 @@ function propertyGraphService (req, log, settings) {
     addNode: addNode,
     addEdge: addEdge,
     getNodeByUri: getNodeByUri,
-    toQuery: toQuery,
     connect: connect,
     refresh: refresh,
     reset: reset,
@@ -263,16 +262,19 @@ function propertyGraphService (req, log, settings) {
     return null;
   };
 
-  RDFResource.prototype.createQuery = function (opts) {
+  RDFResource.prototype.createQuery = function (config) {
+    var cfg = config || {};
     if (!this.isVariable())
       return null;
     var q = new Query(this);
-    if (opts && opts.limit) q.limit = opts.limit;
-    if (opts && opts.offset) q.offset = opts.offset;
-    if (q.triples.length == 0)
+    if (q.triples.length == 0) {
+      if (cfg.callback) cfg.callback();
       return null;
-    else
-      return q;
+    }
+
+    if (cfg.limit)  q.limit  = cfg.limit;
+    if (cfg.offset) q.offset = cfg.offset;
+    return q;
   }
 
   RDFResource.prototype.hasResults = function () {
@@ -398,12 +400,13 @@ function propertyGraphService (req, log, settings) {
     }
   };
 
-  Node.prototype.loadPreview = function (opts) {
-    var q = this.createQuery(opts);
+  Node.prototype.loadPreview = function (config) {
+    var cfg = config || cfg,
+        q = this.createQuery(cfg);
     if (q) {
-      if (opts && opts.varFilter) {
+      if (cfg.varFilter) {
         var l = q.addLabel(this);
-        l.variable.addFilter('regex', {regex: opts.varFilter});
+        l.variable.addFilter('regex', {regex: cfg.varFilter});
       } else {
         q.addOptLabel(this);
       }
@@ -417,7 +420,7 @@ function propertyGraphService (req, log, settings) {
           q.triples.push([p, dc, t[1]])
         }
       });
-      q.retrieve();
+      q.retrieve(cfg);
     }
   }
 
@@ -500,9 +503,10 @@ function propertyGraphService (req, log, settings) {
     if (propertyGraph.selected == this) thisProp.parentNode.onClick();
   }
 
-  Property.prototype.loadPreview = function (opts) {
+  Property.prototype.loadPreview = function (config) {
     //For wikidata only
-    var q = this.createQuery(opts),
+    var cfg = config || {},
+        q = this.createQuery(cfg),
         dc = new RDFResource(true),
         p = new RDFResource(true);
     dc.mkConst();
@@ -515,8 +519,8 @@ function propertyGraphService (req, log, settings) {
     var t1 = [p, dc, this],
         t2 = q.createTripleLabel(p);
 
-    if (opts && opts.varFilter) {
-      t2[2].variable.addFilter('regex', {regex: opts.varFilter});
+    if (cfg.varFilter) {
+      t2[2].variable.addFilter('regex', {regex: cfg.varFilter});
       q.triples.push(t1);
       q.triples.push(t2);
     } else {
@@ -526,7 +530,7 @@ function propertyGraphService (req, log, settings) {
 
     q.select.push(t2[2]);
     p.variable.alias = this.variable.getName() + 'tmp';
-    q.retrieve();
+    q.retrieve(cfg);
   }
 
   /******* Literal TDA *******************************************************/
@@ -564,12 +568,13 @@ function propertyGraphService (req, log, settings) {
     return 'M'+x+','+y+'V'+y2+'H'+x2;
   };
 
-  Literal.prototype.loadPreview = function (opts) {
-    var q = this.createQuery(opts);
-    if (opts && opts.varFilter) {
-      var tmpF = this.variable.addFilter('regex', {regex: opts.varFilter});
+  Literal.prototype.loadPreview = function (config) {
+    var cfg = config || {},
+        q = this.createQuery(cfg);
+    if (cfg.varFilter) {
+      var tmpF = this.variable.addFilter('regex', {regex: cfg.varFilter});
     }
-    q.retrieve();
+    q.retrieve(cfg);
     this.variable.removeFilter(tmpF);
   }
 
@@ -886,12 +891,13 @@ function propertyGraphService (req, log, settings) {
     this.select = Array.from(this.dep);
   }
 
-  Query.prototype.retrieve = function () {
+  Query.prototype.retrieve = function (config) {
     var self = this,
+        cfg = config || {},
         q = self.get(),
         n = self.select.filter(r => {return (r.variable.id != -1 && r.variable.query != q); }).length;
     if (q && n > 0) {
-      req.execQuery(q, data => {
+      req.execQuery(q, { canceller: cfg.canceller, callback: data => {
         if (data.results.bindings.length > 0) {
           self.select.forEach(r => {
             var values = new Set(),
@@ -907,218 +913,10 @@ function propertyGraphService (req, log, settings) {
             r.variable.query = q;
           });
         }
-      });
-    }
-  }
-
-  function toQuery (resources) {
-    // If no resources then all resources.
-    if (!resources || resources.length == 0) {
-      resources = [];
-      propertyGraph.nodes.forEach(node => {
-        resources.push(node);
-        node.properties.forEach(prop => {
-          resources.push(prop);
-        });
-      });
-    }
-
-    resources = resources.filter(r => { return r.isVariable() || (r.isProperty() && r.isLiteral()); });
-
-    var queries = [];
-
-    while (resources.length > 0) {
-      var toSolve = new Set();
-      var triples = new Set();
-      var filters = new Set();
-      var literals = new Set();
-
-      var queue = [resources.pop()];
-      
-      while (queue.length > 0) {
-        var cur = queue.pop();
-        toSolve.add(cur);
-
-        // Add edges who contains this resource (cur)
-        var edges = propertyGraph.edges.filter(e => { return e.contains(cur); });
-        edges.forEach(e => {
-          triples.add(e);
-          [e.source.parentNode, e.source, e.target].forEach(r => {
-            if (r.isVariable()) {
-              if (!toSolve.has(r)) queue.push(r);
-            }
-          });
-        });
-
-        // Add filters of this resource
-        cur.variable.filters.forEach(f => { filters.add(f); });
-
-        if (cur.isNode()) {
-          // If is a node, add all literal relations.
-          cur.literalRelations().forEach(r => {
-            if (!toSolve.has(r)) queue.push(r);
-          });
-        } else if (cur.isLiteral()) {
-          // If is a literal property add filters, this resource to literals and parent to queue.
-          literals.add(cur);
-          cur.getLiteral().filters.forEach(f => { filters.add(f); });
-          if (cur.parentNode.isVariable()) {
-            if (!toSolve.has(cur.parentNode)) queue.push(cur.parentNode);
-          }
-        }
-      }
-
-      // Remove this query resources from requested elements and add variables to select
-      var select = [];
-      toSolve.forEach(r => {
-        // remove
-        var index = resources.indexOf(r);
-        if (index >= 0) resources.splice(index, 1);
-        // add
-        if (r.isVariable()) select.push( r.variable );
-        if (r.isProperty() && r.isLiteral()) select.push( r.getLiteral() );
-      });
-
-      // Check edges and add triples, values and prefixes
-      var prefixes = new Set();
-      var values = new Set();
-      var where = [];
-      var tmp, pre;
-      triples.forEach(e => {
-        tmp = [];
-        [e.source.parentNode, e.source, e.target].forEach(r => {
-          if (r.isVariable()) tmp.push(r.variable);
-          else {
-            if (r.uris.length == 1) {
-              pre = r.getUri().toPrefix();
-              if (pre[1]) prefixes.add(pre[1]);
-              tmp.push(pre[0]);
-            } else {
-              tmp.push(r.variable);
-              values.add(r);
-            }
-          }
-        });
-        where.push(tmp);
-      });
-
-      // Check literals
-      literals.forEach(lit => { 
-        tmp = [];
-        [lit.parentNode, lit].forEach(r => {
-          if (r.isVariable()) tmp.push(r.variable);
-          else {
-            if (r.uris.length == 1) {
-              pre = r.getUri().toPrefix();
-              if (pre[1]) prefixes.add(pre[1]);
-              tmp.push(pre[0]);
-            } else {
-              tmp.push(r.variable);
-              values.add(r);
-            }
-          }
-        });
-        tmp.push( lit.getLiteral().get() );
-        where.push(tmp);
-      });
-
-      if (select.length > 0 && where.length > 0) queries.push({
-        resources: Array.from(toSolve).sort(),
-        data: {select: select, where: where, filters: filters, values: values, prefixes: prefixes, optional: [] },
-        get: function () {
-          if (this.data.select.length == 0 || (this.data.where.length == 0 && this.data.optional.length == 0))
-            return null;
-          // Use this function to get the query.
-          var q = 'SELECT DISTINCT ' + this.data.select.map(s => {return s.get()}).join(' ') + ' WHERE {\n'
-          this.data.where.forEach(triple => {
-            q += '  ' + triple.join(' ') + ' .\n';
-          });
-
-          this.data.optional.forEach(opt => {
-            q += '  OPTIONAL {\n';
-            opt.where.forEach(triple => {
-              q += '    ' + triple.join(' ') + ' .\n';
-            });
-            opt.filters.forEach(f => { q += '    ' + f.apply()});
-            q += '  }'
-          });
-
-          this.data.filters.forEach(f => {q += '  ' + f.apply(); });
-
-          this.data.values.forEach(v => {
-            q += '  VALUES ' + v.variable.get() + ' {' + v.uris.map(u => {
-              pre = u.toPrefix();
-              if (pre[1]) this.data.prefixes.add(pre[1]);
-              return pre[0];
-            }).join(' ') + '}\n';
-          });
-          q += '}';
-
-          if (this.data.limit) q += ' limit ' + this.data.limit;
-          if (this.data.offset) q += ' offset ' + this.data.offset;
-
-          var h = '';
-          this.data.prefixes.forEach(p => {
-            h += 'PREFIX ' + p.prefix + ': <' + p.uri + '>\n'
-          });
-
-          return h + q;
-        },
-        addLabels: function (select, opt) {
-          opt = opt || false;
-          if (select.length == 0) return null;
-          var pre = "http://www.w3.org/2000/01/rdf-schema#label".toPrefix();
-          if (pre[1]) this.data.prefixes.add(pre[1]);
-          var bindings = {}
-          select.forEach(s => {
-            var name = s.get()+'Label';
-            var trip = [s, pre[0], name];
-            bindings[name] = s;
-            if (opt) {
-              this.data.optional.push({where: [trip], filters: []});
-            } else {
-              var index = this.data.where.findIndex(t => { return t.join(' ') == trip.join(' ')});
-              if (index < 0)
-                this.data.where.push(trip);
-            }
-          });
-          return bindings;
-        },
-      });
-    }
-    return queries;
-  }
-
-  function retrieveResults (query, callback) {
-    var sparql = query.get();
-    var toLoad = [];
-    query.data.select.forEach(s => {
-      if (s.query != sparql) toLoad.push(s);
-    });
-
-    if (query.data.select.length != toLoad.length) {
-      query.data.select = toLoad;
-      sparql = query.get();
-    }
-    
-    if (sparql) {
-      req.execQuery(sparql, data => {
-        if (data.results.bindings.length > 0) {
-          query.data.select.forEach(s => {
-            var values = new Set();
-            var name = s.getName();
-            s.results = data.results.bindings.map(r => { return r[name]; });
-            s.results = s.results.filter(r => { return (!values.has(r.value) && values.add(r.value))});
-            s.query = sparql;
-          });
-        } else {
-          query.data.select.forEach(s => {
-            s.results = [];
-            s.query = sparql;
-          });
-        }
-        if (callback) callback();
-      });
+        if (cfg.callback) cfg.callback();
+      }});
+    } else {
+      if (cfg.callback) cfg.callback();
     }
   }
 
