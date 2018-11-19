@@ -18,17 +18,21 @@ html(lang="en", ng-app="survey")
   body(ng-controller="MainCtrl as main")
 
     .container
-      .jumbotron.mt-5#top
+      .jumbotron#top(style="border-radius: 0px; min-height: 100vh; margin-bottom: 0px;")
         .row.justify-content-center
           .col-10
             .page-header 
-              h1 Survey
+              .row
+                .col-5
+                  h1 Survey
+                .col-7
+                  h4(style="bottom: 0; position: absolute; right: 15px;") {{ main.subtitle() }}
               hr
 
             fieldset.form-group(ng-hide="main.step != 0")
               h5 Select the tool you will start with:
-              .row
-                legend.col-form-label.col-sm-2.pt-0 Start with?:
+              .row.mb-3
+                legend.col-form-label.col-sm-2.pt-0 
                 .col-sm-10
                   .form-check
                     input.form-check-input#base-url(type="radio", name="gridRadios", value="https://explorer.csrg.cl",
@@ -40,10 +44,10 @@ html(lang="en", ng-app="survey")
                     label.form-check-label(for="wqh-url")  https://query.wikidata.org
               .form-group.row
                 .col-sm-12
-                  button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Next
+                  span This survey has no back button, press next only when you are sure you want to continue.
+                  button.btn.btn-primary.pull-right.mt-1(type="submit", ng-click="main.next()") Next
 
             div#user-id(ng-hide="main.step != 1")
-              h4 Part 1: User Identification 
               form
                 fieldset.form-group
                   .row
@@ -61,32 +65,23 @@ html(lang="en", ng-app="survey")
                   label.col-sm-2.col-form-label(for="user-age") Age:
                   .col-sm-10
                     input.form-control#user-age(type="number", placeholder="18", ng-model="main.data.user.age")
-                fieldset.form-group
-                  .row
-                    legend.col-form-label.col-sm-2.pt-0 Degree:
-                    .col-sm-10
-                      .form-check
-                        input.form-check-input#degree-pregrado(type="radio", name="degree", value="bachelor",
-                            ng-model="main.data.user.degree")
-                        label.form-check-label(for="degree-pregrado")  Bachelor
-                      .form-check
-                        input.form-check-input#degree-magister(type="radio", name="degree", value="master",
-                            ng-model="main.data.user.degree")
-                        label.form-check-label(for="degree-magister")  Master
-                      .form-check
-                        input.form-check-input#degree-doctorado(type="radio", name="degree", value="doctor",
-                            ng-model="main.data.user.degree")
-                        label.form-check-label(for="degree-doctorado") Doctor
+                .form-group.row
+                  label.col-sm-2.col-form-label(for="user-degree") Degree:
+                  .col-sm-10
+                    input.form-control#user-degree(type="text", placeholder="Engineer...", ng-model="main.data.user.degree")
                 .form-group.row
                   .col-sm-12
                     button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Next
 
             div#tasks(ng-hide="main.step != 2")
-              h4 Part 2: Task {{ main.taskStep + 1}} of 10
+              h5 In 
+                a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
+                | , 
+              //h4 Part 2: Task {{ main.taskStep + 1}} of 10
                 .pull-right on  
                   a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
               div(ng-repeat="(key, value) in main.tasks", ng-hide="main.taskStep!=$index")
-                label(for="{{'sparql' + $index}}", style="font-size: 1.25rem;") {{ value }}
+                label(for="{{'sparql' + $index}}", style="font-size: 1.5rem;") give me resources that {{ value }}
                 form
                   textarea.form-control.mb-2(id="{{'sparql' + $index}}", rows="5", 
                       placeholder="Your SPARQL query here.", ng-model="main.data.tasks[$index].sparql")
@@ -95,15 +90,17 @@ html(lang="en", ng-app="survey")
                       button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Next
 
             div#nasa-tlx(ng-hide="main.step != 3")
-              h4 Part 3: Nasa-TLX
+              //h4 Part 3: Nasa-TLX
                 .pull-right for  
                   a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
-              form
+              h5 Answer the following questions based on your experience using 
+                a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
+              form.mt-4
                 div(ng-repeat="(key, value) in main.tlx")
                   .row(style="font-weight: bolder;")
-                    .col-sm-4 {{ value.category }}
-                    .col-sm-8
-                      label.pull-right(for="{{'tlx' + $index}}") {{ value.text }}
+                    .col-sm-8 {{ value.text }}
+                    .col-sm-4
+                      label.pull-right(for="{{'tlx' + $index}}") {{ value.category }}
                   input.custom-range(id="{{'tlx' + $index}}", type="range", step="5",
                       ng-model="main.data.tlx[main.urlStep].score[$index]")
                   div.mb-4(style="font-weight: lighter;")
@@ -114,10 +111,12 @@ html(lang="en", ng-app="survey")
                     button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Next
 
             div#likert(ng-hide="main.step != 4")
-              h4 Part 4: Likert
+              //h4 Part 4: Likert
                 .pull-right for  
                   a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
-              form
+              h5 Answer the following questions based on your experience using 
+                a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
+              form.mt-4
                 div(ng-repeat="(key, value) in main.likert")
                   label(style="font-weight: bolder;", for="{{'likert' + $index}}") {{ value.text }}
                   input.custom-range(id="{{'likert' + $index}}", type="range", min="1", max="5",

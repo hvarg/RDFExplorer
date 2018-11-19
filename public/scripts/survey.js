@@ -20,7 +20,7 @@ function MainCtrl ($http) {
 
   vm.data = {
     startUrl: "https://explorer.csrg.cl",
-    user: {gender: 'male', age: null, degree: 'bachelor'},
+    user: {gender: 'male', age: null, degree: null},
     tasks: [
       {on: null, sparql: null, time: null}, {on: null, sparql: null, time: null},
       {on: null, sparql: null, time: null}, {on: null, sparql: null, time: null},
@@ -63,23 +63,31 @@ function MainCtrl ($http) {
   ]
 
   vm.tasks = [
-    "Dogs (instances of dog)",
-    "Popes (people that has hold the position of Pope)",
-    "Lakes of Canada",
-    "Mountains of Europe",
-    "Women born in Argentina",
-    "States of the United States",
-    "Films based on comics",
-    "Sovereign states that shares border with territory of France",
-    "Emperors with children who were also emperors",
-    "Lakes of Chile with a vertical depth greater than 500",
+    "are trees (instances of tree)",
+    "have hold the position of Pope and are female",
+    "are lakes of countries that have south America as continent",
+    "are mountains of Europe",
+    "were born in Argentina and are female",
+    "are states of the United States",
+    "are films and are based on comics",
+    "are sovereign states that shares border with territory of France",
+    "were emperors with children who were also emperors",
+    "are lakes of Chile with a vertical depth greater than 500",
   ]
 
   vm.clock = null;
 
   vm.next = next;
+  vm.subtitle = subtitle;
   vm.download = download;
   vm.upload = upload;
+
+  function subtitle () {
+    if (vm.step == 1) return 'Part 1: User identification';
+    if (vm.step == 2) return 'Part 2: Task ' + (vm.taskStep+1) + ' of 10';
+    if (vm.step == 3) return 'Part 3: Nasa-TLX for ' + vm.url[vm.urlStep].slice(8);;
+    if (vm.step == 4) return 'Part 4: Likert for ' + vm.url[vm.urlStep].slice(8);
+  }
 
   function next () {
     switch (vm.step) {
