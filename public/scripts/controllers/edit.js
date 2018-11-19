@@ -124,7 +124,6 @@ function EditCtrl ($scope, pGraph, $timeout, $q) {
     };
 
     var now = vm.resultFilterValue + '';
-    console.log(now);
     if (now) {
       $timeout(function () {
         if (now == vm.resultFilterValue && now != lastValueSearch) {

@@ -31,8 +31,8 @@ function SparqlCtrl ($scope, pGraph) {
       if (q) {
         q.selectAll();
         q.select.forEach(r => {
-          var index = queue.indexOf(cur);
-          if (index) queue.splice(index, 1);
+          var index = queue.indexOf(r);
+          if (index >= 0) queue.splice(index, 1);
         });
         vm.queries.push(q);
       } else {
