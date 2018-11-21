@@ -126,7 +126,29 @@ function visualQueryBuilder (pGraph) {
       svg.on("mouseout",  function (d) {thisGraph.focused = false;});
       svg.on("contextmenu", function () {
         //Do no show context menu, the default menu can break the tools ouside the svg.
-        d3.event.preventDefault();
+        //d3.event.preventDefault();
+        var menuItems = {}
+        menuItems['New variable'] = x => {
+          var xycoords = d3.mouse(thisGraph.svgG.node()),
+              d = pGraph.addNode();
+          d.setPosition(xycoords[0],xycoords[1]);
+          d.onClick();
+          thisGraph.updateGraph();
+        };
+
+        var selected = pGraph.getSelected();
+        if (selected) {
+          menuItems['New property'] = x => {
+            var xycoords = d3.mouse(thisGraph.svgG.node()),
+                d = pGraph.addNode();
+            d.setPosition(xycoords[0],xycoords[1]);
+            pGraph.addEdge(selected, d);
+            d.onClick();
+            thisGraph.updateGraph();
+          };
+        }
+        gMenu(menuItems);
+
       });
 
       // listen for dragging
@@ -639,7 +661,7 @@ function visualQueryBuilder (pGraph) {
     };
 
     /* Custom context menu FIXME: add this into graphcreator and create two separated menues. */
-    function contextMenu() {
+    function ContextMenu() {
       var height, width, margin = 0.1, // fraction of width
           items = [], rescale = false;
 
@@ -717,7 +739,6 @@ function visualQueryBuilder (pGraph) {
 
       return menu;
     }
-
     
     /** MAIN SVG **/
     var svg = d3.select(element[0]).append("svg")
@@ -726,8 +747,11 @@ function visualQueryBuilder (pGraph) {
           .attr("height", element[0].offsetHeight);
 
     var graph = new GraphCreator(svg, pGraph.nodes, pGraph.edges);
-    var menu = contextMenu().items('Describe', 'Edit', 'Copy URI', 'Remove');
     graph.updateGraph();
+    var menu = ContextMenu().items('Describe', 'Edit', 'Copy URI', 'Remove');
+    
+    var gMenu = new ContextMenu(); // Global menu
+    gMenu.items('New variable', 'New property');
     
     pGraph.connect(element[0], graph);
 
