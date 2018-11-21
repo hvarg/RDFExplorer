@@ -49,9 +49,8 @@ function propertyGraphService (req, log, settings) {
   var lastVarId = 0;
   var uriToNode = {};
   var usedAlias = [];
-
-
-  function u (uri) { return '<'+uri+'>'; }
+  var lastVarResId = 0;
+  var lastVarPropId = 0;
 
   /******* Filter TDA ********************************************************/
   function Filter (variable, type, data) {
@@ -88,17 +87,27 @@ function propertyGraphService (req, log, settings) {
   };
 
   /******* Variable TDA ******************************************************/
-  function Variable (tmpId) {
-    if (tmpId) {
-      this.id = tmpId;       // If a tmpId si provided, must check is not used already.
+  function Variable (parent) {
+    if (parent instanceof Node) {
+      this.id = 'var' + lastVarResId++;
+    } else if (parent instanceof Property || parent instanceof Literal) {
+      this.id = 'prop' + lastVarPropId++;
     } else {
-      this.id = lastVarId++; // Secure variable name
+      this.id = lastVarId++;
     }
     this.alias = '';       // User defined variable name
     this.filters = [];
     this.options = {show: true, count: false};
     this.results = [];
-    //this.parent = parent;
+    this.parent  = parent;
+  }
+
+  Variable.prototype.isBinded = function () {
+    if (this.parent instanceof Node || this.parent instanceof Property || this.parent instanceof Literal) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   Variable.prototype.toString = function () {
@@ -157,13 +166,9 @@ function propertyGraphService (req, log, settings) {
   };
 
   /******* RDFResource TDA ***************************************************/
-  function RDFResource (dummy) {
+  function RDFResource () {
     this.isVar = true;
-    if (dummy) {
-      this.variable = new Variable(-1);
-    } else {
-      this.variable = new Variable();
-    }
+    this.variable = new Variable(this);
     this.uris = [];
     this.cur = -1;
   }
@@ -412,8 +417,8 @@ function propertyGraphService (req, log, settings) {
       }
       q.triples.forEach(t => {
         if (t[0].isVariable() && t[1].isVariable()) {
-          var dc = new RDFResource(true),
-              p = new RDFResource(true);
+          var dc = new RDFResource(),
+              p = new RDFResource();
           dc.mkConst();
           dc.addUri('http://wikiba.se/ontology#directClaim');
           p.variable.alias = t[1].variable.getName() + 'tmp';
@@ -507,8 +512,8 @@ function propertyGraphService (req, log, settings) {
     //For wikidata only
     var cfg = config || {},
         q = this.createQuery(cfg),
-        dc = new RDFResource(true),
-        p = new RDFResource(true);
+        dc = new RDFResource(),
+        p = new RDFResource();
     dc.mkConst();
     dc.addUri('http://wikiba.se/ontology#directClaim');
     /*dc.variable.alias = 'wikibaseP';
@@ -852,10 +857,10 @@ function propertyGraphService (req, log, settings) {
       throw new Error(resource, ' is not a variable');
     if (resource instanceof Literal)
       throw new Error(resource, ' is a literal');
-    var p = new RDFResource(true);
+    var p = new RDFResource();
     p.mkConst();
     p.addUri(settings.labelUri);
-    var o = new RDFResource(true);
+    var o = new RDFResource();
     o.variable.alias = resource.variable.getName() + 'Label';
     o.variable.addFilter('lang', {language: settings.lang});
     return [resource, p, o];
@@ -895,7 +900,7 @@ function propertyGraphService (req, log, settings) {
     var self = this,
         cfg = config || {},
         q = self.get(),
-        n = self.select.filter(r => {return (r.variable.id != -1 && r.variable.query != q); }).length;
+        n = self.select.filter(r => {return (r.variable.isBinded() && r.variable.query != q); }).length;
     if (q && n > 0) {
       req.execQuery(q, { canceller: cfg.canceller, callback: data => {
         if (data.results.bindings.length > 0) {
