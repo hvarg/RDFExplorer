@@ -127,28 +127,7 @@ function visualQueryBuilder (pGraph) {
       svg.on("contextmenu", function () {
         //Do no show context menu, the default menu can break the tools ouside the svg.
         //d3.event.preventDefault();
-        var menuItems = {}
-        menuItems['New variable'] = x => {
-          var xycoords = d3.mouse(thisGraph.svgG.node()),
-              d = pGraph.addNode();
-          d.setPosition(xycoords[0],xycoords[1]);
-          d.onClick();
-          thisGraph.updateGraph();
-        };
-
-        var selected = pGraph.getSelected();
-        if (selected) {
-          menuItems['New property'] = x => {
-            var xycoords = d3.mouse(thisGraph.svgG.node()),
-                d = pGraph.addNode();
-            d.setPosition(xycoords[0],xycoords[1]);
-            pGraph.addEdge(selected, d);
-            d.onClick();
-            thisGraph.updateGraph();
-          };
-        }
-        gMenu(menuItems);
-
+        gMenu();
       });
 
       // listen for dragging
@@ -516,15 +495,7 @@ function visualQueryBuilder (pGraph) {
           })
         .on("dblclick",  function(d){ d.onDblClick(); })
         .on('contextmenu', function(d){
-            var menuItems = {
-              'Edit':     x => { d.edit(); },
-              'Remove':   x => { d.delete(); thisGraph.updateGraph(); },
-            };
-            if (!d.isVariable() && d.hasUris()) {
-              menuItems['Describe'] = function () { d.describe() };
-              menuItems['Copy URI'] = function () { d.getUri().copyToClipboard() };
-            }
-            menu(menuItems);
+            rMenu(d);
         })
         .call(thisGraph.drag);
 
@@ -601,15 +572,7 @@ function visualQueryBuilder (pGraph) {
             .on("click",    p => { state.clickedProperty = true; p.onClick(); })
             .on("dblclick", p => { p.onDblClick(); })
             .on("contextmenu", p => {
-              var menuItems = {
-                'Edit':     x => { p.edit(); },
-                'Remove':   x => { p.delete(); thisGraph.updateGraph(); },
-              };
-              if (!p.isVariable() && p.hasUris()) {
-                menuItems['Describe'] = function () { p.describe() };
-                menuItems['Copy URI'] = function () { p.getUri().copyToClipboard(); };
-              }
-              menu(menuItems);
+              pMenu(p)
             });
 
         newP.append("text")
@@ -631,11 +594,7 @@ function visualQueryBuilder (pGraph) {
             .on("click", p => { state.clickedProperty = true; p.literal.onClick();})
             .on("dblclick", p => { p.literal.onDblClick(); })
             .on("contextmenu", p => {
-              var menuItems = {
-                'Edit':     x => { p.literal.edit(); },
-                'Remove':   x => { p.delete(); thisGraph.updateGraph(); },
-              };
-              menu(menuItems);
+              lMenu(p.literal);
             });
 
         newL.append("text")
@@ -660,15 +619,14 @@ function visualQueryBuilder (pGraph) {
       });
     };
 
-    /* Custom context menu FIXME: add this into graphcreator and create two separated menues. */
+    /* Custom context menu FIXME: add this into graphcreator. */
     function ContextMenu() {
       var height, width, margin = 0.1, // fraction of width
           items = [], rescale = false;
 
-      function menu(f) {
+      function menu(obj) {
         var z = graph.getZoom();
         var xycoords = d3.mouse(graph.svgG.node());
-        //console.log(z, xycoords); TODO: zoom z[2]
         var x = (xycoords[0] + z[0]);
         var y = (xycoords[1] + z[1]);
         d3.event.preventDefault();
@@ -679,24 +637,42 @@ function visualQueryBuilder (pGraph) {
 
         // Draw the menu
         d3.select('svg')
-            .append('g').attr('class', 'context-menu')
+            .append('g')
+            .classed('context-menu', true)
             .selectAll('tmp')
             .data(items).enter()
-            //.append('g').attr('class', 'menu-entry')
-            .append('g').classed('menu-entry', true)
-            .classed('disabled', function (d) {return !f[d];})
-            .on('click', function (d) { if (f[d]) f[d](); });
+            .append('g')
+            .classed('menu-entry', true)
+            .classed('disabled', function (d) {return d.disabled(obj);})
+            .on('click', function (d) {
+              if (!d.disabled(obj)) {
+                d.func(obj);
+              }
+              else {
+                d3.event.stopPropagation();
+              }
+            })
+            .on('contextmenu', function (d) {
+              if (!d.disabled(obj)) {
+                d.func(obj);
+              }
+              d3.event.preventDefault();
+              d3.event.stopPropagation();
+              d3.select('.context-menu').remove();
+            });
 
         d3.selectAll('.menu-entry')
-            .append('rect').attr('class', 'menu-entry-rect')
+            .append('rect')
+            .classed('menu-entry-rect', true)
             .attr('x', x)
             .attr('y', function(d, i){ return y + (i * height); })
             .attr('width', width)
             .attr('height', height);
 
         d3.selectAll('.menu-entry')
-            .append('text').attr('class', 'menu-entry-text')
-            .text(function(d){ return d; })
+            .append('text')
+            .classed('menu-entry-text', true)
+            .text(function(d){ return d.name; })
             .attr('x', x)
             .attr('y', function(d, i){ return y + (i * height); })
             .attr('dy', height - margin / 2)
@@ -719,11 +695,11 @@ function visualQueryBuilder (pGraph) {
         if (rescale) {
           d3.select('svg').selectAll('tmp')
               .data(items).enter()
-              .append('text').attr('class', 'menu-entry-text')
-              .text(function(d){ return d; })
+              .append('text')
+              .attr('class', 'menu-entry-text tmp')
+              .text(function(d){ return d.name; })
               .attr('x', -1000)
-              .attr('y', -1000)
-              .attr('class', 'tmp');
+              .attr('y', -1000);
           var z = d3.selectAll('.tmp')[0]
                     .map(function(x){ return x.getBBox(); });
           width = d3.max(z.map(function(x){ return x.width; }));
@@ -739,7 +715,92 @@ function visualQueryBuilder (pGraph) {
 
       return menu;
     }
-    
+    /** MENU **/
+    // me = menu entry
+    var meNewVar = {
+      name: 'New variable',
+      disabled: () => { return false },
+      func: () => {
+        var xycoords = d3.mouse(graph.svgG.node()),
+            d = pGraph.addNode();
+        d.setPosition(xycoords[0],xycoords[1]);
+        d.onClick();
+        graph.updateGraph();
+      }
+    };
+
+    var meNewProp = {
+      name: 'New property',
+      disabled: () => {return !pGraph.getSelected();},
+      func: () => {
+        var selected = pGraph.getSelected();
+        var xycoords = d3.mouse(graph.svgG.node()),
+            d = pGraph.addNode();
+        d.setPosition(xycoords[0],xycoords[1]);
+        pGraph.addEdge(selected, d);
+        d.onClick();
+        graph.updateGraph();
+      }
+    }
+
+    var meDescribe = {
+      name: 'Describe',
+      disabled: (obj) => { return (obj.isVariable() || !obj.hasUris()); },
+      func: (obj) => { obj.describe(); }
+    }
+
+    var meEdit = {
+      name: 'Edit',
+      disabled: () => { return false; },
+      func: (obj) => { obj.edit(); }
+    }
+
+    var meRemove = {
+      name: 'Remove',
+      disabled: () => { return false; },
+      func: (obj) => { 
+        obj.delete();
+        graph.updateGraph();
+      }
+    }
+
+    var meNewPropMove = {
+      name: 'New property',
+      disabled: () => {return false;},
+      func: (obj) => {
+        var d = pGraph.addNode();
+        d.setPosition(obj.x+280, obj.y+70);
+        pGraph.addEdge(obj, d);
+        d.onClick();
+        graph.updateGraph();
+      }
+    }
+
+    var meNewLit = {
+      name: 'New literal',
+      disabled: () => {return false;},
+      func: (obj) => {
+        obj.newProp().mkLiteral();
+        graph.updateGraph();
+      }
+    }
+
+    var meCopyUri = {
+      name: 'Copy URI',
+      disabled: (obj) => { return (obj.isVariable() || !obj.hasUris()); },
+      func: (obj) => { obj.getUri().copyToClipboard() }
+    }
+
+    var gMenu = new ContextMenu(), // Global menu
+        rMenu = new ContextMenu(), // Node menu
+        pMenu = new ContextMenu(), // Propery menu
+        lMenu = new ContextMenu(); // Litral menu
+
+    gMenu.items(meNewVar, meNewProp);
+    rMenu.items(meDescribe, meEdit, meNewPropMove, meNewLit, meCopyUri, meRemove);
+    pMenu.items(meDescribe, meEdit, meCopyUri, meRemove);
+    lMenu.items(meEdit, meRemove);
+
     /** MAIN SVG **/
     var svg = d3.select(element[0]).append("svg")
           .attr("id", "d3vqb")
@@ -748,12 +809,6 @@ function visualQueryBuilder (pGraph) {
 
     var graph = new GraphCreator(svg, pGraph.nodes, pGraph.edges);
     graph.updateGraph();
-    var menu = ContextMenu().items('Describe', 'Edit', 'Copy URI', 'Remove');
-    
-    var gMenu = new ContextMenu(); // Global menu
-    gMenu.items('New variable', 'New property');
-    
     pGraph.connect(element[0], graph);
-
   }
 }

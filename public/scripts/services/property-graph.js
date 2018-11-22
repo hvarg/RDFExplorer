@@ -573,6 +573,11 @@ function propertyGraphService (req, log, settings) {
     return 'M'+x+','+y+'V'+y2+'H'+x2;
   };
 
+  Literal.prototype.delete = function () {
+    log.add('Deleting literal id ' + this.id);
+    this.parent.delete();
+  }
+
   Literal.prototype.loadPreview = function (config) {
     var cfg = config || {},
         q = this.createQuery(cfg);
