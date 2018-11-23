@@ -2,7 +2,26 @@ angular.module('rdfvis.services').factory('requestService', requestService);
 requestService.$inject = ['settingsService', '$http', '$timeout'];
 
 function requestService (settings, $http, $timeout) {
-  var label = {};   //TODO this to sparql-helpers
+  var label = {
+    "http://www.wikidata.org/prop/direct/P31":    "instance of",
+    "http://www.wikidata.org/prop/direct/P105":   "taxon rank",
+    "http://www.wikidata.org/prop/direct/P129":   "physically interacts with",
+    "http://www.wikidata.org/prop/direct/P171":   "parent taxon",
+    "http://www.wikidata.org/prop/direct/P225":   "taxon name",
+    "http://www.wikidata.org/prop/direct/P279":   "subclass of",
+    "http://www.wikidata.org/prop/direct/P361":   "part of",
+    "http://www.wikidata.org/prop/direct/P682":   "biological process",
+    "http://www.wikidata.org/prop/direct/P688":   "encodes",
+    "http://www.wikidata.org/prop/direct/P1462":  "standards body",
+    "http://www.wikidata.org/prop/direct/P2293":  "genetic association",
+    "http://www.wikidata.org/entity/Q146":        "house cat",
+    "http://www.wikidata.org/entity/Q7367":       "Culicidae",
+    "http://www.wikidata.org/entity/Q7432":       "species",
+    "http://www.wikidata.org/entity/Q12078":      "cancer",
+    "http://www.wikidata.org/entity/Q16521":      "taxon",
+    "http://www.wikidata.org/entity/Q37033":      "World Wide Web Consortium",
+    "http://www.wikidata.org/entity/Q14818032":   "cell proliferation",
+  };
   var delay = 100;   //delay between concurrent request
   var running = 0;  //number of concurrent request
 
@@ -64,7 +83,7 @@ function requestService (settings, $http, $timeout) {
       params: {
         format: 'json',
         query: query,
-        origin: '*',
+        //callback: 'some_function',
       }
     };
     

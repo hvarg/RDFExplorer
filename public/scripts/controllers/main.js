@@ -34,6 +34,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
 
   /* scope */
   $scope.drag = drag;
+  $scope.dragExample = dragExample;
   $scope.dragSearch = dragSearch;
   $scope.$on('newSettings', function(event, data) { vm.lastSearch = ''; });
   $scope.$on('tool', function(event, data) {
@@ -137,6 +138,11 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
     ev.dataTransfer.setData("special", special);
   }
 
+  function dragExample (ev, type) {
+    ev.dataTransfer.setData("special", "example");
+    ev.dataTransfer.setData("type", type);
+  }
+
   function dragSearch (ev) {
     ev.dataTransfer.setData("special", "search");
     ev.dataTransfer.setData("alias", vm.lastSearch);
@@ -201,8 +207,10 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
           intro: 'Here you can see the SPARQL equivalent of the query you\'ve drawn in the <i>query creator</i>. ' +
                  'Executing this query will give you all required results.',
           position: 'left-aligned'},
-        { intro: 'Thats all! For more options right-click on the elements of the <i>query creator</i>.' +
-                 'If you need more help click the help tool (<i class="fa fa-info"></i>) on the top-right border.'
+        { intro: 'For more options right-click on any element of the <i>query creator</i>.'
+        },
+        { element: '#help-button',
+          intro: 'If you need more help or want to see some examples click here.'
         },
       ]
     });

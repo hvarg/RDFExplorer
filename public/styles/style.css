@@ -93,6 +93,15 @@ visual-query-builder {
   background-color: #f8f8f8;
 }
 
+.example {
+  cursor: grab;
+  display: inline-block;
+  border: 2px solid black;
+  border-radius: 4px;
+  padding: 2px 5px;
+  background-color: #f8f8f8;
+}
+
 .tab-hl {
   box-shadow: inset 0px -25px 25px -35px rgba(0,123,255,1);
 }

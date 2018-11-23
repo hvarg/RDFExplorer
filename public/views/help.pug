@@ -2,13 +2,27 @@ div(ng-show="main.tool == 'help'")
   h3.ta-center(ng-click="main.modalHelp()") Help
   hr(style="margin: 3px 0px;")
 
-  h5.mt-2 Quick help:
+  h4.mt-2 Quick help:
   p.ml-2
     a(href="", ng-click="main.tutorial()") Click here to run the interactive tutorial.
     br
     a(href="", ng-click="main.modalHelp()") Click here to display the getting started.
 
-  h4.mt-2 Frequently Asked Question
+  h4.mt-2 Examples:
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'cats')")
+    i.fa.fa-bars.mr-2
+    | Cats
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'w3c')")
+    i.fa.fa-bars.mr-2
+    | W3C standards
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'mosquito')")
+    i.fa.fa-bars.mr-2
+    | Mosquito species
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'cancer')")
+    i.fa.fa-bars.mr-2
+    | Drugs for cancer that target genes related to cell proliferation
+
+  h4.mt-3 Frequently Asked Question
   h5.clickable.no-select(ng-click="main.faq1 = !main.faq1")
     i.fa.mr-2(ng-class="main.faq1 ? 'fa-eye' : 'fa-eye-slash'")
     | How do I create a resource (node)?

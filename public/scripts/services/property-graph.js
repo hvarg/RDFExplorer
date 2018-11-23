@@ -261,8 +261,14 @@ function propertyGraphService (req, log, settings) {
   RDFResource.prototype.getRepr = function () {
     if (this.isVariable()) return this.variable.get();
     if (this.hasUris()) {
-      if (this.uris.length == 1) return this.getUri().getLabel();
-      else return '('+(this.cur+1)+'/'+this.uris.length+') '+ this.getUri().getLabel();
+      if (this.uris.length == 1) {
+        if (this.star) return this.getUri().getLabel() + '*';
+        else return this.getUri().getLabel();
+      }
+      else {
+        if (this.star) return '('+(this.cur+1)+'/'+this.uris.length+') '+ this.getUri().getLabel() + '*';
+        else return '('+(this.cur+1)+'/'+this.uris.length+') '+ this.getUri().getLabel();
+      }
     }
     return null;
   };
@@ -425,7 +431,14 @@ function propertyGraphService (req, log, settings) {
           q.triples.push([p, dc, t[1]])
         }
       });
-      q.retrieve(cfg);
+      if (this.hide) {
+        console.log(this);
+        this.hide = false;
+        q.retrieve(cfg);
+        this.hide = true;
+      } else {
+        q.retrieve(cfg);
+      }
     }
   }
 
@@ -642,6 +655,10 @@ function propertyGraphService (req, log, settings) {
     var prop = ev.dataTransfer.getData("prop");
     var special = ev.dataTransfer.getData("special");
     if (!uri && !prop && !special) return null;
+    if (special == 'example') {
+      createExample( ev.dataTransfer.getData("type"), ev );
+      return null;
+    }
     // Create or get the node unless this a literal property
     if (special != 'literal') {
       var d = propertyGraph.getNodeByUri(uri);
@@ -692,6 +709,81 @@ function propertyGraphService (req, log, settings) {
     }
 
     if (d && (!prop) && d != propertyGraph.select) d.onClick();
+    refresh();
+  }
+
+  function createExample (type, ev) {
+    var z = propertyGraph.visual.getZoom();
+    var x = (ev.layerX - z[0])/z[2];
+    var y = (ev.layerY - z[1])/z[2];
+
+    var s = addNode();
+    var p = s.newProp();
+    var o = addNode();
+    addEdge(p, o);
+    s.setPosition(x, y);
+    o.setPosition(x+280, y+25);
+
+    switch (type) {
+      case 'cats':
+        s.variable.setAlias('cat');
+        p.addUri("http://www.wikidata.org/prop/direct/P31");  p.mkConst();
+        o.addUri("http://www.wikidata.org/entity/Q146");      o.mkConst();
+        break;
+
+      case 'w3c':
+        s.variable.setAlias('standard');
+        p.addUri("http://www.wikidata.org/prop/direct/P1462");  p.mkConst();
+        o.addUri("http://www.wikidata.org/entity/Q37033");      o.mkConst();
+        break;
+
+      case 'mosquito':
+        s.variable.setAlias('mosquito');
+        p.addUri("http://www.wikidata.org/prop/direct/P31");  p.mkConst();
+        o.addUri("http://www.wikidata.org/entity/Q16521");    o.mkConst();
+        var p2 = s.newProp(); p2.addUri("http://www.wikidata.org/prop/direct/P105"); p2.mkConst();
+        var o2 = addNode(); o2.addUri("http://www.wikidata.org/entity/Q7432"); o2.mkConst();
+        var p3 = s.newProp(); p3.addUri("http://www.wikidata.org/prop/direct/P171"); p3.mkConst(); p3.star = true;
+        var o3 = addNode(); o3.addUri("http://www.wikidata.org/entity/Q7367"); o3.mkConst();
+        var p4 = s.newProp(); p4.addUri("http://www.wikidata.org/prop/direct/P225"); p4.mkConst(); p4.mkLiteral();
+        p4.getLiteral().setAlias('taxon_name');
+        addEdge(p2, o2); o2.setPosition(x+280, y+65);
+        addEdge(p3, o3); o3.setPosition(x+280, y+105);
+        //addEdge(p4, o4); o4.setPosition(x+280, y+145);
+        break;
+
+      case 'cancer':
+        s.variable.setAlias('drug');
+        o.variable.setAlias('gene_product'); o.hide = true;
+        p.addUri("http://www.wikidata.org/prop/direct/P129"); p.mkConst();
+        var s2 = addNode(); s2.variable.setAlias('gene');
+        var p2 = s2.newProp(); p2.addUri("http://www.wikidata.org/prop/direct/P688"); p2.mkConst();
+        var s3 = addNode(); s3.variable.setAlias('disease');
+        var p3 = s3.newProp(); p3.addUri("http://www.wikidata.org/prop/direct/P279"); p3.mkConst(); p3.star = true;
+        var p4 = s3.newProp(); p4.addUri("http://www.wikidata.org/prop/direct/P2293"); p4.mkConst();
+        var o2 = addNode(); o2.addUri("http://www.wikidata.org/entity/Q12078"); o2.mkConst();
+        var p5 = o.newProp(); p5.addUri("http://www.wikidata.org/prop/direct/P682"); p5.mkConst();
+        var o3 = addNode(); o3.variable.setAlias('biological_process');
+        var p6 = o3.newProp(); p6.addUri("http://www.wikidata.org/prop/direct/P361");
+                               p6.addUri("http://www.wikidata.org/prop/direct/P279"); p6.mkConst(); p6.star = true;
+        var o4 = addNode(); o4.addUri("http://www.wikidata.org/entity/Q14818032"); o4.mkConst();
+
+        addEdge(p2, o);
+        addEdge(p4, s2);
+        addEdge(p3, o2);
+        addEdge(p5, o3);
+        addEdge(p6, o4);
+        o.setPosition(x,y);
+        s3.setPosition(x, y-110);
+        o4.setPosition(x, y+80);
+        o2.setPosition(x+280, y-85);
+        s2.setPosition(x+280, y-35);
+        o3.setPosition(x+280, y+45);
+        s.setPosition(x-280, y-25);
+        break;
+    }
+
+    s.onClick();
     refresh();
   }
 
@@ -779,22 +871,34 @@ function propertyGraphService (req, log, settings) {
         if (r.isVariable()) return r.variable;
         else {
           if (r.uris.length == 1) {
-            if (r.parent) {
+            if (r.parent) { //is literal
               return '"' + r.getUri() + '"';
             } else {
               var pre = r.getUri().toPrefix();
               if (pre[1]) prefixes.add(pre[1]);
-              return pre[0];
+              if (r.star) return pre[0] + '*'; //Star on one property
+              else return pre[0];
             }
           } else {
-            values.add(r);
-            return r.variable;
+            if (r.parentNode) { //properties
+              var txt = '(' + r.uris.map(u => {
+                var pre = u.toPrefix();
+                if (pre[1]) prefixes.add(pre[1]);
+                return pre[0];
+              }).join('|');
+              txt += ')'
+              if (r.star) return txt + '*';
+              else return txt;
+            } else {
+              values.add(r);
+              return r.variable;
+            }
           }
         }
       }).join(' ') + ' .\n';
     }
 
-    self.q = "SELECT DISTINCT " + self.select.map(r => {return r.variable}).join(' ') + " WHERE {\n"
+    self.q = "SELECT DISTINCT " + self.select.filter(r => {return !r.hide}).map(r => {return r.variable}).join(' ') + " WHERE {\n"
     self.triples.forEach(t => {
       self.q += '  ' + writeTriple(t);
       // flatten all filters and apply
