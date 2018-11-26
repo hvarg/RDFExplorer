@@ -1,3 +1,4 @@
 node_modules/
 public/components/
 public/.ignore
+survey-results/*.json

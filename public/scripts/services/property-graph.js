@@ -1,12 +1,12 @@
 angular.module('rdfvis.services').factory('propertyGraphService', propertyGraphService);
-propertyGraphService.$inject = ['requestService'];
+propertyGraphService.$inject = ['requestService', 'logService', 'settingsService'];
 
-function propertyGraphService (req) {
+function propertyGraphService (req, log, settings) {
   var nodeWidth = 220,
+      childWidth = 200,
       nodeBaseHeight = 30,
-      diffParentChild = 20,
       childHeight = 20,
-      childPadding = 10;
+      padding = 10;
 
   var propertyGraph = { //TODO this to the end;
     // DATA:
@@ -31,9 +31,9 @@ function propertyGraphService (req) {
     addNode: addNode,
     addEdge: addEdge,
     getNodeByUri: getNodeByUri,
-    toQuery: toQuery,
     connect: connect,
     refresh: refresh,
+    reset: reset,
     getSelected: getSelected,
     // Defined elsewhere:
     describe: null,
@@ -49,9 +49,8 @@ function propertyGraphService (req) {
   var lastVarId = 0;
   var uriToNode = {};
   var usedAlias = [];
-
-
-  function u (uri) { return '<'+uri+'>'; }
+  var lastVarResId = 0;
+  var lastVarPropId = 0;
 
   /******* Filter TDA ********************************************************/
   function Filter (variable, type, data) {
@@ -77,18 +76,38 @@ function propertyGraphService (req) {
     if (this.type == 'geq') {
         return 'FILTER (' + this.variable.get() + ' >' + this.data.number + ')\n'
     }
+    if (this.type == 'isuri') {
+      return 'FILTER isIRI(' + this.variable.get() + ')\n';
+    }
+    if (this.type == 'isliteral') {
+      return 'FILTER isLiteral(' + this.variable.get() + ')\n';
+    }
     console.log('filter type "'+ type +'" not implemented.');
     return null;
   };
 
   /******* Variable TDA ******************************************************/
   function Variable (parent) {
-    this.id = lastVarId++; // Secure variable name
+    if (parent instanceof Node) {
+      this.id = 'var' + lastVarResId++;
+    } else if (parent instanceof Property || parent instanceof Literal) {
+      this.id = 'prop' + lastVarPropId++;
+    } else {
+      this.id = lastVarId++;
+    }
     this.alias = '';       // User defined variable name
     this.filters = [];
     this.options = {show: true, count: false};
     this.results = [];
-    //this.parent = parent;
+    this.parent  = parent;
+  }
+
+  Variable.prototype.isBinded = function () {
+    if (this.parent instanceof Node || this.parent instanceof Property || this.parent instanceof Literal) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   Variable.prototype.toString = function () {
@@ -120,7 +139,7 @@ function propertyGraphService (req) {
   };
 
   var validOpts = ['show', 'count'];
-  Variable.prototype.setOptions = function (opts) {
+  Variable.prototype.setOptions = function (opts) { //TODO: unused
     var keys = Object.keys(opts);
     keys = keys.filter(k => {
       return (validOpts.indexOf(k) >= 0);
@@ -131,7 +150,9 @@ function propertyGraphService (req) {
   };
 
   Variable.prototype.addFilter = function (type, data) {
+    log.add('New filter (' + type + ') for variable ' + String(this) + ' (' + this.id + ')');
     this.filters.push( new Filter(this, type, data) );
+    return this.filters[this.filters.length-1];
   };
 
   Variable.prototype.removeFilter = function (filter) {
@@ -165,7 +186,7 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.onClick = function () {
     this.select();
-    if (!this.isVariable() && !this.isLiteral() && this.hasUris()) this.describe();
+    if (!this.isVariable() && this.hasUris() && this instanceof Node) this.describe();
     else this.edit();
   };
 
@@ -176,11 +197,17 @@ function propertyGraphService (req) {
     propertyGraph.selected = this;
   };
 
+  RDFResource.prototype.isSelected = function () {
+    return (propertyGraph.selected === this);
+  };
+
   RDFResource.prototype.mkVariable = function () {
+    log.add('Node id ' + this.id + ' is now a variable');
     this.isVar = true;
   };
 
   RDFResource.prototype.mkConst = function () {
+    log.add('Node id ' + this.id + ' is now a constant');
     this.isVar = false;
   };
 
@@ -211,6 +238,7 @@ function propertyGraphService (req) {
 
   RDFResource.prototype.addUri = function (uri) {
     if (this.uris.indexOf(uri) < 0) {
+      log.add('Adding uri to node id ' + this.id + ' ('+ uri + ')');
       this.uris.push(uri);
       if (this.uris.length == 1) this.cur = 0;
       return true;
@@ -233,150 +261,31 @@ function propertyGraphService (req) {
   RDFResource.prototype.getRepr = function () {
     if (this.isVariable()) return this.variable.get();
     if (this.hasUris()) {
-      if (this.uris.length == 1) return this.getUri().getLabel();
-      else return '('+(this.cur+1)+'/'+this.uris.length+') '+ this.getUri().getLabel();
+      if (this.uris.length == 1) {
+        if (this.star) return this.getUri().getLabel() + '*';
+        else return this.getUri().getLabel();
+      }
+      else {
+        if (this.star) return '('+(this.cur+1)+'/'+this.uris.length+') '+ this.getUri().getLabel() + '*';
+        else return '('+(this.cur+1)+'/'+this.uris.length+') '+ this.getUri().getLabel();
+      }
     }
     return null;
   };
 
-  RDFResource.prototype.createQuery = function () {
-    //FIXME: do not return if this is unbound
-    if (!this.isVariable()) return null;
-    var self = this;
-    var q = '';
-    var header  = 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n'
-        header += 'SELECT DISTINCT ?uri ?label WHERE {\n'
-        header += '  { SELECT DISTINCT ('+ self.variable.get() +' as ?uri) {\n';
-    var tmp;
-    var vEdges = [];
-    var vNodes = [];
-    var queue  = [self];
-
-    while (queue.length > 0) {
-      var cur = queue.pop();
-      vNodes.push(cur);
-      var edges = propertyGraph.edges.filter(e => {
-        return (e.source.parentNode == cur || e.target == cur || e.source == cur);
-      });
-      edges.forEach(e => {
-        if (vEdges.indexOf(e) < 0) {
-          vEdges.push(e);
-          tmp = [e.source.parentNode, e.source, e.target];
-          for (i = 0; i < 3; i++) {
-            if (tmp[i].isVariable()) {
-              if (tmp[i] !== cur && vNodes.indexOf(tmp[i]) < 0) queue.push(tmp[i]);
-              if (tmp[i] === self) tmp[i] = self.variable.get(); //FIXME ?
-              else tmp[i] = tmp[i].variable.get();
-            } else {
-              //TODO: more than one value
-              tmp[i] = u(tmp[i].getUri());
-            }
-          }
-          q += '    ' + tmp.join(' ') + ' .\n';
-        }
-      });
-      cur.variable.filters.forEach(filter => {
-        q += '    ' + filter.apply();
-      });
-      if (cur.isNode()) {
-        cur.literalRelations().forEach(relation => {
-          tmp = ['','',''];
-          if (relation.parentNode.isVariable()) tmp[0] = relation.parentNode.variable.get();
-          else tmp[0] = u(relation.parentNode.getUri());
-          if (relation.isVariable()) tmp[1] = relation.variable.get();
-          else tmp[1] = u(relation.getUri());
-          tmp[2] = relation.literal.get();
-          q += '    ' + tmp.join(' ') + ' .\n';
-          relation.variable.filters.forEach(filter => { q += '    ' + filter.apply(); });
-          relation.literal.filters.forEach(filter => { q += '    ' + filter.apply(); });
-        });
-      }
+  RDFResource.prototype.createQuery = function (config) {
+    var cfg = config || {};
+    if (!this.isVariable())
+      return null;
+    var q = new Query(this);
+    if (q.triples.length == 0) {
+      if (cfg.callback) cfg.callback();
+      return null;
     }
-    if (q) q = header + q;
-    else return null;
-    q += '    } limit 10\n  }\n'
-    q += '  OPTIONAL {\n'
-    q += '    FILTER (lang(?label) = "en")\n';
-    q += '    ?uri rdfs:label ?label .\n';
-    q += '  }\n} limit 10';
-    //console.log(q);
+
+    if (cfg.limit)  q.limit  = cfg.limit;
+    if (cfg.offset) q.offset = cfg.offset;
     return q;
-  };
-
-  RDFResource.prototype.getResults = function (onStart, onEnd) {
-    if (!this.isVariable()) {
-      console.log('this resource is a constraint!');
-      return null;
-    }
-    if (onStart) onStart();
-
-    var self = this;
-
-    var q = this.createQuery();
-    console.log(q);
-
-    var myQuery = propertyGraph.toQuery([self])[0];
-    /*var b = myQuery.addLabels([repr]);
-    b[repr].filters.push({apply: function () {
-      return 'FILTER (lang('+repr+'Label) = "en")\n';
-    },});*/
-    console.log(myQuery.get());
-    var q = myQuery.get();
-
-    if (q) {
-      req.execQuery(q, data => {
-        console.log(data.results);
-        self.variable.results = data.results.bindings;
-        //console.log(self.variable.results);
-        if (onEnd) onEnd();
-      });
-    }
-  };
-
-  RDFResource.prototype.loadPreview = function (opts) {
-    if (opts && opts.onStart) opts.onStart();
-    var callback = (opts && opts.onEnd) ? opts.onEnd : null;
-
-    var self = this;
-    var queries = propertyGraph.toQuery([self]);
-    var myQuery = queries.filter(q => { return (q.resources.indexOf(self) >= 0); })
-
-    if (myQuery.length == 1) {
-      if (self.isVariable()) {
-        myQuery = myQuery[0];
-        myQuery.data.select = [self.variable]; //Only get this variable.
-        if (opts) {
-          if (opts.limit) myQuery.data.limit = opts.limit;
-          if (opts.offset) myQuery.data.offset = opts.offset;
-          if (opts.varFilter) {
-            var bindings  = myQuery.addLabels([self.variable]);
-            var labelName = Object.keys(bindings)[0];
-            var thisFilter = new Filter({get: () => {return labelName}}, 'regex', {'regex': opts.varFilter});
-            myQuery.data.filters.add(thisFilter);
-          }
-        }
-        retrieveResults(myQuery, self.isLiteral() ? null :  callback);
-      }
-
-      if (self.isLiteral()) {
-        var litQuery = propertyGraph.toQuery([self])[0];
-        litQuery.data.select = [self.literal]; //Only get this variable.
-        if (opts) {
-          if (opts.litlimit) litQuery.data.limit = opts.litlimit;
-          if (opts.litoffset) litQuery.data.offset = opts.litoffset;
-          if (opts.litFilter) {
-            litQuery.data.filters.add(
-              new Filter(self.literal, 'regex', {'regex': opts.litFilter})
-            );
-          }
-        }
-        retrieveResults(litQuery, callback);
-      }
-
-    } else {
-      console.log('cant resolve this resource');
-      return null;
-    }
   }
 
   RDFResource.prototype.hasResults = function () {
@@ -394,8 +303,7 @@ function propertyGraphService (req) {
     // Representation stuff
     propertyGraph.nodes.push(this);
     this.id = lastNodeId++;
-    this.lastPropDraw = 0;
-    this.redraw = false;
+    log.add('New node id ' + this.id);
   }
 
   Node.prototype = Object.create(RDFResource.prototype);
@@ -410,7 +318,9 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.getHeight = function () {
-    return nodeBaseHeight + this.properties.length*(childHeight+childPadding);
+    var h = nodeBaseHeight + this.properties.length * (childHeight + padding);
+    this.properties.filter(p=>{return p.literal}).forEach(p=>{ h+= (childHeight + padding); })
+    return h;
   };
 
   Node.prototype.setPosition = function (x, y) {
@@ -425,13 +335,13 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.getColor = function () {
-    // This function returns an unique 'string' that defines the color of this node.
     if (this.isVariable()) return propertyGraph.colors.rVar;
     else return propertyGraph.colors.rConst;
   };
 
   Node.prototype.newProp = function () {
-    return new Property(this);
+    var n = new Property(this);
+    return n;
   };
 
   Node.prototype.getPropByUri = function (uri) {
@@ -459,6 +369,7 @@ function propertyGraphService (req) {
   };
 
   Node.prototype.delete = function () {
+    log.add('Deleting node id ' + this.id);
     var i, j, edge, prop, tmp;
     // remove all edges with this node as target.
     for (i = propertyGraph.edges.length - 1; i >= 0; i--) {
@@ -468,8 +379,9 @@ function propertyGraphService (req) {
         tmp = propertyGraph.edges.filter(e => { return (e.source === edge.source); });
         if (tmp.length == 1) {
           tmp[0].source.delete();
+        } else {
+          propertyGraph.edges.splice(i, 1);
         }
-        propertyGraph.edges.splice(i, 1);
       }
     }
     // remove all edges with source = some property of this node.
@@ -499,39 +411,65 @@ function propertyGraphService (req) {
     }
   };
 
+  Node.prototype.loadPreview = function (config) {
+    var cfg = config || cfg,
+        q = this.createQuery(cfg);
+    if (q) {
+      if (cfg.varFilter) {
+        var l = q.addLabel(this);
+        l.variable.addFilter('regex', {regex: cfg.varFilter});
+      } else {
+        q.addOptLabel(this);
+      }
+      q.triples.forEach(t => {
+        if (t[0].isVariable() && t[1].isVariable()) {
+          var dc = new RDFResource(),
+              p = new RDFResource();
+          dc.mkConst();
+          dc.addUri('http://wikiba.se/ontology#directClaim');
+          p.variable.alias = t[1].variable.getName() + 'tmp';
+          q.triples.push([p, dc, t[1]])
+        }
+      });
+      if (this.hide) {
+        console.log(this);
+        this.hide = false;
+        q.retrieve(cfg);
+        this.hide = true;
+      } else {
+        q.retrieve(cfg);
+      }
+    }
+  }
+
   /******* Property TDA ******************************************************/
   function Property (parentNode) {
     RDFResource.call(this);
-    this.id = lastPropId++;
+    this.id         = lastPropId++;
     this.parentNode = parentNode;
-    this.isLit = false;
-    this.literal = null;
-    this.index = parentNode.properties.length;
+    this.index      = parentNode.properties.length;
+    this.literal    = null;
     parentNode.properties.push(this);
+    log.add('New property id ' + this.id + ' for node id ' + parentNode.id);
   }
 
   Property.prototype = Object.create(RDFResource.prototype);
   Property.prototype.constructor = Property;
 
-  Object.defineProperty(Property.prototype, 'y',  { get: function() { return this.parentNode.y;  } }); 
-  Object.defineProperty(Property.prototype, 'x',  { get: function() { return this.parentNode.x; } });
+  Object.defineProperty(Property.prototype, 'y', { get: function() { return this.parentNode.y; } }); 
+  Object.defineProperty(Property.prototype, 'x', { get: function() { return this.parentNode.x; } });
 
-  Property.prototype.getWidth = function () {
-    return this.parentNode.getWidth() - diffParentChild;
-  };
+  Property.prototype.getWidth   = function () { return childWidth; };
+  Property.prototype.getHeight  = function () { return childHeight; };
+  Property.prototype.getX       = function () { return -(this.getWidth()/2); };
+  Property.prototype.getY       = function () { return this.getOffsetY(); };
 
-  Property.prototype.getHeight = function () {
-    return childHeight;
-  };
-
-  Property.prototype.getOffsetY = function () {
-    return this.parentNode.getBaseHeight()/2 + this.index * (this.getHeight() + childPadding);
-  };
-
-  Property.prototype.getRepr = function () {
-    var repr = RDFResource.prototype.getRepr.call(this);
-    if (repr && this.isLiteral()) return repr + ' → ' + this.literal.get();
-    else return repr
+  Property.prototype.getOffsetY = function () { //FIXME: this is executed a lot of times;
+    var h = this.parentNode.getBaseHeight()/2 + this.index * (this.getHeight() + padding);
+    for (var i = 0; i < this.index; i++) {
+      if (this.parentNode.properties[i].literal) h += (childHeight + padding);
+    }
+    return h;
   };
 
   Property.prototype.getColor = function () {
@@ -549,16 +487,24 @@ function propertyGraphService (req) {
   };
 
   Property.prototype.isLiteral = function () {
-    return this.isLit;
+    return !!(this.literal);
   };
 
   Property.prototype.mkLiteral = function () {
-    this.isLit = true;
-    if (!this.literal) this.literal = new Variable();
-    //TODO
+    for (var i = 0; i < propertyGraph.edges.length; i++) {
+      if (propertyGraph.edges[i].source === this)
+        return null;
+    }
+    log.add('Property id ' + this.id + 'is now literal');
+    return new Literal(this);
+  }
+
+  Property.prototype.getLiteral = function () {
+    return this.literal.variable;
   }
 
   Property.prototype.delete = function () {
+    log.add('Deleting property id ' + this.id);
     var thisProp = this;
     var i, edge;
     // remove all edges 
@@ -572,8 +518,87 @@ function propertyGraphService (req) {
     thisProp.parentNode.properties.splice(i, 1);
     for (; i < thisProp.parentNode.properties.length; i++)
       thisProp.parentNode.properties[i].index -= 1;
-    thisProp.parentNode.redraw = true;
-    if (propertyGraph.selected == this) propertyGraph.selected = null;
+    if (propertyGraph.selected == this) thisProp.parentNode.onClick();
+  }
+
+  Property.prototype.loadPreview = function (config) {
+    //For wikidata only
+    var cfg = config || {},
+        q = this.createQuery(cfg),
+        dc = new RDFResource(),
+        p = new RDFResource();
+    dc.mkConst();
+    dc.addUri('http://wikiba.se/ontology#directClaim');
+    /*dc.variable.alias = 'wikibaseP';
+    dc.variable.filters.push({apply: function () {
+      return 'FILTER(regex(str(?wikibaseP), "http://wikiba.se/ontology#" ) )\n';
+    }});*/
+    p.variable.alias = this.variable.getName();
+    var t1 = [p, dc, this],
+        t2 = q.createTripleLabel(p);
+
+    if (cfg.varFilter) {
+      t2[2].variable.addFilter('regex', {regex: cfg.varFilter});
+      q.triples.push(t1);
+      q.triples.push(t2);
+    } else {
+      q.triples.push(t1)
+      q.optionals.push([t2]);
+    }
+
+    q.select.push(t2[2]);
+    p.variable.alias = this.variable.getName() + 'tmp';
+    q.retrieve(cfg);
+  }
+
+  /******* Literal TDA *******************************************************/
+  function Literal (parentProperty) {
+    RDFResource.call(this);
+    this.parent = parentProperty;
+    parentProperty.literal = this;
+  }
+
+  Literal.prototype = Object.create(RDFResource.prototype);
+  Literal.prototype.constructor = Literal;
+  Literal.prototype.getColor = function () {
+    if (this.isVariable()) return propertyGraph.colors.rVar;
+    else return propertyGraph.colors.rConst;
+    //return propertyGraph.colors.pLit;
+  }
+
+  Literal.prototype.getOffsetY = function () { //FIXME: this is executed a lot of times;
+    return this.parent.getOffsetY() + this.getHeight() + padding;
+  };
+
+  Literal.prototype.getWidth = function () {
+    return childWidth;
+  };
+
+  Literal.prototype.getHeight = function () {
+    return childHeight;
+  };
+
+  Literal.prototype.getPath = function () {
+    var x = 10 - this.parent.getWidth()/2,
+        y = this.parent.getOffsetY() + this.parent.getHeight(),
+        x2 = x + 17,
+        y2 = y + 20;
+    return 'M'+x+','+y+'V'+y2+'H'+x2;
+  };
+
+  Literal.prototype.delete = function () {
+    log.add('Deleting literal id ' + this.id);
+    this.parent.delete();
+  }
+
+  Literal.prototype.loadPreview = function (config) {
+    var cfg = config || {},
+        q = this.createQuery(cfg);
+    if (cfg.varFilter) {
+      var tmpF = this.variable.addFilter('regex', {regex: cfg.varFilter});
+    }
+    q.retrieve(cfg);
+    this.variable.removeFilter(tmpF);
   }
 
   /******* Edge TDA **********************************************************/
@@ -581,6 +606,7 @@ function propertyGraphService (req) {
     this.source = source;
     this.target = target;
     propertyGraph.edges.push(this);
+    log.add('New edge from property id ' + source.id + ' to node id ' + target.id);
   }
 
   Edge.prototype.contains = function (resource) {
@@ -601,6 +627,20 @@ function propertyGraphService (req) {
     propertyGraph.visual.updateGraph();
   }
 
+  function reset () {
+    propertyGraph.selected = null;
+    propertyGraph.nodes = [];
+    propertyGraph.edges = [];
+    lastNodeId = 0;
+    lastPropId = 0;
+    lastVarId = 0;
+    uriToNode = {};
+    usedAlias = [];
+    propertyGraph.visual.nodes = propertyGraph.nodes;
+    propertyGraph.visual.edges = propertyGraph.edges;
+    refresh();
+  }
+
   function getSelected () {
     return propertyGraph.selected;
   }
@@ -615,6 +655,10 @@ function propertyGraphService (req) {
     var prop = ev.dataTransfer.getData("prop");
     var special = ev.dataTransfer.getData("special");
     if (!uri && !prop && !special) return null;
+    if (special == 'example') {
+      createExample( ev.dataTransfer.getData("type"), ev );
+      return null;
+    }
     // Create or get the node unless this a literal property
     if (special != 'literal') {
       var d = propertyGraph.getNodeByUri(uri);
@@ -659,17 +703,91 @@ function propertyGraphService (req) {
       p.addUri('http://www.w3.org/2000/01/rdf-schema#label');
       p.mkConst();
       p.mkLiteral();
-      p.literal.setAlias(alias+'Label');
-      p.literal.addFilter('lang', {language: 'en'});
-      p.literal.addFilter('text', {keyword: alias});
+      p.getLiteral().setAlias(alias+'Label');
+      p.getLiteral().addFilter('lang', {language: 'en'});
+      p.getLiteral().addFilter('text', {keyword: alias});
     }
 
     if (d && (!prop) && d != propertyGraph.select) d.onClick();
     refresh();
   }
 
+  function createExample (type, ev) {
+    var z = propertyGraph.visual.getZoom();
+    var x = (ev.layerX - z[0])/z[2];
+    var y = (ev.layerY - z[1])/z[2];
+
+    var s = addNode();
+    var p = s.newProp();
+    var o = addNode();
+    addEdge(p, o);
+    s.setPosition(x, y);
+    o.setPosition(x+280, y+25);
+
+    switch (type) {
+      case 'cats':
+        s.variable.setAlias('cat');
+        p.addUri("http://www.wikidata.org/prop/direct/P31");  p.mkConst();
+        o.addUri("http://www.wikidata.org/entity/Q146");      o.mkConst();
+        break;
+
+      case 'w3c':
+        s.variable.setAlias('standard');
+        p.addUri("http://www.wikidata.org/prop/direct/P1462");  p.mkConst();
+        o.addUri("http://www.wikidata.org/entity/Q37033");      o.mkConst();
+        break;
+
+      case 'mosquito':
+        s.variable.setAlias('mosquito');
+        p.addUri("http://www.wikidata.org/prop/direct/P31");  p.mkConst();
+        o.addUri("http://www.wikidata.org/entity/Q16521");    o.mkConst();
+        var p2 = s.newProp(); p2.addUri("http://www.wikidata.org/prop/direct/P105"); p2.mkConst();
+        var o2 = addNode(); o2.addUri("http://www.wikidata.org/entity/Q7432"); o2.mkConst();
+        var p3 = s.newProp(); p3.addUri("http://www.wikidata.org/prop/direct/P171"); p3.mkConst(); p3.star = true;
+        var o3 = addNode(); o3.addUri("http://www.wikidata.org/entity/Q7367"); o3.mkConst();
+        var p4 = s.newProp(); p4.addUri("http://www.wikidata.org/prop/direct/P225"); p4.mkConst(); p4.mkLiteral();
+        p4.getLiteral().setAlias('taxon_name');
+        addEdge(p2, o2); o2.setPosition(x+280, y+65);
+        addEdge(p3, o3); o3.setPosition(x+280, y+105);
+        //addEdge(p4, o4); o4.setPosition(x+280, y+145);
+        break;
+
+      case 'cancer':
+        s.variable.setAlias('drug');
+        o.variable.setAlias('gene_product'); o.hide = true;
+        p.addUri("http://www.wikidata.org/prop/direct/P129"); p.mkConst();
+        var s2 = addNode(); s2.variable.setAlias('gene');
+        var p2 = s2.newProp(); p2.addUri("http://www.wikidata.org/prop/direct/P688"); p2.mkConst();
+        var s3 = addNode(); s3.variable.setAlias('disease');
+        var p3 = s3.newProp(); p3.addUri("http://www.wikidata.org/prop/direct/P279"); p3.mkConst(); p3.star = true;
+        var p4 = s3.newProp(); p4.addUri("http://www.wikidata.org/prop/direct/P2293"); p4.mkConst();
+        var o2 = addNode(); o2.addUri("http://www.wikidata.org/entity/Q12078"); o2.mkConst();
+        var p5 = o.newProp(); p5.addUri("http://www.wikidata.org/prop/direct/P682"); p5.mkConst();
+        var o3 = addNode(); o3.variable.setAlias('biological_process');
+        var p6 = o3.newProp(); p6.addUri("http://www.wikidata.org/prop/direct/P361");
+                               p6.addUri("http://www.wikidata.org/prop/direct/P279"); p6.mkConst(); p6.star = true;
+        var o4 = addNode(); o4.addUri("http://www.wikidata.org/entity/Q14818032"); o4.mkConst();
+
+        addEdge(p2, o);
+        addEdge(p4, s2);
+        addEdge(p3, o2);
+        addEdge(p5, o3);
+        addEdge(p6, o4);
+        o.setPosition(x,y);
+        s3.setPosition(x, y-110);
+        o4.setPosition(x, y+80);
+        o2.setPosition(x+280, y-85);
+        s2.setPosition(x+280, y-35);
+        o3.setPosition(x+280, y+45);
+        s.setPosition(x-280, y-25);
+        break;
+    }
+
+    s.onClick();
+    refresh();
+  }
+
   /***************************************************************************/
-  /**************************/
   /****** Public stuff ******/
   function addNode () {
     return new Node();
@@ -677,225 +795,242 @@ function propertyGraphService (req) {
 
   function addEdge (source, target) {
     /* FIXME: duplicate edges */
-    if (source instanceof Property) 
-      return new Edge(source, target);
-    if (source instanceof Node) {
-      return new Edge(source.newProp(), target);
-    }
+    if (source instanceof Property) return new Edge(source, target);
+    if (source instanceof Node)     return new Edge(source.newProp(), target);
   }
 
   function getNodeByUri (uri) {
     return uriToNode[uri] || null;
   }
 
-  function toQuery (resources) {
-    // If no resources then all resources.
-    if (!resources || resources.length == 0) {
-      resources = [];
-      propertyGraph.nodes.forEach(node => {
-        resources.push(node);
-        node.properties.forEach(prop => {
-          resources.push(prop);
-        });
-      });
-    }
-
-    resources = resources.filter(r => { return r.isVariable() || (r.isProperty() && r.isLiteral()); });
-
-    var queries = [];
-
-    while (resources.length > 0) {
-      var toSolve = new Set();
-      var triples = new Set();
-      var filters = new Set();
-      var literals = new Set();
-
-      var queue = [resources.pop()];
-      
-      while (queue.length > 0) {
-        var cur = queue.pop();
-        toSolve.add(cur);
-
-        // Add edges who contains this resource (cur)
-        var edges = propertyGraph.edges.filter(e => { return e.contains(cur); });
-        edges.forEach(e => {
-          triples.add(e);
-          [e.source.parentNode, e.source, e.target].forEach(r => {
-            if (r.isVariable()) {
-              if (!toSolve.has(r)) queue.push(r);
-            }
-          });
-        });
-
-        // Add filters of this resource
-        cur.variable.filters.forEach(f => { filters.add(f); });
-
-        if (cur.isNode()) {
-          // If is a node, add all literal relations.
-          cur.literalRelations().forEach(r => {
-            if (!toSolve.has(r)) queue.push(r);
-          });
-        } else if (cur.isLiteral()) {
-          // If is a literal property add filters, this resource to literals and parent to queue.
-          literals.add(cur);
-          cur.literal.filters.forEach(f => { filters.add(f); });
-          if (cur.parentNode.isVariable()) {
-            if (!toSolve.has(cur.parentNode)) queue.push(cur.parentNode);
-          }
-        }
-      }
-
-      // Remove this query resources from requested elements and add variables to select
-      var select = [];
-      toSolve.forEach(r => {
-        // remove
-        var index = resources.indexOf(r);
-        if (index >= 0) resources.splice(index, 1);
-        // add
-        if (r.isVariable()) select.push( r.variable );
-        if (r.isProperty() && r.isLiteral()) select.push( r.literal );
-      });
-
-      // Check edges and add triples, values and prefixes
-      var prefixes = new Set();
-      var values = new Set();
-      var where = [];
-      var tmp, pre;
-      triples.forEach(e => {
-        tmp = [];
-        [e.source.parentNode, e.source, e.target].forEach(r => {
-          if (r.isVariable()) tmp.push(r.variable);
-          else {
-            if (r.uris.length == 1) {
-              pre = r.getUri().toPrefix();
-              if (pre[1]) prefixes.add(pre[1]);
-              tmp.push(pre[0]);
-            } else {
-              tmp.push(r.variable);
-              values.add(r);
-            }
-          }
-        });
-        where.push(tmp);
-      });
-
-      // Check literals
-      literals.forEach(lit => { 
-        tmp = [];
-        [lit.parentNode, lit].forEach(r => {
-          if (r.isVariable()) tmp.push(r.variable);
-          else {
-            if (r.uris.length == 1) {
-              pre = r.getUri().toPrefix();
-              if (pre[1]) prefixes.add(pre[1]);
-              tmp.push(pre[0]);
-            } else {
-              tmp.push(r.variable);
-              values.add(r);
-            }
-          }
-        });
-        tmp.push( lit.literal.get() );
-        where.push(tmp);
-      });
-
-      if (select.length > 0 && where.length > 0) queries.push({
-        resources: Array.from(toSolve).sort(),
-        data: {select: select, where: where, filters: filters, values: values, prefixes: prefixes, optional: [] },
-        get: function () {
-          if (this.data.select.length == 0 || (this.data.where.length == 0 && this.data.optional.length == 0))
-            return null;
-          // Use this function to get the query.
-          var q = 'SELECT DISTINCT ' + this.data.select.map(s => {return s.get()}).join(' ') + ' WHERE {\n'
-          this.data.where.forEach(triple => {
-            q += '  ' + triple.join(' ') + ' .\n';
-          });
-
-          this.data.optional.forEach(opt => {
-            q += '  OPTIONAL {\n';
-            opt.where.forEach(triple => {
-              q += '    ' + triple.join(' ') + ' .\n';
-            });
-            opt.filters.forEach(f => { q += '    ' + f.apply()});
-            q += '  }'
-          });
-
-          this.data.filters.forEach(f => {q += '  ' + f.apply(); });
-
-          this.data.values.forEach(v => {
-            q += '  VALUES ' + v.variable.get() + ' {' + v.uris.map(u => {
-              pre = u.toPrefix();
-              if (pre[1]) this.data.prefixes.add(pre[1]);
-              return pre[0];
-            }).join(' ') + '}\n';
-          });
-          q += '}';
-
-          if (this.data.limit) q += ' limit ' + this.data.limit;
-          if (this.data.offset) q += ' offset ' + this.data.offset;
-
-          var h = '';
-          this.data.prefixes.forEach(p => {
-            h += 'PREFIX ' + p.prefix + ': <' + p.uri + '>\n'
-          });
-
-          return h + q;
-        },
-        addLabels: function (select, opt) {
-          opt = opt || false;
-          if (select.length == 0) return null;
-          var pre = "http://www.w3.org/2000/01/rdf-schema#label".toPrefix();
-          if (pre[1]) this.data.prefixes.add(pre[1]);
-          var bindings = {}
-          select.forEach(s => {
-            var name = s.get()+'Label';
-            var trip = [s, pre[0], name];
-            bindings[name] = s;
-            if (opt) {
-              this.data.optional.push({where: [trip], filters: []});
-            } else {
-              var index = this.data.where.findIndex(t => { return t.join(' ') == trip.join(' ')});
-              if (index < 0)
-                this.data.where.push(trip);
-            }
-          });
-          return bindings;
-        },
-      });
-    }
-    return queries;
+  /***** Query creator stuff *****/
+  function Query (resource) {
+    this.select = [resource];
+    this.update(resource);
+    this.optionals = [];
   }
 
-  function retrieveResults (query, callback) {
-    var sparql = query.get();
-    var toLoad = [];
-    query.data.select.forEach(s => {
-      if (s.query != sparql) toLoad.push(s);
-    });
+  Query.prototype.update = function (resource) {
+    var dep = new Set(),
+        queue = [],
+        triples = [];
 
-    if (query.data.select.length != toLoad.length) {
-      query.data.select = toLoad;
-      sparql = query.get();
+    queue.enqueue = function (x) {
+      if (x.isVariable() && !dep.has(x)) {
+        dep.add(x);
+        this.push(x);
+        return true;
+      }
+      return false;
+    };
+
+    triples.add = function (s, p, o) {
+      if (this.some(e => { return (e[0] === s && e[1] === p && e[2] === o); })) 
+        return false;
+      this.push([s,p,o]);
+      [s,p,o].forEach( r =>{ queue.enqueue(r); });
+    }
+
+    triples.addEdge = function (e) {
+      this.add(e.source.parentNode, e.source, e.target);
     }
     
-    if (sparql) {
-      req.execQuery(sparql, data => {
+    queue.enqueue(resource);
+
+    while (queue.length > 0) {
+      var cur = queue.pop();
+      if (cur instanceof Node) {
+        propertyGraph.edges
+          .filter(e => { return (e.source.parentNode === cur || e.target === cur); })
+          .forEach(e => { triples.addEdge(e) });
+        cur.literalRelations().forEach(r => { triples.add(cur, r, r.literal); });
+      } else if (cur instanceof Property) {
+        if (cur.isLiteral()) {
+          triples.add(cur.parentNode, cur, cur.literal);
+        } else {
+          propertyGraph.edges
+            .filter(e => { return (e.source === cur); })
+            .forEach(e => { triples.addEdge(e); });
+        }
+      } else if (cur instanceof Literal) {
+        triples.add(cur.parent.parentNode, cur.parent, cur);
+      }
+    }
+    this.dep = dep;
+    this.triples = triples;
+  }
+
+  Query.prototype.get = function () {
+    if (this.triples.length == 0) return null;
+    var self =  this,
+        values = new Set(),
+        prefixes = new Set();
+
+    function writeTriple (t) {
+      return t.map(r => {
+        if (r.isVariable()) return r.variable;
+        else {
+          if (r.uris.length == 1) {
+            if (r.parent) { //is literal
+              return '"' + r.getUri() + '"';
+            } else {
+              var pre = r.getUri().toPrefix();
+              if (pre[1]) prefixes.add(pre[1]);
+              if (r.star) return pre[0] + '*'; //Star on one property
+              else return pre[0];
+            }
+          } else {
+            if (r.parentNode) { //properties
+              var txt = '(' + r.uris.map(u => {
+                var pre = u.toPrefix();
+                if (pre[1]) prefixes.add(pre[1]);
+                return pre[0];
+              }).join('|');
+              txt += ')'
+              if (r.star) return txt + '*';
+              else return txt;
+            } else {
+              values.add(r);
+              return r.variable;
+            }
+          }
+        }
+      }).join(' ') + ' .\n';
+    }
+
+    self.q = "SELECT DISTINCT " + self.select.filter(r => {return !r.hide}).map(r => {return r.variable}).join(' ') + " WHERE {\n"
+    self.triples.forEach(t => {
+      self.q += '  ' + writeTriple(t);
+      // flatten all filters and apply
+      [].concat.apply([], t
+          .filter(r => { return r.isVariable(); })
+          .map(r => { return r.variable.filters; })
+      ).forEach(f => { self.q += '  ' + f.apply(); });
+      if (t[1].isVariable() && t[2].isVariable()) {
+        if (t[2] instanceof Literal) {
+          var nf = new Filter(t[2].variable, 'isliteral');
+        } else {
+          var nf = new Filter(t[2].variable, 'isuri');
+        }
+        self.q += '  ' + nf.apply();
+      }
+    });
+
+    self.optionals.forEach(opt => {
+      self.q += '  OPTIONAL {\n'
+      opt.forEach(t => {
+        // Same as for triples
+        self.q += '    ' + writeTriple(t);
+        [].concat.apply([], t
+            .filter(r => { return r.isVariable(); })
+            .map(r => { return r.variable.filters; })
+        ).forEach(f => { self.q += '    ' + f.apply(); });
+        if (t[1].isVariable() && t[2].isVariable()) {
+          if (t[2] instanceof Literal) {
+            var nf = new Filter(t[2].variable, 'isliteral');
+          } else {
+            var nf = new Filter(t[2].variable, 'isuri');
+          }
+          self.q += '  ' + nf.apply();
+        }
+      });
+      self.q += '  }\n'
+    });
+
+    Array.from(values).forEach(v => {
+      self.q += '  VALUES ' + v.variable + ' {';
+      var mapped = v.parent ?
+        v.uris.map(u => { return '"' + u + '"'}) :
+        v.uris.map(u => {
+          var pre = u.toPrefix();
+          if (pre[1]) prefixes.add(pre[1]);
+          return pre[0];
+        });
+      self.q += mapped.join(' ') + '}\n';
+    });
+
+    self.q += '}'
+    if (self.limit) self.q += ' LIMIT ' + self.limit;
+    if (self.offset) self.q += ' OFFSET ' + self.offset;
+
+    var h = '';
+    Array.from(prefixes).forEach(p => {
+      h += 'PREFIX ' + p.prefix + ': <' + p.uri + '>\n'
+    });
+    this.q = h + this.q;
+    return this.q;
+  };
+
+  Query.prototype.createTripleLabel = function (resource) {
+    if (!resource.isVariable())
+      throw new Error(resource, ' is not a variable');
+    if (resource instanceof Literal)
+      throw new Error(resource, ' is a literal');
+    var p = new RDFResource();
+    p.mkConst();
+    p.addUri(settings.labelUri);
+    var o = new RDFResource();
+    o.variable.alias = resource.variable.getName() + 'Label';
+    o.variable.addFilter('lang', {language: settings.lang});
+    return [resource, p, o];
+  }
+
+  Query.prototype.addLabel = function (resource) {
+    var t = this.createTripleLabel(resource);
+    if (this.triples.some(e => { return (e[0] === t[0] && e[1] === t[1] && e[2] === t[2]); })) 
+        return null;
+    this.triples.push(t);
+    this.select.push(t[2]);
+    return t[2];
+  }
+
+  Query.prototype.addOptLabel = function (resource) {
+    var t = this.createTripleLabel(resource);
+    this.optionals.push([t]);
+    this.select.push(t[2]);
+    return t[2];
+  }
+
+  Query.prototype.addLabels = function () {
+    var self = this;
+    var labels = [];
+    self.select.forEach(r => { 
+      if (r instanceof Node || r instanceof Property)
+        labels.push(self.addLabel(r));
+    });
+    return labels;
+  }
+
+  Query.prototype.selectAll = function () {
+    this.select = Array.from(this.dep);
+  }
+
+  Query.prototype.retrieve = function (config) {
+    var self = this,
+        cfg = config || {},
+        q = self.get(),
+        n = self.select.filter(r => {return (r.variable.isBinded() && r.variable.query != q); }).length;
+    if (q && n > 0) {
+      req.execQuery(q, { canceller: cfg.canceller, callback: data => {
         if (data.results.bindings.length > 0) {
-          query.data.select.forEach(s => {
-            var values = new Set();
-            var name = s.getName();
-            s.results = data.results.bindings.map(r => { return r[name]; });
-            s.results = s.results.filter(r => { return (!values.has(r.value) && values.add(r.value))});
-            s.query = sparql;
+          self.select.forEach(r => {
+            var values = new Set(),
+                variable = r.variable,
+                name = variable.getName();
+            variable.results = data.results.bindings.filter(d => { return d[name]}).map(d => { return d[name]; });
+            variable.results = variable.results.filter(d => { return (!values.has(d.value) && values.add(d.value))});
+            variable.query = q;
           });
         } else {
-          query.data.select.forEach(s => {
-            s.results = [];
-            s.query = sparql;
+          self.select.forEach(r => {
+            r.variable.results = [];
+            r.variable.query = q;
           });
         }
-        if (callback) callback();
-      });
+        if (cfg.callback) cfg.callback();
+      }});
+    } else {
+      if (cfg.callback) cfg.callback();
     }
   }
 

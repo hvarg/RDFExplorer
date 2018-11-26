@@ -1,13 +1,14 @@
 angular.module('rdfvis.controllers').controller('DescribeCtrl', DescribeCtrl);
 
-DescribeCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', 'settingsService'];
+DescribeCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestService', 'settingsService',
+'logService'];
 
-function DescribeCtrl ($scope, pGraph, query, request, settings) {
+function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
   var vm = this;
   var cfg = settings.describe;
   var cache = [];
   vm.selected = null;
-  vm.show = {datatype: true, objects: true, external: false};
+  vm.show = {datatype: false, objects: true, external: false};
 
   pGraph.describe = describeObj;
   vm.getNext = describeNext;
@@ -31,6 +32,10 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
   };
 
   function load (uri, sourceObject) {
+    log.add('Describe ' + uri);
+    var realUri = uri;
+    if (uri.includes('prop/direct')) uri = uri.replace('prop/direct', 'entity');
+
     var c = cache.filter(s => {return s.uri == uri})
     if (c.length>0) {
       vm.selected = c[0];
@@ -39,13 +44,14 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
 
     var source = sourceObject || null;
     var selected = { uri: uri, source: source, objects: [], datatype: [], text: [], external: [], image: [], results: {} };
+    selected.getUri = function () { return realUri };
     vm.selected = selected;
 
-    request.execQuery(query.getProperties(selected.uri), function (data) {
-      var properties = data.results.bindings.filter(p => {return (!cfg.exclude.includes(p.uri.value))});
+    request.execQuery(query.getProperties(uri), {callback: data => {
+      var properties = data.results.bindings.filter(r => {return (!cfg.exclude.includes(r.property.value))});
       properties.forEach(r => {
-        var obj = {uri: r.uri.value};
-        if (r.label) obj.label = r.label.value;
+        var obj = {uri: r.property.value};
+        if (r.propertyLabel) obj.label = r.propertyLabel.value;
 
         if (cfg.image.includes(obj.uri)) {
           selected.image.push(obj);
@@ -63,7 +69,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
           selected.datatype.push(obj);
           loadDatatype( obj.uri );
         } else if (r.kind.value == "0") {
-          request.execQuery(query.countValuesType(selected.uri, obj.uri), d => {
+          request.execQuery(query.countValuesType(selected.uri, obj.uri), { callback: d => {
             if (d.results.bindings.length > 0) {
               var uri_count = Number(d.results.bindings[0].uris.value);
               var lit_count = Number(d.results.bindings[0].lits.value);
@@ -75,12 +81,11 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
                 loadDatatype( obj.uri );
               }
             }
-          });
+          }});
         }
-
-      sort();
       });
-    });
+      sort();
+    }});
 
     cache.push(selected);
     if (cache.length > 10) cache.splice(0, 1);
@@ -88,25 +93,25 @@ function DescribeCtrl ($scope, pGraph, query, request, settings) {
   }
 
   function loadPropUri (prop) {
-    request.execQuery(query.getPropUri(vm.selected.uri, prop), data => {
+    request.execQuery(query.getPropUri(vm.selected.uri, prop), { callback: data => {
       vm.selected.results[prop] = data.results.bindings.map(s => {return s.uri.value});
-    });
+    }});
   }
 
   function loadDatatype (prop) {
-    request.execQuery(query.getPropDatatype(vm.selected.uri, prop), data => {
+    request.execQuery(query.getPropDatatype(vm.selected.uri, prop), { callback: data => {
       vm.selected.results[prop] = data.results.bindings.map(s => {return s.lit.value});
-    });
+    }});
   }
 
   function loadObject (prop) {
-    request.execQuery(query.getPropObject(vm.selected.uri, prop), data => {
+    request.execQuery(query.getPropObject(vm.selected.uri, prop), { callback: data => {
       vm.selected.results[prop] = data.results.bindings.map(s => {
         var obj = {uri: s.uri.value};
-        if (s.label) obj.label = s.label.value;
+        if (s.uriLabel) obj.label = s.uriLabel.value;
         return obj;
       });
-    });
+    }});
   }
 
   function sort () {

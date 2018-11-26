@@ -1,16 +1,17 @@
 div(ng-show="main.tool == 'sparql'", ng-controller="SparqlCtrl as ctrl")
   h3(style="text-align: center;", ng-click="ctrl.updateQuery()") Sparql queries
-  hr
+  hr(style="margin: 3px 0px;")
 
-  h3(ng-if="ctrl.queries.length==0") No queries
+  h4(ng-if="ctrl.queries.length==0") Current configuration generates no queries!
 
   div(ng-repeat="(key, query) in ctrl.queries", ng-init="query.show = true;")
-    h5.mt-2.clickable.no-select(ng-click="query.show = !query.show")
+    div.mt-2.clickable.no-select(ng-click="query.show = !query.show", style="font-size: 1.3rem;")
       i.fa.mr-2(ng-class="query.show ? 'fa-eye' : 'fa-eye-slash'")
-      | Query {{ $index }}
-    div(ng-if="query.show")
-      b contains:
-      .no-select.bordered.clickable.mr-1.mb-1(
-          style="border-color: {{res.getColor()}};",
-          ng-repeat="res in query.resources", ng-click="ctrl.onClick(res)") {{ res.getRepr() }}
-      sparql-edit(query="query")
+      span Query {{ $index + 1 }}  
+      span (
+      span.no-select.bordered.clickable.mr-1.mb-1(
+          ng-repeat="res in query.select",
+          style="border-color: {{res.getColor()}}; font-size: 1rem;",
+          ng-click="ctrl.onClick(res)") {{ res.getRepr() }}
+      span )
+    sparql-edit(ng-if="query.show", query="query")

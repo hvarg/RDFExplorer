@@ -7,33 +7,12 @@ svg{
   user-select: none;
 }
 
-.conceptG text{
+text {
   pointer-events: none;
 }
 
 marker{
   fill: #333;
-}
-
-g.conceptG circle{
-  fill: #F6FBFF;
-  stroke: #333;
-  stroke-width: 2px;
-}
-
-g.conceptG:hover circle{
-  fill: rgb(200, 238, 241);
-}
-
-g.selected circle{
-  fill: rgb(250, 232, 255);
-}
-g.selected:hover circle{
-  fill: rgb(250, 232, 255);
-}
-
-.selected {
-  /*stroke-dasharray: 4;*/
 }
 
 .connect-node {
@@ -47,20 +26,15 @@ path.link {
   cursor: default;
 }
 
-path.link:hover{
-  stroke: rgb(94, 196, 204);
-}
-
-g.connect-node circle{
-  fill: #BEFFFF;
-}
-
 path.link.hidden{
   stroke-width: 0;
 }
 
-path.link.selected {
-  stroke: rgb(229, 172, 247);
+path.literal-path {
+  fill: none;
+  stroke: #333;
+  stroke-width: 3px;
+  cursor: default;
 }
 
 .highlight {
@@ -68,41 +42,47 @@ path.link.selected {
   position: fixed;
   box-shadow: 0 0 10px rgba(81, 203, 238, 1);
   z-index: 0;
+  width:100%;
+  height:100%;
 }
 
-.mainRect {
+.node-rect {
   font-family: serif;
   fill: #f8f8f8;
   stroke-width: 2px;
   stroke: red;
 }
 
-.mainRect:hover {
+.node-rect:hover {
   fill: #f1f1f1;
 }
 
-.mainTitle {
+.node-text {
   font-weight: bold;
   text-anchor: middle;
   alignment-baseline: central;
   font-size: 16;
 }
 
-.innerRect, .small-box {
+.property-rect, .literal-rect {
   font-family: serif;
   fill: #f3f3f3;
   stroke-width: 1px;
   stroke: blue;
 }
 
-.innerRect:hover, .small-box:hover {
+.property-rect:hover, .literal-rect:hover {
   fill: #f0f0f0;
 }
 
-.innerText {
+.property-text {
   text-anchor: middle;
   alignment-baseline: central;
-  font-size: 14;
+}
+
+.literal-text {
+  alignment-baseline: central;
+  text-anchor: middle;
 }
 
 .aw-icon {
@@ -111,13 +91,6 @@ path.link.selected {
   font-size: 14;
   font-family: FontAwesome;
 }
-/*.csubtitle {
-  text-anchor: end;
-  alignment-baseline: after-edge;
-  font-size: 14;
-  font-style: italic;
-  color: rgba(0, 0, 0, 0.75);
-}*/
 
 .context-menu {
 }

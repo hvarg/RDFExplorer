@@ -1,11 +1,16 @@
 div#tools
   div#right-buttons
-    button.pull-right.btn.btn-outline-secondary(
+    button#help-button.pull-right.btn.btn-outline-secondary(
         ng-click="main.toolToggle('help')",
         ng-class="{'active': (main.tool == 'help') }",
         type="button", aria-label="Right Align")
       span.fa.fa-info(aria-hidden="true")
-    button.pull-right.btn.btn-outline-secondary(disabled,
+    //button.pull-right.btn.btn-outline-secondary(
+        ng-click="main.toolToggle('log')",
+        ng-class="{'active': (main.tool == 'log') }",
+        type="button", aria-label="Right Align")
+      span.fa.fa-file-archive-o(aria-hidden="true")
+    //button.pull-right.btn.btn-outline-secondary(disabled,
         ng-click="main.toolToggle('settings')",
         ng-class="{'active': (main.tool == 'settings') }",
         type="button", aria-label="Right Align")
@@ -29,6 +34,7 @@ div#tools
   div#right-panel(ng-hide="main.tool == 'none'")
     include describe
     include settings
+    include log
     include edit
     include sparql
     include help

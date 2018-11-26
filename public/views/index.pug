@@ -4,7 +4,12 @@ block content
   include search
   include tools
 
-  visual-query-builder(ng-click="main.searchDeactivate()")
+  h3#mid-help.no-select(ng-if="main.graph.nodes.length == 0") Need help?
+    br 
+    span.mr-2(ng-click="main.modalHelp()", style="pointer-events: auto;") getting started
+    i |
+    span.ml-2(ng-click="main.tutorial()", style="pointer-events: auto;") interactive tutorial
+  visual-query-builder#vqb-main(ng-click="main.searchDeactivate()")
   div(style="position: fixed; bottom: 0; color: #b3b3b3; z-index: -10;").mb-3.ml-3.no-click.no-select
     i &lt;shift + drag&gt;
     span :  new edge

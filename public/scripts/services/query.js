@@ -26,8 +26,11 @@ function queryService (settings) {
   function search (keyword, type, limit, offset) {
     type = type || settings.searchClass.uri.value;
     limit = limit || settings.resultLimit;
-    prefixes = ['rdf', 'rdfs'];
-    q  = 'SELECT DISTINCT ?uri ?label ?type ?tlabel WHERE {\n';
+    q  = 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
+         'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n';
+    if (settings.endpoint.type == 'fuseki')
+      q += 'PREFIX text: <http://jena.apache.org/text#>\n';
+    q += 'SELECT DISTINCT ?uri ?label ?type ?tlabel WHERE {\n';
     q += '  { SELECT ?uri ?label WHERE {\n';
     q += '      ?uri rdfs:label ?label . \n';
     q += '      FILTER (lang(?label) = "en")\n';
@@ -38,7 +41,6 @@ function queryService (settings) {
           break;
         case 'fuseki':
           q += '      ?uri text:query (rdfs:label "' + keyword + '" '+ limit +') .\n';
-          prefixes.push('text');
           break;
         default:
           q += '      FILTER regex(?label, "' + keyword + '", "i")\n'
@@ -50,7 +52,7 @@ function queryService (settings) {
     q += '  ?uri rdf:type ?type .\n';
     q += '  ?type rdfs:label ?tlabel .\n';
     q += '  FILTER (lang(?tlabel) = "en")\n}}';
-    return header(prefixes) + q;
+    return q;
   }
 
   function getClasses (uri, limit, offset) {
@@ -68,13 +70,16 @@ function queryService (settings) {
     return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
            'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' +
            'PREFIX owl: <http://www.w3.org/2002/07/owl#>\n' +
-           'SELECT DISTINCT ?uri ?label ?kind WHERE {\n' +
-           '  <' + uri + '> ?uri [] .\n' +
-           '  OPTIONAL { ?uri rdfs:label ?label . FILTER (lang(?label) = "en")}\n' +
+           'PREFIX bd: <http://www.bigdata.com/rdf#>\n' +
+           'PREFIX wikibase: <http://wikiba.se/ontology#>\n' +
+           'SELECT DISTINCT ?property ?propertyLabel ?kind WHERE {\n' +
+           '  <' + uri + '> ?property [] .\n' +
+           '  ?p wikibase:directClaim ?property .\n' +
+           '  OPTIONAL { ?p rdfs:label ?propertyLabel . FILTER (lang(?propertyLabel) = "en")}\n' +
            '  BIND(\n' +
-           '    IF(EXISTS { ?uri rdf:type owl:ObjectProperty},\n' +
+           '    IF(EXISTS { ?property rdf:type owl:ObjectProperty},\n' +
            '      1,\n' +
-           '      IF(EXISTS {?uri rdf:type owl:DatatypeProperty},\n' +
+           '      IF(EXISTS {?property rdf:type owl:DatatypeProperty},\n' +
            '        2,\n' +
            '        0))\n' +
            '    as ?kind)\n' +
@@ -96,9 +101,9 @@ function queryService (settings) {
   function getPropObject (uri, prop) {
     return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
            'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' +
-           'SELECT DISTINCT ?uri ?label WHERE {\n' +
+           'SELECT DISTINCT ?uri ?uriLabel WHERE {\n' +
            '  <' + uri + '> <' + prop + '> ?uri .\n' +
-           '  OPTIONAL { ?uri rdfs:label ?label . FILTER (lang(?label) = "en")}\n}';
+           '  OPTIONAL { ?uri rdfs:label ?uriLabel . FILTER (lang(?uriLabel) = "en")}\n}';
   }
 
   function getPropDatatype (uri, prop) {

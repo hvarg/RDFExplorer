@@ -1,60 +1,62 @@
 angular.module('rdfvis.controllers').controller('EditCtrl', EditCtrl);
 
-EditCtrl.$inject = ['$scope', 'propertyGraphService', '$timeout'];
+EditCtrl.$inject = ['$scope', 'propertyGraphService', '$timeout', '$q'];
 
-function EditCtrl ($scope, pGraph, $timeout) {
+function EditCtrl ($scope, pGraph, $timeout, $q) {
   var vm = this;
   vm.selected = null;
   vm.variable = null;
-  vm.literal  = null;
 
   vm.isVariable = true;
   vm.isConst    = false;
-  vm.isNode     = true;
   vm.isLiteral  = false;
+
+  vm.newValueType = '';
+  vm.newValuePlaceholder = '';
+  vm.newValue = '';
+
+  vm.resultFilterValue = '';
+  vm.resultFilterLoading = false;
+  vm.canceller = null;
 
   vm.added  = 0;
   vm.newFilterType = "";
   vm.newFilterData = {};
-  vm.varSearch = "";
-  vm.litSearch = "";
+  vm.showFilters = true;
 
-  vm.show  = {filters: false, results: true, const: true, lfilters: false, lresults: true}
+  vm.mkVariable = mkVariable;
+  vm.mkConst    = mkConst;
+  vm.addValue   = addValue;
+  vm.rmValue    = rmValue;
+  vm.newFilter  = newFilter;
+  vm.rmFilter   = rmFilter;
+  vm.loadPreview  = loadPreview;
+  vm.addSearchAsFilter = addSearchAsFilter;
 
   pGraph.edit = editResource;
   vm.refresh  = pGraph.refresh;
   vm.filters  = pGraph.filters;
 
-  vm.mkVariable = mkVariable;
-  vm.mkConst    = mkConst;
-  vm.addUri     = addUri;
-  vm.rmUri      = rmUri;
-  vm.newFilter  = newFilter;
-  vm.rmFilter   = rmFilter;
-  vm.filterRes  = filterResults;
-  vm.filterLit  = filterLiteralResults;
-  vm.addSearchAsFilter = addSearchAsFilter;
-
   function editResource (resource) {
     if (vm.selected != resource) {
-      vm.varSearch = "";
-      vm.litSearch = "";
+      vm.resultFilterValue = '';
     }
     if (resource) {
       vm.selected   = resource;
       vm.variable   = resource.variable;
       vm.isVariable = resource.isVariable();
       vm.isConst    = !vm.isVariable;
-      vm.isNode     = resource.isNode();
-      vm.isLiteral  = resource.isLiteral();
-      vm.literal    = vm.isLiteral ? resource.literal : null;
+      vm.isLiteral  = !!(vm.selected.parent); //FIXME: check if this is a literal
+      if (vm.isLiteral) {
+        vm.newValueType = 'text';
+        vm.newValuePlaceholder = 'add a new literal';
+      } else {
+        vm.newValueType = 'url';
+        vm.newValuePlaceholder = 'add a new URI';
+      }
       loadPreview();
     }
     $scope.$emit('tool', 'edit');
-  }
-
-  function loadPreview () {
-    if (vm.isVariable || vm.isLiteral) vm.selected.loadPreview({limit: 10, litlimit: 10});
   }
 
   function mkVariable () {
@@ -73,17 +75,26 @@ function EditCtrl ($scope, pGraph, $timeout) {
     vm.refresh();
   }
 
-  function addUri (newUri) {
-    if (newUri) {
-      if (vm.selected.addUri(newUri)) vm.added += 1
+  function addValue (newV) {
+    if (!newV) {
+      newV = vm.newValue;
+      vm.newValue = '';
+    }
+    if (newV && vm.selected.addUri(newV)) {
+      if (vm.selected.uris.length == 1) {
+        mkConst();
+      } else {
+        vm.added += 1
+      }
+      vm.refresh();
     }
   }
 
-  function rmUri (uri) {
-    return vm.selected.removeUri(uri)
+  function rmValue (value) {
+    return vm.selected.removeUri(value)
   }
 
-  function newFilter (targetVar) {
+  function newFilter (targetVar) { //TODO: targetVar not needed now
     if (vm.newFilterType == "") return false;
     targetVar.addFilter(vm.newFilterType, copyObj(vm.newFilterData));
     loadPreview();
@@ -97,32 +108,43 @@ function EditCtrl ($scope, pGraph, $timeout) {
     loadPreview();
   }
 
-  var lastVarSearch = '';
-  function filterResults () {
-    var now = vm.varSearch+'';
-    $timeout(function () {
-      if (vm.isVariable && now == vm.varSearch && now != lastVarSearch) {
-        lastVarSearch = now;
-        if (now) vm.selected.loadPreview({limit: 10, varFilter: now});
-        else loadPreview();
-      }
-    }, 400);
+  var lastValueSearch = '';
+  function loadPreview () {
+    if (!vm.isVariable) return;
+
+    if (vm.canceller) {
+      vm.canceller.resolve('new preview');
+      vm.resultFilterLoading = false;
+    }
+    
+    vm.canceller = $q.defer();
+    vm.resultFilterLoading = true;
+    var config = { //add pagination here
+      limit: 10,
+      callback: () => { 
+        vm.resultFilterLoading = false;
+        vm.canceller = null; },
+      canceller: vm.canceller.promise,
+    };
+
+    var now = vm.resultFilterValue + '';
+    if (now) {
+      $timeout(function () {
+        if (now == vm.resultFilterValue && now != lastValueSearch) {
+          lastValueSearch = now;
+          vm.resultFilterLoading = true;
+          config.varFilter = now;
+          vm.selected.loadPreview(config);
+        }
+      }, 400);
+    } else {
+      lastValueSearch = '';
+      vm.selected.loadPreview(config);
+    }
   }
 
-  var lastLitSearch = '';
-  function filterLiteralResults () {
-    var now = vm.litSearch+'';
-    $timeout(function () {
-      if (vm.isLiteral && now == vm.litSearch && now != lastLitSearch) {
-        lastLitSearch = now;
-        if (now) vm.selected.loadPreview({litlimit: 10, litFilter: now});
-        else loadPreview();
-      }
-    }, 400);
-  }
-
-  function addSearchAsFilter () {
-    var text = vm.varSearch + '';
+  function addSearchAsFilter () { // should work but not used
+    var text = vm.resultFilterValue + '';
     console.log(text);
     var p = vm.selected.getPropByUri("http://www.w3.org/2000/01/rdf-schema#label");
     if (!p) {
@@ -131,7 +153,7 @@ function EditCtrl ($scope, pGraph, $timeout) {
     }
     p.mkConst();
     p.mkLiteral();
-    p.literal.addFilter('regex', {regex: text});
+    p.getLiteral.addFilter('regex', {regex: text});
     loadPreview();
   }
 

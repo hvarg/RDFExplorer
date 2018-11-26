@@ -3,10 +3,12 @@ settingsService.$inject = [];
 
 function settingsService () {
   var settings = {
+    lang: 'en',
+    labelUri: "http://www.w3.org/2000/01/rdf-schema#label",
     endpoint: {
-      url: "https://dbpedia.org/sparql",
-      type: "virtuoso",
-      label: "DBpedia",
+      url: "https://query.wikidata.org/sparql",
+      type: "other",
+      label: "wikidata",
     },
     searchClass: {
       uri:   { type: "uri", value: "http://dbpedia.org/ontology/Person" },
@@ -20,21 +22,23 @@ function settingsService () {
     {prefix: 'rdf',       uri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#"},
     {prefix: 'owl',       uri: "http://www.w3.org/2002/07/owl#"},
     {prefix: 'text',      uri: "http://jena.apache.org/text#"},
-    {prefix: 'wd',        uri: "http://www.wikidata.org/entity/"},
     {prefix: 'wds',       uri: "http://www.wikidata.org/entity/statement/"},
+    {prefix: 'wd',        uri: "http://www.wikidata.org/entity/"},
     {prefix: 'wdv',       uri: "http://www.wikidata.org/value/"},
-    {prefix: 'wdt',       uri: "http://www.wikidata.org/prop/direct/"},
     {prefix: 'wikibase',  uri: "http://wikiba.se/ontology#"},
-    {prefix: 'p',         uri: "http://www.wikidata.org/prop/"},
+    {prefix: 'psvn',      uri: "http://www.wikidata.org/prop/statement/value-normalized/"},
     {prefix: 'ps',        uri: "http://www.wikidata.org/prop/statement/"},
+    {prefix: 'pqv',       uri: "http://www.wikidata.org/prop/qualifier/value/"},
     {prefix: 'pq',        uri: "http://www.wikidata.org/prop/qualifier/"},
+    {prefix: 'wdt',       uri: "http://www.wikidata.org/prop/direct/"},
+    {prefix: 'p',         uri: "http://www.wikidata.org/prop/"},
     {prefix: 'rdfs',      uri: "http://www.w3.org/2000/01/rdf-schema#"},
     {prefix: 'bd',        uri: "http://www.bigdata.com/rdf#"},
     {prefix: 'dbc',       uri: "http://dbpedia.org/resource/Category:"},
     {prefix: 'dbo',       uri: "http://dbpedia.org/ontology/"},
     {prefix: 'dbp',       uri: "http://dbpedia.org/property/"},
-    {prefix: 'dbr',       uri: "http://dbpedia.org/resource/"},
     {prefix: 'dbt',       uri: "http://dbpedia.org/resource/Template:"},
+    {prefix: 'dbr',       uri: "http://dbpedia.org/resource/"},
     {prefix: 'dc',        uri: "http://purl.org/dc/elements/1.1/"},
     {prefix: 'dct',       uri: "http://purl.org/dc/terms/"},
     {prefix: 'foaf',      uri: "http://xmlns.com/foaf/0.1/"},
@@ -53,12 +57,31 @@ function settingsService () {
 
   // selected = {uri: '', object: [], datatype: [], text: [], extra: [], image: [], values: {}},
   settings.describe = {
-    exclude: ["http://purl.org/voc/vrank#hasRank"],
-    objects: ["http://www.w3.org/1999/02/22-rdf-syntax-ns#type"],
+    exclude: [
+      "http://www.wikidata.org/prop/direct/P443", //pronuntiation
+      "http://www.wikidata.org/prop/direct/P109", //signature
+    ],
+    objects: ["http://www.wikidata.org/prop/direct/P31"],
     datatype: [],
     text: ["http://dbpedia.org/ontology/abstract"],
-    image: ["http://dbpedia.org/ontology/thumbnail"],
-    external: ["http://dbpedia.org/ontology/wikiPageExternalLink", "http://xmlns.com/foaf/0.1/homepage"],
+    image: [
+      "http://www.wikidata.org/prop/direct/P18",  //thumbnail
+      "http://www.wikidata.org/prop/direct/P154", //logo
+      "http://www.wikidata.org/prop/direct/P41",  //flag
+      "http://www.wikidata.org/prop/direct/P94",  //coat of arms
+      "http://www.wikidata.org/prop/direct/P158", //seal
+      "http://www.wikidata.org/prop/direct/P242", //map
+      "http://www.wikidata.org/prop/direct/P948", //banner
+    ],
+    external: [
+      "http://www.wikidata.org/prop/direct/P2035",
+      "http://www.wikidata.org/prop/direct/P2888",
+      "http://www.wikidata.org/prop/direct/P973",
+      "http://www.wikidata.org/prop/direct/P856",
+      "http://www.wikidata.org/prop/direct/P3264",
+      "http://www.wikidata.org/prop/direct/P1896",
+      "http://www.wikidata.org/prop/direct/P1581",
+    ],
   }
 
   return settings;

@@ -1,16 +1,91 @@
 div(ng-show="main.tool == 'help'")
-  h3.ta-center Getting Started
+  h3.ta-center(ng-click="main.modalHelp()") Help
   hr(style="margin: 3px 0px;")
 
-  p.just
-    |  This visualization will help you in the exploration of a RDF dataset and the creation of SPARQL queries.
-    |  You can run an 
-    a(href="", ng-click="main.tutorial()") interactive tutorial clicking here
-    |  or read the documentation in this page.
+  h4.mt-2 Quick help:
+  p.ml-2
+    a(href="", ng-click="main.tutorial()") Click here to run the interactive tutorial.
+    br
+    a(href="", ng-click="main.modalHelp()") Click here to display the getting started.
 
-  //h5.mt-2 Index:
-  //a.ml-4 Components
+  h4.mt-2 Examples:
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'cats')")
+    i.fa.fa-bars.mr-2
+    | Cats
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'w3c')")
+    i.fa.fa-bars.mr-2
+    | W3C standards
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'mosquito')")
+    i.fa.fa-bars.mr-2
+    | Mosquito species
+  h5.example.mr-1(draggable="true", ondragstart="angular.element(this).scope().dragExample(event, 'cancer')")
+    i.fa.fa-bars.mr-2
+    | Drugs for cancer that target genes related to cell proliferation
 
+  h4.mt-3 Frequently Asked Question
+  h5.clickable.no-select(ng-click="main.faq1 = !main.faq1")
+    i.fa.mr-2(ng-class="main.faq1 ? 'fa-eye' : 'fa-eye-slash'")
+    | How do I create a resource (node)?
+  p.just(ng-if="main.faq1")
+    |  There are two ways to create resources:
+    br
+    |  (i) drag-and-drop the result of a search, and, 
+    img.c-img-full(src="/images/02.gif")
+    |  (ii) shift-click in the query creator (this will create a new variable).
+    img.c-img-full(src="/images/00.gif")
+
+  h5.clickable.no-select(ng-click="main.faq2 = !main.faq2")
+    i.fa.mr-2(ng-class="main.faq2 ? 'fa-eye' : 'fa-eye-slash'")
+    | How do I create a property (edge)?
+  p.just(ng-if="main.faq2")
+    |  There are two ways to create properties:
+    br
+    |  (i) drag-and-drop an existing property from the describe tool, and,
+    img.c-img-full(src="/images/03.gif")
+    |  (ii) press shift and drag one element to another.
+    img.c-img-full(src="/images/01.gif")
+
+  h5.clickable.no-select(ng-click="main.faq3 = !main.faq3")
+    i.fa.mr-2(ng-class="main.faq3 ? 'fa-eye' : 'fa-eye-slash'")
+    | How do I delete an element?
+  p.just(ng-if="main.faq3")
+    |  To remove an element use right click to display more options and click in 
+    i  remove
+    img.c-img-full(src="/images/04.gif")
+
+  h5.clickable.no-select(ng-click="main.faq4 = !main.faq4")
+    i.fa.mr-2(ng-class="main.faq4 ? 'fa-eye' : 'fa-eye-slash'")
+    | What do colors mean?
+  p.just(ng-if="main.faq4")
+    |  The colour of the borders denotes the type of the elements:
+    |  Resources can be 
+    span(style="color: #1f77b4;") blue (constraints)
+    |  or   
+    span(style="color: #2ca02c;") gree (variables)
+    |.
+    br
+    |  Properties can be  
+    span(style="color: #ff7f0e;") orange (object properties), 
+    span(style="color: #9467bd;") purple (datatype properties)  
+    | or  
+    span(style="color: #d62728;") red (variable properties)
+    |.
+    img.c-img-full(src="/images/colors.png")
+
+  h5.clickable.no-select(ng-click="main.faq5 = !main.faq5")
+    i.fa.mr-2(ng-class="main.faq5 ? 'fa-eye' : 'fa-eye-slash'")
+    |  What are the property types and what does it mean?
+  p.just(ng-if="main.faq5")
+    |  There are two property types:
+    br
+    |  (i) 
+    span(style="color: #ff7f0e;") Object type properties 
+    |  are properties that links two resources, and, (ii)  
+    span(style="color: #9467bd;") Datatype properties 
+    |  are properties that stored literal information (strings, numbers and so on), 
+    |  this kind of data can not be stored as a resource and can not have properties.
+
+//
   h5.mt-2 Components
   p.just
     |  The three main components of this interface are: 
