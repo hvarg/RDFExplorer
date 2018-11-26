@@ -30,10 +30,34 @@ html(lang="en", ng-app="survey")
               hr
 
             fieldset.form-group(ng-hide="main.step != 0")
-              h5 Select the tool you will start with:
-              .row.mb-3
-                legend.col-form-label.col-sm-2.pt-0 
-                .col-sm-10
+              p 
+                | In this user study you will be asked to evaluate two interfaces for the creation of SPARQL queries.
+                | The study is divided into 4 tasks. First you will be asked for basic identification information.
+                | Second, you will be asked to answer 10 questions by creating SPARQL queries with the interfaces to evaluate
+                | (switching between them in each question), in this section you should copy and paste the queries created by
+                | the interfaces and enter them in the text boxes provided. 
+                | The last two tasks are subjective evaluations in which you must rate each interface based on your
+                | experience using them.
+              b It is important that you:
+              p.mt-2.ml-3 1.- Read carefully the questions and options presented to you.
+              p.ml-3 2.- Press 'next' only when you are sure, as you don't have the option to go back to previous questions.
+              p.ml-3 3.- Do not refresh the page at any time during the test.
+
+              h5 Consent form
+              p
+                | Your participation in this study is completely voluntary.
+                | All of your answers are confidential and anonymous. 
+                | Your data is stored in electronic format and will be used for academic purposes only.
+                | If you have any questions, please contact Hernán Vargas at hernan.vargas@alumnos.usm.cl.
+              b Clicking on the "accept and continue" button confirms that:
+              p.mt-2.ml-3 - You have read the above information.
+              p.ml-3 - You voluntarily agree to participate in the study.
+              p.ml-3 - You are at least 18 years old.
+              b If you agree, select the interface you will start with and press continue:
+              //h5 Select the tool you will start with:
+              .row.mb-3.mt-3
+                legend.col-form-label.col-sm-1.pt-0 
+                .col-sm-11
                   .form-check
                     input.form-check-input#base-url(type="radio", name="gridRadios", value="https://explorer.csrg.cl",
                         ng-model="main.data.startUrl")
@@ -44,8 +68,8 @@ html(lang="en", ng-app="survey")
                     label.form-check-label(for="wqh-url")  https://query.wikidata.org
               .form-group.row
                 .col-sm-12
-                  span This survey has no back button, press next only when you are sure you want to continue.
-                  button.btn.btn-primary.pull-right.mt-1(type="submit", ng-click="main.next()") Next
+                  //span This survey has no back button, press next only when you are sure you want to continue.
+                  button.btn.btn-primary.pull-right.mt-1(type="submit", ng-click="main.next()") Accept and continue
 
             div#user-id(ng-hide="main.step != 1")
               form
@@ -81,7 +105,7 @@ html(lang="en", ng-app="survey")
                 .pull-right on  
                   a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
               div(ng-repeat="(key, value) in main.tasks", ng-hide="main.taskStep!=$index")
-                label(for="{{'sparql' + $index}}", style="font-size: 1.5rem;") give me resources that {{ value }}
+                label(for="{{'sparql' + $index}}", style="font-size: 1.5rem;") find resources that {{ value }}
                 form
                   textarea.form-control.mb-2(id="{{'sparql' + $index}}", rows="5", 
                       placeholder="Your SPARQL query here.", ng-model="main.data.tasks[$index].sparql")
