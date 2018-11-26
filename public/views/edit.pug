@@ -31,8 +31,11 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
             a(ng-if="!ctrl.isLiteral", title="{{value}}", href="", ng-click="value.describe();") {{ value.getLabel(); }}
             span(ng-if="ctrl.isLiteral") {{ value }}
           i.clickable.pull-right.fa.fa-trash.mt-1(ng-click="ctrl.selected.removeUri(value);")
+    div.form-check.form-check-inline.mt-1(ng-if="ctrl.selected.isProperty()")
+      input.form-check-input#prop-star(type="checkbox", ng-model="ctrl.selected.star", ng-change="ctrl.refresh()")
+      label.form-check-label(for="prop-star") Wildcard property
 
-  //-------------------- CONSTRAINT --------------------//
+  //--------------------- VARIABLE ---------------------//
   div.mt-3(ng-if="ctrl.isVariable")
     form
       .form-row
