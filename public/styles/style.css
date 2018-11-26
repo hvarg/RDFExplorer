@@ -27,6 +27,7 @@ visual-query-builder {
 }
 
 #mid-help {
+  cursor: default;
   position: fixed;
   font-size: 1.5rem;
   top: 45%;
