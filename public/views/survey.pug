@@ -90,9 +90,9 @@ html(lang="en", ng-app="survey")
                   .col-sm-10
                     input.form-control#user-age(type="number", placeholder="18", ng-model="main.data.user.age")
                 .form-group.row
-                  label.col-sm-2.col-form-label(for="user-degree") Degree:
+                  label.col-sm-2.col-form-label(for="user-degree") Degree/Career:
                   .col-sm-10
-                    input.form-control#user-degree(type="text", placeholder="Engineer...", ng-model="main.data.user.degree")
+                    input.form-control#user-degree(type="text", placeholder="Phd, Engineer...", ng-model="main.data.user.degree")
                 .form-group.row
                   .col-sm-12
                     button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Next
