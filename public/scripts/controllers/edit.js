@@ -81,7 +81,11 @@ function EditCtrl ($scope, pGraph, $timeout, $q) {
       vm.newValue = '';
     }
     if (newV && vm.selected.addUri(newV)) {
-      vm.added += 1
+      if (vm.selected.uris.length == 1) {
+        mkConst();
+      } else {
+        vm.added += 1
+      }
       vm.refresh();
     }
   }
