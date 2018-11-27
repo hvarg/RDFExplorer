@@ -57,9 +57,9 @@ function MainCtrl ($http) {
   ]
 
   vm.likert = [
-    { text: "How confident are you of the answers you gave", lmin:"Not at all Confident", lmax:"Highly Confident", },
-    { text: "How satisfied you are with the tool", lmin:"Very Disatisfied", lmax:"Very Satisfied", },
-    { text: "How likely are you to recommend the tool to a friend or colleague?", lmin:"Not Likely", lmax:"Very Likely", },
+    { text: "I was confident of the answers I provided", lmin:"Do not agree at all", lmax:"Completely agree", },
+    { text: "I was satisfied with the tool", lmin:"Do not agree at all", lmax:"Completely agree", },
+    { text: "I am likely to recommend the tool to a friend or colleague", lmin:"Do not agree at all", lmax:"Completely agree", },
   ]
 
   vm.tasks = [
@@ -152,7 +152,7 @@ function MainCtrl ($http) {
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   }
-  
+
   function upload () {
     return $http({
       method: 'POST',

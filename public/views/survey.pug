@@ -88,7 +88,14 @@ html(lang="en", ng-app="survey")
                 .form-group.row
                   label.col-sm-2.col-form-label(for="user-age") Age:
                   .col-sm-10
-                    input.form-control#user-age(type="number", placeholder="18", ng-model="main.data.user.age")
+                    //input.form-control#user-age(type="number", placeholder="18", ng-model="main.data.user.age")
+                    select.form-control.custom-select#user-age(ng-model="main.data.user.age")
+                      option 18-24
+                      option 25-30
+                      option 31-40
+                      option 41-50
+                      option 51-60
+                      option 60+
                 .form-group.row
                   label.col-sm-2.col-form-label(for="user-degree") Degree/Career:
                   .col-sm-10
@@ -138,7 +145,7 @@ html(lang="en", ng-app="survey")
               //h4 Part 4: Likert
                 .pull-right for  
                   a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
-              h5 Answer the following questions based on your experience using 
+              h5 How much do you agree with the following statements  based on your experience using 
                 a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
               form.mt-4
                 div(ng-repeat="(key, value) in main.likert")
