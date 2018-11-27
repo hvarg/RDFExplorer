@@ -54,19 +54,20 @@ div(ng-show="main.tool == 'describe'", ng-controller="DescribeCtrl as ctrl")
   div(ng-if="ctrl.show.objects")
     .propRect(ng-repeat="prop in ctrl.selected.objects track by $index", ng-class="{'active': prop.active}", style="border-color: #ff7f0e;")
       .head(ng-click="prop.active = !prop.active")
-        .text-truncate(style="display:inline-block; width:100%;",
+        .text-truncate(style="display:inline-block; width:100%; cursor: grab;",
             id="{{ 'propId' + $index }}",
             ondragstart="angular.element(this).scope().drag(event, '', angular.element(this).scope().prop.uri)",
             draggable="true", title="{{prop.uri}}") {{ prop.uri.getLabel() }}
         .info
-          span.pull-right.fa(aria-hidden="true", ng-class="prop.active ? 'fa-chevron-up' : 'fa-chevron-down'")
+          span.pull-right.clickable.fa(aria-hidden="true", ng-class="prop.active ? 'fa-chevron-up' : 'fa-chevron-down'")
           .inner-addon.right-addon
             i.fa.fa-search.clickable(ng-click="prop.active = true; $event.stopPropagation();", aria-hidden="true")
             input.form-control(ng-click="prop.active = true; $event.stopPropagation();", type="text", ng-model="prop.filter")
       hr
       .fakeRect-container
         .fakeRect(style="border-color: #1f77b4;",
-            ng-repeat="obj in ctrl.selected.results[prop.uri] | filter: prop.filter track by $index"
+            ng-repeat="obj in ctrl.selected.results[prop.uri] | filter: prop.filter track by $index",
+            ng-dblclick="obj.uri.describe();", 
             ondragstart="angular.element(this).scope().drag(event, angular.element(this).scope().obj.uri, angular.element(this).scope().prop.uri)",
             draggable="true", title="{{obj.uri}}") {{ obj.uri.getLabel() }}
 

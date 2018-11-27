@@ -60,6 +60,7 @@ function settingsService () {
     exclude: [
       "http://www.wikidata.org/prop/direct/P443", //pronuntiation
       "http://www.wikidata.org/prop/direct/P109", //signature
+      "http://www.wikidata.org/prop/direct/P51", //audio
     ],
     objects: ["http://www.wikidata.org/prop/direct/P31"],
     datatype: [],
