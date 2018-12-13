@@ -1,8 +1,8 @@
 angular.module('rdfvis.directives').directive('visualQueryBuilder', visualQueryBuilder);
 
-visualQueryBuilder.$inject = ['propertyGraphService'];
+visualQueryBuilder.$inject = ['propertyGraphService', 'logService'];
 
-function visualQueryBuilder (pGraph) {
+function visualQueryBuilder (pGraph, log) {
   var directive = {
     link: link,
     restrict: 'EA',
@@ -288,6 +288,8 @@ function visualQueryBuilder (pGraph) {
       if (mouseDownNode !== d){
         // we're in a different node: create new edge for mousedown edge and add to graph
         var e = pGraph.addEdge(mouseDownNode, d);
+        log.add('Builder', 'New property ?' + e.source.variable.id + ' (parent ?' + e.source.parentNode.variable.id + ')');
+        log.add('Builder', 'New edge ?' + e.source.parentNode.variable.id + ' --(?' + e.source.variable.id + ')--> ?' + d.variable.id);
         e.source.onClick();
         thisGraph.updateGraph();
         /*else if (a) request.relations(a);
@@ -337,6 +339,7 @@ function visualQueryBuilder (pGraph) {
         var xycoords = d3.mouse(thisGraph.svgG.node()),
             d = pGraph.addNode();
         d.setPosition(xycoords[0],xycoords[1]);
+        log.add('Builder', 'New node ?' + d.variable.id);
         d.onClick();
 
         thisGraph.updateGraph();
@@ -723,6 +726,7 @@ function visualQueryBuilder (pGraph) {
       func: () => {
         var xycoords = d3.mouse(graph.svgG.node()),
             d = pGraph.addNode();
+        log.add('Builder', 'New node ?' + d.variable.id);
         d.setPosition(xycoords[0],xycoords[1]);
         d.onClick();
         graph.updateGraph();
@@ -737,7 +741,10 @@ function visualQueryBuilder (pGraph) {
         var xycoords = d3.mouse(graph.svgG.node()),
             d = pGraph.addNode();
         d.setPosition(xycoords[0],xycoords[1]);
-        pGraph.addEdge(selected, d);
+        var p = pGraph.addEdge(selected, d).source;
+        log.add('Builder', 'New node ?' + d.variable.id);
+        log.add('Builder', 'New property ?' + p.variable.id);
+        log.add('Builder', 'New edge ?' + p.parentNode.variable.id + ' --(?' + p.variable.id + ')--> ?' + d.variable.id);
         d.onClick();
         graph.updateGraph();
       }
@@ -761,6 +768,7 @@ function visualQueryBuilder (pGraph) {
       func: (obj) => { 
         obj.delete();
         graph.updateGraph();
+        log.add('Builder', 'Remove ?' + obj.variable.id);
       }
     }
 
@@ -770,7 +778,10 @@ function visualQueryBuilder (pGraph) {
       func: (obj) => {
         var d = pGraph.addNode();
         d.setPosition(obj.x+280, obj.y+70);
-        pGraph.addEdge(obj, d);
+        var p = pGraph.addEdge(obj, d).source;
+        log.add('Builder', 'New node ?' + d.variable.id);
+        log.add('Builder', 'New property ?' + p.variable.id);
+        log.add('Builder', 'New edge ?' + p.parentNode.variable.id + ' --(?' + p.variable.id + ')--> ?' + d.variable.id);
         d.onClick();
         graph.updateGraph();
       }
@@ -780,8 +791,9 @@ function visualQueryBuilder (pGraph) {
       name: 'New literal',
       disabled: () => {return false;},
       func: (obj) => {
-        obj.newProp().mkLiteral();
+        var l = obj.newProp().mkLiteral();
         graph.updateGraph();
+        log.add('Builder', 'New literal property ?' + l.variable.id + ' for ?' + obj.variable.id);
       }
     }
 

@@ -150,7 +150,6 @@ function propertyGraphService (req, log, settings) {
   };
 
   Variable.prototype.addFilter = function (type, data) {
-    log.add('New filter (' + type + ') for variable ' + String(this) + ' (' + this.id + ')');
     this.filters.push( new Filter(this, type, data) );
     return this.filters[this.filters.length-1];
   };
@@ -202,12 +201,10 @@ function propertyGraphService (req, log, settings) {
   };
 
   RDFResource.prototype.mkVariable = function () {
-    log.add('Node id ' + this.id + ' is now a variable');
     this.isVar = true;
   };
 
   RDFResource.prototype.mkConst = function () {
-    log.add('Node id ' + this.id + ' is now a constant');
     this.isVar = false;
   };
 
@@ -238,7 +235,6 @@ function propertyGraphService (req, log, settings) {
 
   RDFResource.prototype.addUri = function (uri) {
     if (this.uris.indexOf(uri) < 0) {
-      log.add('Adding uri to node id ' + this.id + ' ('+ uri + ')');
       this.uris.push(uri);
       if (this.uris.length == 1) this.cur = 0;
       return true;
@@ -303,7 +299,6 @@ function propertyGraphService (req, log, settings) {
     // Representation stuff
     propertyGraph.nodes.push(this);
     this.id = lastNodeId++;
-    log.add('New node id ' + this.id);
   }
 
   Node.prototype = Object.create(RDFResource.prototype);
@@ -369,7 +364,6 @@ function propertyGraphService (req, log, settings) {
   };
 
   Node.prototype.delete = function () {
-    log.add('Deleting node id ' + this.id);
     var i, j, edge, prop, tmp;
     // remove all edges with this node as target.
     for (i = propertyGraph.edges.length - 1; i >= 0; i--) {
@@ -450,7 +444,6 @@ function propertyGraphService (req, log, settings) {
     this.index      = parentNode.properties.length;
     this.literal    = null;
     parentNode.properties.push(this);
-    log.add('New property id ' + this.id + ' for node id ' + parentNode.id);
   }
 
   Property.prototype = Object.create(RDFResource.prototype);
@@ -495,7 +488,6 @@ function propertyGraphService (req, log, settings) {
       if (propertyGraph.edges[i].source === this)
         return null;
     }
-    log.add('Property id ' + this.id + 'is now literal');
     return new Literal(this);
   }
 
@@ -504,7 +496,6 @@ function propertyGraphService (req, log, settings) {
   }
 
   Property.prototype.delete = function () {
-    log.add('Deleting property id ' + this.id);
     var thisProp = this;
     var i, edge;
     // remove all edges 
@@ -587,7 +578,6 @@ function propertyGraphService (req, log, settings) {
   };
 
   Literal.prototype.delete = function () {
-    log.add('Deleting literal id ' + this.id);
     this.parent.delete();
   }
 
@@ -606,7 +596,6 @@ function propertyGraphService (req, log, settings) {
     this.source = source;
     this.target = target;
     propertyGraph.edges.push(this);
-    log.add('New edge from property id ' + source.id + ' to node id ' + target.id);
   }
 
   Edge.prototype.contains = function (resource) {
@@ -670,6 +659,7 @@ function propertyGraphService (req, log, settings) {
         }
       }
       d.setPosition((ev.layerX - z[0])/z[2], (ev.layerY - z[1])/z[2]);
+      log.add('Drop', 'Node ?' + d.variable.id + (uri ? ' add URI: ' + uri + ' (' + uri.getLabel() + ')': '') );
     }
 
     // Add the property
@@ -677,6 +667,7 @@ function propertyGraphService (req, log, settings) {
       var sel = getSelected();
       if (!sel || !sel.isNode()) {
         console.log('Selected resource does not support property creation!');
+        if (d) d.delete();
         return null;
       }
       var p = sel.getPropByUri(prop);
@@ -688,9 +679,12 @@ function propertyGraphService (req, log, settings) {
       if (special == 'literal') {
         // If we are creating a literal property.
         p.mkLiteral();
+        log.add('Drop', 'Literal property ?' + p.variable.id + ' (parent ?' + p.parentNode.variable.id + ') add URI: ' + prop + ' (' + prop.getLabel() + ')');
       } else {
         // If we are not creating a literal property create the edge (selected)--p-->(d)
         propertyGraph.addEdge(p, d);
+        log.add('Drop', 'Property ?' + p.variable.id + ' (parent ?' + p.parentNode.variable.id + ') add URI: ' + prop + ' (' + prop.getLabel() + ')');
+        log.add('Drop', 'New edge ?' + p.parentNode.variable.id + ' --(?' + p.variable.id + ')--> ?' + d.variable.id);
       }
     }
 
@@ -713,6 +707,7 @@ function propertyGraphService (req, log, settings) {
   }
 
   function createExample (type, ev) {
+    log.add('Drop', 'Example ' + type);
     var z = propertyGraph.visual.getZoom();
     var x = (ev.layerX - z[0])/z[2];
     var y = (ev.layerY - z[1])/z[2];

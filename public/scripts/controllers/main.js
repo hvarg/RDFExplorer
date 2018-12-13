@@ -5,6 +5,9 @@ MainCtrl.$inject = ['$scope', 'propertyGraphService', 'queryService', 'requestSe
 
 function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibModal, $animate) {
   var vm = this;
+  /** init **/
+  log.init();
+
   /* General stuff */
   vm.tool = 'none';
   vm.toolToggle = toolToggle;
@@ -44,7 +47,9 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
 
   /* Tools display function */
   function toolToggle (panel) {
+    var msg = 'Changed from ' + vm.tool; //log related
     vm.tool = (vm.tool == panel) ? 'none' : panel;
+    log.add('Tool', msg + ' to ' + vm.tool);
     if (vm.tool == 'describe' && pGraph.getSelected()) pGraph.getSelected().describe();
     if (vm.tool == 'edit' && pGraph.getSelected()) pGraph.getSelected().edit();
     if (vm.tool == 'sparql') pGraph.getQueries();
@@ -55,7 +60,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
   function searchDeactivate() { vm.searchActive = false; }
 
   function onSearch (data) {
-    log.add('Search "'+ vm.lastSearch + '", ' + data.length + ' results');
+    log.add('Search', '"' + vm.lastSearch + '": ' + data.length + ' results');
     /*var r = {}
     data.results.bindings.forEach(res => {
       if (!r[res.uri.value]) r[res.uri.value] = [];
@@ -136,11 +141,16 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
     ev.dataTransfer.setData("uri", uri);
     ev.dataTransfer.setData("prop", prop);
     ev.dataTransfer.setData("special", special);
+    var msg = uri ? 'URI: ' + uri + ' (' + uri.getLabel() + ') ' : '';
+    msg += prop ? 'Property: ' + prop + ' (' + prop.getLabel() + ') ' : '';
+    msg += special ? 'SP: ' + special + ' ' : '';
+    log.add('Drag', msg);
   }
 
   function dragExample (ev, type) {
     ev.dataTransfer.setData("special", "example");
     ev.dataTransfer.setData("type", type);
+    log.add('Drag', 'Example ' + type);
   }
 
   function dragSearch (ev) {
@@ -150,7 +160,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
 
   function tutorial () {
     vm.tool = 'none';
-    log.add('Tutorial started')
+    log.add('Tour', 'Started')
     vm.searchActive = false;
 
     var intro = introJs();
@@ -308,6 +318,7 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
   }
 
   function modalHelp () {
+    log.add('Tutorial', 'Started')
     $uibModal.open({
       animation: true,
       windowClass: 'show',

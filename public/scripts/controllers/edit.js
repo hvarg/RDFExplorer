@@ -1,8 +1,8 @@
 angular.module('rdfvis.controllers').controller('EditCtrl', EditCtrl);
 
-EditCtrl.$inject = ['$scope', 'propertyGraphService', '$timeout', '$q'];
+EditCtrl.$inject = ['$scope', 'propertyGraphService', '$timeout', '$q', 'logService'];
 
-function EditCtrl ($scope, pGraph, $timeout, $q) {
+function EditCtrl ($scope, pGraph, $timeout, $q, log) {
   var vm = this;
   vm.selected = null;
   vm.variable = null;
@@ -22,7 +22,7 @@ function EditCtrl ($scope, pGraph, $timeout, $q) {
   vm.added  = 0;
   vm.newFilterType = "";
   vm.newFilterData = {};
-  vm.showFilters = true;
+  vm.showFilters = false;
 
   vm.mkVariable = mkVariable;
   vm.mkConst    = mkConst;
@@ -54,12 +54,14 @@ function EditCtrl ($scope, pGraph, $timeout, $q) {
         vm.newValueType = 'url';
         vm.newValuePlaceholder = 'add a new URI';
       }
+      log.add('Edit', 'Editing ?' + vm.variable.id);
       loadPreview();
     }
     $scope.$emit('tool', 'edit');
   }
 
   function mkVariable () {
+    log.add('Edit', 'Set ?' + vm.variable.id + ' as variable');
     vm.selected.mkVariable();
     vm.isVariable = true;
     vm.isConst = false;
@@ -68,6 +70,7 @@ function EditCtrl ($scope, pGraph, $timeout, $q) {
   }
 
   function mkConst () {
+    log.add('Edit', 'Set ?' + vm.variable.id + ' as constraint');
     vm.added = 0;
     vm.selected.mkConst();
     vm.isVariable = false;
@@ -87,11 +90,15 @@ function EditCtrl ($scope, pGraph, $timeout, $q) {
         vm.added += 1
       }
       vm.refresh();
+      log.add('Edit', 'Add ' + newV + ' (' + newV.getLabel() + ') to ?' + vm.variable.id);
     }
   }
 
   function rmValue (value) {
-    return vm.selected.removeUri(value)
+    if (vm.selected.removeUri(value)) {
+      vm.refresh();
+      log.add('Edit', 'Remove ' + value + ' (' + value.getLabel() + ') from ?' + vm.variable.id);
+    }
   }
 
   function newFilter (targetVar) { //TODO: targetVar not needed now
@@ -135,6 +142,7 @@ function EditCtrl ($scope, pGraph, $timeout, $q) {
           vm.resultFilterLoading = true;
           config.varFilter = now;
           vm.selected.loadPreview(config);
+          log.add('Edit', 'Filtering results by "'+now+'"');
         }
       }, 400);
     } else {

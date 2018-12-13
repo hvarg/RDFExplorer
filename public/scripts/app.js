@@ -1,6 +1,7 @@
 angular.module('rdfvis', [
   'angular-loading-bar',
   'ngAnimate',
+  'ngCookies',
   'ui.bootstrap',
   'rdfvis.services',
   'rdfvis.controllers',

@@ -20,6 +20,7 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
     if (!vm.selected || vm.selected.uri != uri) {
       load(uri);
     }
+    log.add('Describe', 'URI: ' + uri + ' (' + uri.getLabel() + ')');
     return vm.selected;
   }
 
@@ -29,10 +30,10 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
     if (uri && (!vm.selected || vm.selected.uri != uri)) {
       load(uri, obj);
     }
+    if (uri) log.add('Describe', '?' + obj.variable.id + ', URI: ' + uri + ' (' + uri.getLabel() + ')');
   };
 
   function load (uri, sourceObject) {
-    log.add('Describe ' + uri);
     var realUri = uri;
     if (uri.includes('prop/direct')) uri = uri.replace('prop/direct', 'entity');
 
