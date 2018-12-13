@@ -10,8 +10,9 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
     li.nav-item.clickable
       .nav-link(ng-class="{'active': !ctrl.isVariable, 'tab-hl': ctrl.added>0}", ng-click="ctrl.mkConst()")
         input.no-click(type="checkbox", ng-model="ctrl.isConst")
-        a.ml-1 Constraint
-        b(ng-if="ctrl.added>0").ml-2 [+{{ctrl.added}}]
+        a.ml-1 Constraint {{ ctrl.selected.uris.length >  0 ? '('+ctrl.selected.uris.length+')' : '' }}
+        // add as new or something
+        //b(ng-if="ctrl.added>0").ml-2 [+{{ctrl.added}}]
 
   //-------------------- CONSTRAINT --------------------//
   div(ng-if="!ctrl.isVariable")
@@ -30,7 +31,7 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
           span.ell(style="width: calc(100% - 30px);")
             a(ng-if="!ctrl.isLiteral", title="{{value}}", href="", ng-click="value.describe();") {{ value.getLabel(); }}
             span(ng-if="ctrl.isLiteral") {{ value }}
-          i.clickable.pull-right.fa.fa-trash.mt-1(ng-click="ctrl.selected.removeUri(value);")
+          i.clickable.pull-right.fa.fa-trash.mt-1(ng-click="ctrl.rmValue(value);")
     div.form-check.form-check-inline.mt-1(ng-if="ctrl.selected.isProperty()")
       input.form-check-input#prop-star(type="checkbox", ng-model="ctrl.selected.star", ng-change="ctrl.refresh()")
       label.form-check-label(for="prop-star") Wildcard property
@@ -62,13 +63,16 @@ div(ng-show="main.tool == 'edit'", ng-controller="EditCtrl as ctrl")
             i.fa(ng-if="!ctrl.resultFilterLoading", ng-class="ctrl.variable.results.length==0 ?  'fa-exclamation-triangle' : 'fa-check'")
 
     .custom-container-content.active
-      .alert.alert-warning.alert-sm.mt-2.mb-1(ng-if="ctrl.variable.results.length==0") Currently this variable has no partial results!
+      .alert.alert-warning.alert-sm.mt-2.mb-1(ng-if="ctrl.variable.results.length==0 && !ctrl.resultFilterLoading") Currently this variable has no partial results!
+      .alert.alert-light.alert-sm.mt-2.mb-1(ng-if="ctrl.variable.results.length==0 && ctrl.resultFilterLoading") Loading...
       .row(ng-repeat="elem in ctrl.variable.results", title="{{elem.value}}")
         .col-md-12(ng-class="{'mt-1': $first}")
           span.ell(style="width: calc(100% - 30px);")
-            a(ng-if="!ctrl.isLiteral", href="", ng-click="elem.value.describe()") {{ elem.value.getLabel(); }}
+            a(ng-if="!ctrl.isLiteral", href="", ng-click="ctrl.addValue(elem.value);")
+              i.fa.mr-1.mt-1.clickable(ng-class="ctrl.selected.uris.indexOf(elem.value) < 0 ? 'fa-plus' : 'fa-check-square-o'")
+              | {{ elem.value.getLabel(); }}
             span(ng-if="ctrl.isLiteral") {{ elem.value }}
-          i.pull-right.fa.fa-plus.mr-1.mt-1.clickable(ng-click="ctrl.addValue(elem.value);")
+          i.pull-right.fa.fa-eye.mr-1.mt-1.clickable(ng-click="elem.value.describe();")
       //.row() add pagination here
         .col-md-2.clickable
           i.fa.fa-chevron-left

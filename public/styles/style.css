@@ -535,7 +535,7 @@ visual-query-builder {
 }
 
 #edit-filter-results {
-  background-color: rgb(233, 236, 239);
+  /*background-color: rgb(233, 236, 239);*/
   padding-right: 30px;
 }
 
