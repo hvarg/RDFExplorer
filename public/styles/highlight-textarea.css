@@ -1,0 +1,41 @@
+.backdrop {
+    position: absolute;
+    z-index: 1;
+    background-color: #fff;
+    overflow: auto;
+    pointer-events: none;
+    transition: transform 1s;
+    width: 95%;
+    padding: .375rem .75rem;
+    height:180px;
+}
+
+.highlights {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: transparent;
+}
+
+#simple-textarea {
+    width: 95%;
+    display: block;
+    position: absolute;
+    z-index: 2;
+    margin: 0;
+    border-radius: 0;
+    color: #444;
+    background-color: transparent;
+    overflow: auto;
+    resize: none;
+    transition: transform 1s;
+    height:180px;
+}
+
+mark {
+    border-radius: 3px;
+    color: transparent;
+}
+
+.highlight-one-to-k{
+    background-color: #fdd01c;
+}

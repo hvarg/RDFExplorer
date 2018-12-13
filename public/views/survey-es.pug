@@ -1,0 +1,264 @@
+doctype html
+html(lang="en", ng-app="survey")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1, shrink-to-fit=no")
+    base(href="/")
+    // Bootstrap
+    link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css",
+         integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO", crossorigin="anonymous")
+    // Font Awesome
+    link(href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css", rel="stylesheet")
+    // angular-loading-bar
+    link(rel="stylesheet", href="//cdnjs.cloudflare.com/ajax/libs/angular-loading-bar/0.9.0/loading-bar.min.css")
+    // CodeMirror
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.39.2/codemirror.min.css")
+    link(rel="stylesheet", href="styles/survey.css")
+    link(rel="stylesheet", href="styles/highlight-textarea.css")
+    title="RDF Explorer survey"
+
+  body(ng-controller="MainCtrl as main")
+
+    .container
+      .jumbotron#top(style="border-radius: 0px; min-height: 100vh; margin-bottom: 0px;")
+        .row.justify-content-center
+          .col-10
+            .page-header 
+              .row
+                .col-5
+                  h1 Estudio de usuario
+                .col-7
+                  h4(style="bottom: 0; position: absolute; right: 15px;") {{ main.subtitle() }}
+              hr
+
+            fieldset.form-group(ng-hide="main.step != 0")
+              p 
+                | En este estudio de usuario se le pedirá evaluar dos interfaces para la creación de consultas SPARQL.
+                | El estudio es efectuado en dos grupos, cada grupo utilizará una interfaz especifica para resolver 5
+                | tareas y luego deberá contestar una serie de preguntas subjetivas con respecto a su experiencia
+                | utilizando dicha interfaz.
+                | Una vez terminado el proceso con una interfaz, se repite con la otra utilizando un set de preguntas 
+                | diferentes.
+              b Es importante que usted:
+              p.mt-2.ml-3 1.- Lea atentamente las preguntas y opciones presentadas.
+              p.ml-3 2.- Presione 
+                i continuar 
+                | solo cuando esté seguro de su respuesta pues no puede volver a preguntas anteriores.
+              p.ml-3 3.- Utilice el mismo navegador para resolver todas las preguntas.
+              p.ml-3 3.- No cierre ni refresque esta página en ningún momento.
+
+              h5 Formulario de consentimiento
+              p
+                | Su participación en este estudio es completamente voluntaria.
+                | Todos los datos y respuestas recolectadas son confidenciales y anónimas.
+                | Sus datos son almacenados de manera electronica y solo serán utilizados con fines académicos.
+                | Si tiene alguna consulta o sugerencia no dude en contactarse con Hernán Vargas al correo hernan.vargas@alumnos.usm.cl.
+              b Presionando el botón <i>acepto</i> usted confirma que:
+              p.mt-2.ml-3 - Ha leído la información anterior.
+              p.ml-3 - Acepta voluntariamente participar en este estudio.
+              p.ml-3 - Tiene al menos 18 años de edad.
+              .form-group.row
+                .col-sm-12
+                  button.btn.btn-primary.pull-right.mt-1(type="submit", ng-click="main.next()") Acepto
+
+            div#user-id(ng-hide="main.step != 1")
+              form
+                fieldset.form-group
+                  .row
+                    legend.col-form-label.col-sm-2.pt-0 Genero:
+                    .col-sm-10
+                      .form-check
+                        input.form-check-input#gender-male(type="radio", name="gender", value="male",
+                            ng-model="main.data.user.gender")
+                        label.form-check-label(for="gender-male")  Masculino
+                      .form-check
+                        input.form-check-input#gender-female(type="radio", name="gender", value="female",
+                            ng-model="main.data.user.gender")
+                        label.form-check-label(for="gender-female")  Femenino
+                .form-group.row
+                  label.col-sm-2.col-form-label(for="user-age") Edad:
+                  .col-sm-10
+                    //input.form-control#user-age(type="number", placeholder="18", ng-model="main.data.user.age")
+                    select.form-control.custom-select#user-age(ng-model="main.data.user.age")
+                      option 18-24
+                      option 25-30
+                      option 31-40
+                      option 41-50
+                      option 51-60
+                      option 60+
+                .form-group.row
+                  label.col-sm-2.col-form-label(for="user-degree") Grado académico
+                  .col-sm-10
+                    input.form-control#user-degree(type="text", placeholder="Phd, Ingeniero...", ng-model="main.data.user.degree")
+
+                fieldset.form-group
+                  .row
+                    legend.col-form-label.col-sm-2.pt-0 Grupo:
+                    .col-sm-10
+                      .form-check
+                        input.form-check-input#gA1(type="radio", name="group", value="A1", ng-model="main.data.user.group")
+                        label.form-check-label(for="gA1")  Grupo A1 (https://explorer.csrg.cl)
+                      .form-check
+                        input.form-check-input#gA2(type="radio", name="group", value="A2", ng-model="main.data.user.group")
+                        label.form-check-label(for="gA2")  Grupo A2 (https://explorer.csrg.cl)
+                      .form-check
+                        input.form-check-input#gB1(type="radio", name="group", value="B1", ng-model="main.data.user.group")
+                        label.form-check-label(for="gB1")  Grupo B1 (https://query.wikidata.org)
+                      .form-check
+                        input.form-check-input#gB2(type="radio", name="group", value="B2", ng-model="main.data.user.group")
+                        label.form-check-label(for="gB2")  Grupo B2 (https://query.wikidata.org)
+                .form-group.row
+                  .col-sm-12
+                    button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Continuar
+
+            div#tasks(ng-hide="main.step != 2")
+              h5 Resuelva en: 
+                a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
+
+              div(ng-show="main.taskSet == 1")
+                div#task1-1(ng-show="main.taskStep == 0")
+                  h4 1.- Encuentre todos los 
+                    span.hint perros
+                      span.hinttext intance of: dog
+                div#task2-1(ng-show="main.taskStep == 1")
+                  h4 2.- Encuentre todos los 
+                    span.hint papas 
+                      span.hinttext position held: pope
+                    |  de  
+                    span.hint género femenino   
+                      span.hinttext sex or gender: female
+                div#task3-1(ng-show="main.taskStep == 2")
+                  h4 3.- Encuentre todas las 
+                    span.hint montañas 
+                      span.hinttext instance of: mountain 
+                    |  ubicadas en los  
+                    span.hint países de América del Sur 
+                      span.hinttext continent: South America
+                div#task4-1(ng-show="main.taskStep == 3")
+                  h4 4.- Encuentre todos los pares de 
+                    span.hint emperadores 
+                      span.hinttext position held: emperor
+                    |  que tenga una relación de 
+                    span.hint padre-hijo
+                      span.hinttext father / child
+                div#task5-1(ng-show="main.taskStep == 4")
+                  h4 5.- Encuentre todos los 
+                    span.hint ganadores  
+                      span.hinttext award received
+                    |  de 
+                    span.hint algún tipo de premio novel 
+                      span.hinttext instance of: Novel Prize
+                    |  que tengan un 
+                    span.hint estudiante
+                      span.hinttext student
+                    |  que tambien ganó uno
+
+              div(ng-show="main.taskSet == 2")
+                div#task1-2(ng-show="main.taskStep == 0")
+                  h4 1.- Encuentre todos los 
+                    span.hint actores
+                      span.hinttext occupation: actor
+                div#task2-2(ng-show="main.taskStep == 1")
+                  h4 2.- Encuentre todos los 
+                    span.hint participantes del mundial FIFA 2014
+                      span.hinttext participant of: 2014 FIFA World Cup
+                    |  que son 
+                    span.hint Chilenos
+                      span.hinttext country of citizenship: Chile
+                div#task3-2(ng-show="main.taskStep == 2")
+                  h4 3.- Encuentre todos los 
+                    span.hint buques portacontenedores  
+                      span.hinttext instance of: container ship 
+                    |  de los 
+                    span.hint países de Europa
+                      span.hinttext continent: Europe
+                div#task4-2(ng-show="main.taskStep == 3")
+                  h4 4.- Encuentre todos los pares de 
+                    span.hint físicos 
+                      span.hinttext occupation: physicist
+                    |  que sean 
+                    span.hint esposos
+                      span.hinttext spouse
+                div#task5-2(ng-show="main.taskStep == 4")
+                  h4 5.- Encuentre todos los pares de  
+                    span.hint familiares  
+                      span.hinttext relative 
+                    |  
+                    span.hint deportistas de  
+                      span.hinttext sport
+                    |  
+                    span.hint algún deporte olímpico
+                      span.hinttext subclass of: Olympic sport
+
+              form
+                textarea.form-control.mb-2(rows="5", placeholder="Your SPARQL query here.",
+                                           ng-model="main.data.tasks[main.taskSet -1][main.taskStep].sparql")
+                .form-group.row
+                  .col-sm-12
+                    button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Continuar
+
+            div#nasa-tlx(ng-hide="main.step != 3")
+              h5 Responda las siguientes preguntas basandose en su experiencia utilizando 
+                a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
+              form.mt-4
+                div(ng-repeat="(key, value) in main.tlx")
+                  .row(style="font-weight: bolder;")
+                    .col-sm-9 {{ value.text }}
+                    .col-sm-3
+                      label.pull-right(for="{{'tlx' + $index}}") {{ value.category }}
+                  input.custom-range(id="{{'tlx' + $index}}", type="range", step="5",
+                      ng-model="main.data.tlx[main.urlStep].score[$index]")
+                  div.mb-4(style="font-weight: lighter;")
+                    span {{ value.lmin }}
+                    span.pull-right {{ value.lmax }}
+                .form-group.row
+                  .col-sm-12
+                    button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Continuar
+
+            div#likert(ng-hide="main.step != 4")
+              h5 Indique cuan de acuerdo está con las siguientes sentencias badandose en su experiencia utilizando 
+                a(href="{{main.url[main.urlStep]}}", target="_blank") {{main.url[main.urlStep]}}
+              form.mt-4
+                div(ng-repeat="(key, value) in main.likert")
+                  label(style="font-weight: bolder;", for="{{'likert' + $index}}") {{ value.text }}
+                  input.custom-range(id="{{'likert' + $index}}", type="range", min="1", max="5",
+                      ng-model="main.data.likert[main.urlStep].score[$index]")
+                  div.mb-4(style="font-weight: lighter;")
+                    span {{ value.lmin }}
+                    span.pull-right {{ value.lmax }}
+                h5.mt-5 ¿Cómo explicarías en palabras simples la estructura de los datos con los que trabajaste?
+                div.backdrop
+                  div.highlights
+                textarea.form-control.mb-2#simple-textarea(rows="5", ng-model="main.data.simple[main.urlStep].value",
+                    placeholder="Toda palabra que no esté dentro de las 2000 más populares del español será remarcada, intente evitarlas.")
+                .form-group.row(style="margin-top:200px;")
+                  .col-sm-12
+                    button.btn.btn-primary.pull-right(type="submit", ng-click="main.next()") Continuar
+
+            div(ng-hide="main.step != 5")
+              h4 Gracias por participar en el estudio!
+              h5(ng-show="!main.send || !main.send2") Espere mientras se envian sus respuestas...
+              h5(ng-show="main.send && main.send2") Sus respuestas han sido enviadas!
+              //button.btn.btn-primary.pull-right(ng-click="main.download()") Download
+
+    // Bootstrap 4.0 js
+    script(src="https://code.jquery.com/jquery-3.3.1.slim.min.js",
+           integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo", crossorigin="anonymous")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+           integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49", crossorigin="anonymous")
+    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js",
+           integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy", crossorigin="anonymous")
+    // AngularJS
+    script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js")
+    script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-animate.js")
+    script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-cookies.js")
+    //Ui bootstrap
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.0/ui-bootstrap-tpls.min.js")
+    // angular-loading-bar
+    script(src="//cdnjs.cloudflare.com/ajax/libs/angular-loading-bar/0.9.0/loading-bar.min.js")
+    // CodeMirror
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.39.2/codemirror.min.js")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.39.2/mode/sparql/sparql.min.js")
+    // My scripts
+    script(src="scripts/survey-es.js")
+    script(src="scripts/highlight-textarea.js")

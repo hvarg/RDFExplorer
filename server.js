@@ -20,7 +20,6 @@ app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
 // SURVEY =====================================================================
 app.post('/upload-survey', function(req, res) {
   var timestamp = Number(new Date);
-  req.body['user-id'] = req.ip;
   fs.writeFile(
     'survey-results/' + timestamp + '.json',
     JSON.stringify(req.body),
@@ -31,9 +30,21 @@ app.post('/upload-survey', function(req, res) {
   );
 });
 
+app.post('/upload-logs', function(req, res) {
+  var timestamp = Number(new Date);
+  fs.writeFile(
+    'user-logs/' + timestamp + '.json',
+    JSON.stringify(req.body),
+    'utf8',
+    function () {
+      res.sendStatus(200);
+    }
+  );
+});
+
 // ROUTES =====================================================================
 app.get('/survey', function(req, res) {
-  res.render(views+'survey.pug');
+  res.render(views+'survey-es.pug');
 });
 
 app.get('/modal/help', function (req, res) {
