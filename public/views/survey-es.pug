@@ -87,7 +87,11 @@ html(lang="en", ng-app="survey")
                       option 51-60
                       option 60+
                 .form-group.row
-                  label.col-sm-2.col-form-label(for="user-degree") Grado académico
+                  label.col-sm-2.col-form-label(for="user-rol") Rol
+                  .col-sm-10
+                    input.form-control#user-degree(type="text", placeholder="201X73XXX-X", ng-model="main.data.user.rol")
+                .form-group.row
+                  label.col-sm-2.col-form-label(for="user-degree") Año cursado
                   .col-sm-10
                     input.form-control#user-degree(type="text", placeholder="Phd, Ingeniero...", ng-model="main.data.user.degree")
 
@@ -146,8 +150,8 @@ html(lang="en", ng-app="survey")
                     span.hint ganadores  
                       span.hinttext award received
                     |  de 
-                    span.hint algún tipo de premio novel 
-                      span.hinttext instance of: Novel Prize
+                    span.hint algún tipo de premio nobel 
+                      span.hinttext instance of: Nobel Prize
                     |  que tengan un 
                     span.hint estudiante
                       span.hinttext student

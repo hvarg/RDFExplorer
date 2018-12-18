@@ -38,7 +38,7 @@ function MainCtrl ($http, $c) {
   }
 
   vm.data = {
-    user: {gender: 'male', age: '18-24', degree: null, group: 'A1', id: userId},
+    user: {gender: 'male', age: '18-24', degree: null, group: 'A1', id: userId, rol: ''},
     tasks: [
       [ // Set 1
         {sparql: null, time: null}, {sparql: null, time: null},
