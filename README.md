@@ -1,7 +1,7 @@
 # RDFExplorer
 SPARQL visual query builder and RDF explorer
 
-## Instalation
+## Installation
 
 Clone the repository, then:
 ```
