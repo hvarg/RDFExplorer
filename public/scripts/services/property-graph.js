@@ -421,7 +421,7 @@ function propertyGraphService (req, log, settings) {
       } else {
         q.addOptLabel(this);
       }
-      q.triples.forEach(t => {
+      /*q.triples.forEach(t => {
         if (t[0].isVariable() && t[1].isVariable()) {
           var dc = new RDFResource(),
               p = new RDFResource();
@@ -430,7 +430,7 @@ function propertyGraphService (req, log, settings) {
           p.variable.alias = t[1].variable.getName() + 'tmp';
           q.triples.push([p, dc, t[1]])
         }
-      });
+      });*/
       if (this.hide) {
         console.log(this);
         this.hide = false;
@@ -524,15 +524,11 @@ function propertyGraphService (req, log, settings) {
   Property.prototype.loadPreview = function (config) {
     //For wikidata only
     var cfg = config || {},
-        q = this.createQuery(cfg),
-        dc = new RDFResource(),
+        q = this.createQuery(cfg);
+        /*dc = new RDFResource(),
         p = new RDFResource();
     dc.mkConst();
     dc.addUri('http://wikiba.se/ontology#directClaim');
-    /*dc.variable.alias = 'wikibaseP';
-    dc.variable.filters.push({apply: function () {
-      return 'FILTER(regex(str(?wikibaseP), "http://wikiba.se/ontology#" ) )\n';
-    }});*/
     p.variable.alias = this.variable.getName();
     var t1 = [p, dc, this],
         t2 = q.createTripleLabel(p);
@@ -547,7 +543,7 @@ function propertyGraphService (req, log, settings) {
     }
 
     q.select.push(t2[2]);
-    p.variable.alias = this.variable.getName() + 'tmp';
+    p.variable.alias = this.variable.getName() + 'tmp';*/
     q.retrieve(cfg);
   }
 

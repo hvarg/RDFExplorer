@@ -56,35 +56,21 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
 
   function onSearch (data) {
     log.add('Search "'+ vm.lastSearch + '", ' + data.length + ' results');
-    /*var r = {}
-    data.results.bindings.forEach(res => {
-      if (!r[res.uri.value]) r[res.uri.value] = [];
-      r[res.uri.value].push( res );
-    });
     vm.searchResults = [];
-    for (key in r) {
-      var tmp = {uri: r[key][0].uri, label: r[key][0].label, types: []};
-      r[key].forEach(res => {
-        if (res.type) {
-          tmp.types.push( {uri: res.type, label: res.tlabel } );
-        }
-      });
-      vm.searchResults.push(tmp);
-    }*/
-    //console.log(data);
-    vm.searchResults = [];
-    data.forEach(r => {
-      vm.searchResults.push({uri: r.concepturi, label: r.label, desc: r.description});
-      if (r.label) request.setLabel(r.concepturi, r.label);
+    data.results.bindings.forEach(r => {
+      let desc = (r.tlabel) ? r.tlabel.value : (r.type) ? r.type.value : ''
+      vm.searchResults.push({uri: r.uri.value, label: r.label.value, desc: desc});
+      if (r.label) request.setLabel(r.uri.value, r.label.value);
+      if (r.ltabel) request.setLabel(r.type.value, r.tlabel.value);
     });
 
-    //vm.searchResults = data.results.bindings;
     vm.searchError = false;
     vm.searchWait = false;
     if (vm.searchResults.length == 0) vm.noResults = true;
   }
 
   function onSearchErr (resp) {
+    console.log(resp)
     vm.searchWait = false;
     vm.noResults = false;
     vm.searchError = true;
@@ -92,6 +78,17 @@ function MainCtrl ($scope, pGraph, query, request, $timeout, $http, log, $uibMod
   }
 
   function search () {
+    if (vm.searchInput != vm.lastSearch) {
+      var input = vm.searchInput;
+      vm.lastSearch = input;
+      vm.searchWait = true;
+      vm.noResults  = false; 
+      request.execQuery(query.search(input), {callback: onSearch, cError: onSearchErr});
+    }
+    vm.searchActive = true;
+  }
+
+  function searchWD () {
     //TODO: fix when null;
     if (vm.searchInput != vm.lastSearch) {
       var input = vm.searchInput;

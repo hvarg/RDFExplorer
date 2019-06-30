@@ -6,13 +6,9 @@ function settingsService () {
     lang: 'en',
     labelUri: "http://www.w3.org/2000/01/rdf-schema#label",
     endpoint: {
-      url: "https://query.wikidata.org/sparql",
-      type: "other",
+      url: "https://dbpedia.org/sparql",
+      type: "virtuoso",
       label: "wikidata",
-    },
-    searchClass: {
-      uri:   { type: "uri", value: "http://dbpedia.org/ontology/Person" },
-      label: { type: "literal", "xml:lang": "en", value: "person" }
     },
     resultLimit: 20,
   }
@@ -65,6 +61,7 @@ function settingsService () {
     datatype: [],
     text: ["http://dbpedia.org/ontology/abstract"],
     image: [
+      "http://dbpedia.org/ontology/thumbnail",
       "http://www.wikidata.org/prop/direct/P18",  //thumbnail
       "http://www.wikidata.org/prop/direct/P154", //logo
       "http://www.wikidata.org/prop/direct/P41",  //flag

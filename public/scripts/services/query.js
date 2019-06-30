@@ -24,7 +24,7 @@ function queryService (settings) {
 
   /* TODO: fix language filter and exact match for bif*/
   function search (keyword, type, limit, offset) {
-    type = type || settings.searchClass.uri.value;
+    //type = type || settings.searchClass.uri.value;
     limit = limit || settings.resultLimit;
     q  = 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n' +
          'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n';
@@ -32,15 +32,15 @@ function queryService (settings) {
       q += 'PREFIX text: <http://jena.apache.org/text#>\n';
     q += 'SELECT DISTINCT ?uri ?label ?type ?tlabel WHERE {\n';
     q += '  { SELECT ?uri ?label WHERE {\n';
-    q += '      ?uri rdfs:label ?label . \n';
-    q += '      FILTER (lang(?label) = "en")\n';
+    q += '      ?uri <' + settings.labelUri + '> ?label . \n';
+    q += '      FILTER (lang(?label) = "'+ settings.lang + '")\n';
     if (keyword) {
       switch (settings.endpoint.type) {
         case 'virtuoso':
           q += '      ?label bif:contains "\'' + keyword + '\'" .\n';
           break;
         case 'fuseki':
-          q += '      ?uri text:query (rdfs:label "' + keyword + '" '+ limit +') .\n';
+          q += '      ?uri text:query (<' + settings.labelUri + '> "' + keyword + '" '+ limit +') .\n';
           break;
         default:
           q += '      FILTER regex(?label, "' + keyword + '", "i")\n'
@@ -50,16 +50,16 @@ function queryService (settings) {
     if (offset) q += ' OFFSET ' + offset;
     q += '\n  }\n  OPTIONAL {\n';
     q += '  ?uri rdf:type ?type .\n';
-    q += '  ?type rdfs:label ?tlabel .\n';
-    q += '  FILTER (lang(?tlabel) = "en")\n}}';
+    q += '  ?type <' + settings.labelUri + '> ?tlabel .\n';
+    q += '  FILTER (lang(?tlabel) = "'+ settings.lang + '")\n}}';
     return q;
   }
 
   function getClasses (uri, limit, offset) {
     q  = 'SELECT DISTINCT ?uri ?label WHERE {\n';
     q += '  ' + u(uri) + ' a ?uri .\n';
-    q += '  ?uri rdfs:label ?label .\n';
-    q += '  FILTER (lang(?label) = "en")\n';
+    q += '  ?uri <' + settings.labelUri + '> ?label .\n';
+    q += '  FILTER (lang(?label) = "'+ settings.lang + '")\n';
     q += '}'
     if (limit)  q+= ' limit ' + limit;
     if (offset) q+= ' offset ' + offset;
@@ -71,11 +71,14 @@ function queryService (settings) {
            'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' +
            'PREFIX owl: <http://www.w3.org/2002/07/owl#>\n' +
            'PREFIX bd: <http://www.bigdata.com/rdf#>\n' +
-           'PREFIX wikibase: <http://wikiba.se/ontology#>\n' +
+           //'PREFIX wikibase: <http://wikiba.se/ontology#>\n' +
            'SELECT DISTINCT ?property ?propertyLabel ?kind WHERE {\n' +
            '  <' + uri + '> ?property [] .\n' +
-           '  ?p wikibase:directClaim ?property .\n' +
-           '  OPTIONAL { ?p rdfs:label ?propertyLabel . FILTER (lang(?propertyLabel) = "en")}\n' +
+           // This is for wikidata only
+           //'  ?p wikibase:directClaim ?property .\n' +
+           //'  OPTIONAL { ?p <' + settings.labelUri + '> ?propertyLabel . FILTER (lang(?propertyLabel) = "'+
+           //settings.lang + '")}\n' +
+           '  OPTIONAL { ?property <' + settings.labelUri + '> ?propertyLabel . FILTER (lang(?propertyLabel) = "'+ settings.lang + '")}\n' +
            '  BIND(\n' +
            '    IF(EXISTS { ?property rdf:type owl:ObjectProperty},\n' +
            '      1,\n' +
@@ -103,13 +106,13 @@ function queryService (settings) {
            'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n' +
            'SELECT DISTINCT ?uri ?uriLabel WHERE {\n' +
            '  <' + uri + '> <' + prop + '> ?uri .\n' +
-           '  OPTIONAL { ?uri rdfs:label ?uriLabel . FILTER (lang(?uriLabel) = "en")}\n}';
+           '  OPTIONAL { ?uri <' + settings.labelUri + '> ?uriLabel . FILTER (lang(?uriLabel) = "' + settings.lang + '")}\n}';
   }
 
   function getPropDatatype (uri, prop) {
     return 'SELECT DISTINCT ?lit WHERE {\n' +
            '  <' + uri + '> <' + prop + '> ?lit .\n' +
-           '  FILTER (lang(?lit) = "" || lang(?lit) = "en")\n}'
+           '  FILTER (lang(?lit) = "" || lang(?lit) = "' + settings.lang + '")\n}'
   }
 
   return {

@@ -91,8 +91,8 @@ function requestService (settings, $http, $timeout) {
 
     return $timeout(() => {
       return $http(httpCfg).then(
-        r => { return onSuccess(r, cfg.callback) },
-        r => { return onError(r, cfg.cErr) }
+        r => {return onSuccess(r, cfg.callback) },
+        r => {return onError(r, cfg.cErr) }
       );
     }, (running-1)*delay);
   }

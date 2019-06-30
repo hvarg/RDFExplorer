@@ -34,7 +34,8 @@ function DescribeCtrl ($scope, pGraph, query, request, settings, log) {
   function load (uri, sourceObject) {
     log.add('Describe ' + uri);
     var realUri = uri;
-    if (uri.includes('prop/direct')) uri = uri.replace('prop/direct', 'entity');
+    //This is for wikidata only bc they dont use the same URI for the property and its description
+    //if (uri.includes('prop/direct')) uri = uri.replace('prop/direct', 'entity');
 
     var c = cache.filter(s => {return s.uri == uri})
     if (c.length>0) {
